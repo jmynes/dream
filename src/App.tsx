@@ -18,6 +18,7 @@ const theme = createTheme({
 function App() {
 	const [penColor, setPenColor] = useState("#000000");
 	const [penSize, setPenSize] = useState(2);
+	const [eraserSize, setEraserSize] = useState(15);
 	const [isDrawing, setIsDrawing] = useState(true);
 	const [isEraser, setIsEraser] = useState(false);
 	const [snapToGrid, setSnapToGrid] = useState(true);
@@ -84,17 +85,17 @@ function App() {
 						selectedComponentType={selectedComponentType}
 					/>
 					<Box sx={{ flex: 1, overflow: "hidden", display: "flex" }}>
-						<Canvas
-							penColor={penColor}
-							penSize={penSize}
-							isDrawing={isDrawing}
-							isEraser={isEraser}
-							components={components}
-							onComponentsChange={setComponents}
-							selectedComponentType={selectedComponentType}
-							onComponentPlaced={handleComponentPlaced}
-							snapToGrid={snapToGrid}
-						/>
+					<Canvas
+						penColor={penColor}
+						penSize={isEraser ? eraserSize : penSize}
+						isDrawing={isDrawing}
+						isEraser={isEraser}
+						components={components}
+						onComponentsChange={setComponents}
+						selectedComponentType={selectedComponentType}
+						onComponentPlaced={handleComponentPlaced}
+						snapToGrid={snapToGrid}
+					/>
 					</Box>
 					<RightSidebar />
 				</Box>

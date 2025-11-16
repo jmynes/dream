@@ -59,6 +59,7 @@ export default function Canvas({
 		null,
 	);
 	const [brushPosition, setBrushPosition] = useState<Point | null>(null);
+	const brushAnimationFrameRef = useRef<number | null>(null);
 
 	const drawLine = useCallback(
 		(from: Point, to: Point) => {
@@ -178,18 +179,29 @@ export default function Canvas({
 		[isDrawing, isEraser, selectedComponentType, getPointFromEvent],
 	);
 
-	// Track mouse position for brush preview
+	// Track mouse position for brush preview with throttling
 	const handleCanvasMouseMoveForBrush = useCallback(
 		(e: React.MouseEvent<HTMLCanvasElement>) => {
 			if ((isDrawing || isEraser) && !selectedComponentType) {
 				const point = getPointFromEvent(e);
-				setBrushPosition(point);
+				// Throttle updates using requestAnimationFrame
+				if (brushAnimationFrameRef.current !== null) {
+					cancelAnimationFrame(brushAnimationFrameRef.current);
+				}
+				brushAnimationFrameRef.current = requestAnimationFrame(() => {
+					setBrushPosition(point);
+					brushAnimationFrameRef.current = null;
+				});
 			}
 		},
 		[isDrawing, isEraser, selectedComponentType, getPointFromEvent],
 	);
 
 	const handleCanvasMouseLeave = useCallback(() => {
+		if (brushAnimationFrameRef.current !== null) {
+			cancelAnimationFrame(brushAnimationFrameRef.current);
+			brushAnimationFrameRef.current = null;
+		}
 		setBrushPosition(null);
 	}, []);
 
@@ -487,7 +499,7 @@ export default function Canvas({
 		],
 	);
 
-	// Initialize canvas
+	// Initialize canvas and preserve content on resize
 	useEffect(() => {
 		const canvas = canvasRef.current;
 		if (!canvas) return;
@@ -495,14 +507,46 @@ export default function Canvas({
 		const ctx = canvas.getContext("2d");
 		if (!ctx) return;
 
+		const oldWidth = canvas.width;
+		const oldHeight = canvas.height;
+		const isInitialSetup = oldWidth === 0 && oldHeight === 0;
+
+		// Save current canvas content if resizing (not initial setup)
+		let imageData: ImageData | null = null;
+		if (!isInitialSetup && oldWidth > 0 && oldHeight > 0) {
+			imageData = ctx.getImageData(0, 0, oldWidth, oldHeight);
+		}
+
 		// Set canvas size to match container
 		canvas.width = actualWidth;
 		canvas.height = actualHeight;
 
-		// Set default background
-		ctx.fillStyle = "#ffffff";
-		ctx.fillRect(0, 0, actualWidth, actualHeight);
+		// Restore content if resizing, otherwise set default background
+		if (imageData) {
+			// Restore the saved content
+			const tempCanvas = document.createElement("canvas");
+			tempCanvas.width = oldWidth;
+			tempCanvas.height = oldHeight;
+			const tempCtx = tempCanvas.getContext("2d");
+			if (tempCtx) {
+				tempCtx.putImageData(imageData, 0, 0);
+				ctx.drawImage(tempCanvas, 0, 0);
+			}
+		} else {
+			// Set default background for initial setup
+			ctx.fillStyle = "#ffffff";
+			ctx.fillRect(0, 0, actualWidth, actualHeight);
+		}
 	}, [actualWidth, actualHeight]);
+
+	// Cleanup animation frames on unmount
+	useEffect(() => {
+		return () => {
+			if (brushAnimationFrameRef.current !== null) {
+				cancelAnimationFrame(brushAnimationFrameRef.current);
+			}
+		};
+	}, []);
 
 	// Handle keyboard events for deleting selected components
 	useEffect(() => {
@@ -641,10 +685,23 @@ export default function Canvas({
 				onMouseMove={(e) => {
 					if ((isDrawing || isEraser) && !selectedComponentType) {
 						const point = getPointFromEvent(e);
-						setBrushPosition(point);
+						// Throttle updates using requestAnimationFrame
+						if (brushAnimationFrameRef.current !== null) {
+							cancelAnimationFrame(brushAnimationFrameRef.current);
+						}
+						brushAnimationFrameRef.current = requestAnimationFrame(() => {
+							setBrushPosition(point);
+							brushAnimationFrameRef.current = null;
+						});
 					}
 				}}
-				onMouseLeave={() => setBrushPosition(null)}
+				onMouseLeave={() => {
+					if (brushAnimationFrameRef.current !== null) {
+						cancelAnimationFrame(brushAnimationFrameRef.current);
+						brushAnimationFrameRef.current = null;
+					}
+					setBrushPosition(null);
+				}}
 			>
 				{components.map((component) => (
 					<ComponentRenderer
@@ -659,3 +716,4 @@ export default function Canvas({
 		</Box>
 	);
 }
+
