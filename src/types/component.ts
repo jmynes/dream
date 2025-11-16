@@ -5,5 +5,6 @@ export interface CanvasComponent {
 	type: ComponentType;
 	x: number;
 	y: number;
+	width?: number; // Width in pixels, if not set uses component's natural width
 	props?: Record<string, unknown>;
 }

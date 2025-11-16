@@ -1,4 +1,8 @@
-import { Palette as ColorIcon, Edit as PenIcon } from "@mui/icons-material";
+import {
+	GridOn as GridIcon,
+	Palette as ColorIcon,
+	Edit as PenIcon,
+} from "@mui/icons-material";
 import { Box, IconButton, Slider, Tooltip, Typography } from "@mui/material";
 
 interface ToolbarProps {
@@ -8,6 +12,8 @@ interface ToolbarProps {
 	onPenSizeChange: (size: number) => void;
 	isDrawing: boolean;
 	onDrawingToggle: (drawing: boolean) => void;
+	snapToGrid: boolean;
+	onSnapToGridToggle: (snap: boolean) => void;
 }
 
 export default function Toolbar({
@@ -17,6 +23,8 @@ export default function Toolbar({
 	onPenSizeChange,
 	isDrawing,
 	onDrawingToggle,
+	snapToGrid,
+	onSnapToGridToggle,
 }: ToolbarProps) {
 	return (
 		<Box
@@ -35,6 +43,15 @@ export default function Toolbar({
 					onClick={() => onDrawingToggle(!isDrawing)}
 				>
 					<PenIcon />
+				</IconButton>
+			</Tooltip>
+
+			<Tooltip title="Snap to Grid">
+				<IconButton
+					color={snapToGrid ? "primary" : "default"}
+					onClick={() => onSnapToGridToggle(!snapToGrid)}
+				>
+					<GridIcon />
 				</IconButton>
 			</Tooltip>
 

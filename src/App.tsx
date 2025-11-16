@@ -17,6 +17,7 @@ function App() {
 	const [penColor, setPenColor] = useState("#000000");
 	const [penSize, setPenSize] = useState(2);
 	const [isDrawing, setIsDrawing] = useState(true);
+	const [snapToGrid, setSnapToGrid] = useState(false);
 	const [components, setComponents] = useState<CanvasComponent[]>([]);
 	const [selectedComponentType, setSelectedComponentType] =
 		useState<ComponentType | null>(null);
@@ -54,6 +55,8 @@ function App() {
 								setSelectedComponentType(null);
 							}
 						}}
+						snapToGrid={snapToGrid}
+						onSnapToGridToggle={setSnapToGrid}
 					/>
 
 					<Box
@@ -78,6 +81,7 @@ function App() {
 								onComponentsChange={setComponents}
 								selectedComponentType={selectedComponentType}
 								onComponentPlaced={handleComponentPlaced}
+								snapToGrid={snapToGrid}
 							/>
 						</Box>
 					</Box>

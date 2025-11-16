@@ -18,6 +18,7 @@ interface CanvasProps {
 	onComponentsChange: (components: CanvasComponent[]) => void;
 	selectedComponentType: ComponentType | null;
 	onComponentPlaced: () => void;
+	snapToGrid?: boolean;
 }
 
 export default function Canvas({
@@ -30,6 +31,7 @@ export default function Canvas({
 	onComponentsChange,
 	selectedComponentType,
 	onComponentPlaced,
+	snapToGrid = false,
 }: CanvasProps) {
 	const canvasRef = useRef<HTMLCanvasElement>(null);
 	const containerRef = useRef<HTMLDivElement>(null);
@@ -39,6 +41,14 @@ export default function Canvas({
 		null,
 	);
 	const [dragOffset, setDragOffset] = useState<Point | null>(null);
+	const [selectedComponentId, setSelectedComponentId] = useState<string | null>(
+		null,
+	);
+	const [resizingComponentId, setResizingComponentId] = useState<string | null>(
+		null,
+	);
+	const [resizeStartX, setResizeStartX] = useState<number | null>(null);
+	const [resizeStartWidth, setResizeStartWidth] = useState<number | null>(null);
 
 	const drawLine = useCallback(
 		(from: Point, to: Point) => {
@@ -73,6 +83,25 @@ export default function Canvas({
 			};
 		},
 		[],
+	);
+
+	// Grid configuration: 12 columns
+	const gridColumns = 12;
+	const gridCellWidth = width / gridColumns;
+	const gridCellHeight = 40; // Row height in pixels
+
+	// Snap point to grid
+	const snapToGridPoint = useCallback(
+		(point: Point): Point => {
+			if (!snapToGrid) return point;
+
+			const cellWidth = width / gridColumns;
+			const cellHeight = 40;
+			const snappedX = Math.round(point.x / cellWidth) * cellWidth;
+			const snappedY = Math.round(point.y / cellHeight) * cellHeight;
+			return { x: snappedX, y: snappedY };
+		},
+		[snapToGrid, width],
 	);
 
 	// Handle drawing on canvas
@@ -117,11 +146,12 @@ export default function Canvas({
 			// Only place component if clicking on container background, not on existing components
 			if (e.target === e.currentTarget && selectedComponentType) {
 				const point = getPointFromEvent(e);
+				const snappedPoint = snapToGridPoint(point);
 				const newComponent: CanvasComponent = {
 					id: `component-${Date.now()}`,
 					type: selectedComponentType,
-					x: point.x,
-					y: point.y,
+					x: snappedPoint.x,
+					y: snappedPoint.y,
 					props: {},
 				};
 				onComponentsChange([...components, newComponent]);
@@ -131,6 +161,7 @@ export default function Canvas({
 		[
 			selectedComponentType,
 			getPointFromEvent,
+			snapToGridPoint,
 			components,
 			onComponentsChange,
 			onComponentPlaced,
@@ -143,11 +174,12 @@ export default function Canvas({
 			// Only place if clicking on the overlay itself (empty space), not on components
 			if (e.target === e.currentTarget && selectedComponentType) {
 				const point = getPointFromEvent(e);
+				const snappedPoint = snapToGridPoint(point);
 				const newComponent: CanvasComponent = {
 					id: `component-${Date.now()}`,
 					type: selectedComponentType,
-					x: point.x,
-					y: point.y,
+					x: snappedPoint.x,
+					y: snappedPoint.y,
 					props: {},
 				};
 				onComponentsChange([...components, newComponent]);
@@ -157,6 +189,7 @@ export default function Canvas({
 		[
 			selectedComponentType,
 			getPointFromEvent,
+			snapToGridPoint,
 			components,
 			onComponentsChange,
 			onComponentPlaced,
@@ -170,37 +203,88 @@ export default function Canvas({
 			const component = components.find((c) => c.id === componentId);
 			if (!component) return;
 
+			// Check if clicking on resize handle (right edge)
 			const point = getPointFromEvent(e);
-			setDragOffset({
-				x: point.x - component.x,
-				y: point.y - component.y,
-			});
-			setDraggedComponentId(componentId);
+			const componentWidth = component.width || 100; // Default width
+			const handleRightEdge = component.x + componentWidth;
+			// Resize handle is 16px wide, positioned at right-8, so extends from right-8 to right+8
+			const isResizeHandle =
+				point.x >= handleRightEdge - 8 && point.x <= handleRightEdge + 8;
+
+			if (isResizeHandle) {
+				setResizingComponentId(componentId);
+				setResizeStartX(point.x);
+				setResizeStartWidth(componentWidth);
+			} else {
+				setSelectedComponentId(componentId);
+				setDragOffset({
+					x: point.x - component.x,
+					y: point.y - component.y,
+				});
+				setDraggedComponentId(componentId);
+			}
 		},
 		[components, getPointFromEvent],
 	);
 
 	const handleContainerMouseMove = useCallback(
 		(e: React.MouseEvent<HTMLDivElement>) => {
+			const point = getPointFromEvent(e);
+
+			// Handle resizing
+			if (resizingComponentId && resizeStartX !== null && resizeStartWidth !== null) {
+				const deltaX = point.x - resizeStartX;
+				const newWidth = Math.max(50, resizeStartWidth + deltaX); // Minimum width
+
+				// Snap to grid columns
+				let snappedWidth = newWidth;
+				if (snapToGrid) {
+					const numColumns = Math.round(newWidth / gridCellWidth);
+					snappedWidth = numColumns * gridCellWidth;
+				}
+
+				const updatedComponents = components.map((comp) =>
+					comp.id === resizingComponentId
+						? {
+								...comp,
+								width: snappedWidth,
+							}
+						: comp,
+				);
+				onComponentsChange(updatedComponents);
+				return;
+			}
+
+			// Handle dragging
 			if (!draggedComponentId || !dragOffset) return;
 
-			const point = getPointFromEvent(e);
+			const targetPoint = {
+				x: point.x - dragOffset.x,
+				y: point.y - dragOffset.y,
+			};
+			const snappedPoint = snapToGridPoint(targetPoint);
 			const updatedComponents = components.map((comp) =>
 				comp.id === draggedComponentId
 					? {
 							...comp,
-							x: point.x - dragOffset.x,
-							y: point.y - dragOffset.y,
+							x: snappedPoint.x,
+							y: snappedPoint.y,
 						}
 					: comp,
 			);
 			onComponentsChange(updatedComponents);
 		},
 		[
+			resizingComponentId,
+			resizeStartX,
+			resizeStartWidth,
+			snapToGrid,
+			gridCellWidth,
 			draggedComponentId,
 			dragOffset,
 			components,
 			getPointFromEvent,
+			snapToGridPoint,
 			onComponentsChange,
 		],
 	);
@@ -208,7 +292,20 @@ export default function Canvas({
 	const handleContainerMouseUp = useCallback(() => {
 		setDraggedComponentId(null);
 		setDragOffset(null);
+		setResizingComponentId(null);
+		setResizeStartX(null);
+		setResizeStartWidth(null);
 	}, []);
+
+	// Handle clicking on canvas background to deselect
+	const handleCanvasBackgroundClick = useCallback(
+		(e: React.MouseEvent<HTMLDivElement>) => {
+			if (e.target === e.currentTarget) {
+				setSelectedComponentId(null);
+			}
+		},
+		[],
+	);
 
 	// Handle drag and drop from sidebar
 	const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -225,17 +322,24 @@ export default function Canvas({
 			if (!componentType) return;
 
 			const point = getPointFromEvent(e);
+			const snappedPoint = snapToGridPoint(point);
 			const newComponent: CanvasComponent = {
 				id: `component-${Date.now()}`,
 				type: componentType,
-				x: point.x,
-				y: point.y,
+				x: snappedPoint.x,
+				y: snappedPoint.y,
 				props: {},
 			};
 			onComponentsChange([...components, newComponent]);
 			onComponentPlaced();
 		},
-		[getPointFromEvent, components, onComponentsChange, onComponentPlaced],
+		[
+			getPointFromEvent,
+			snapToGridPoint,
+			components,
+			onComponentsChange,
+			onComponentPlaced,
+		],
 	);
 
 	// Initialize canvas
@@ -274,7 +378,10 @@ export default function Canvas({
 				width,
 				height,
 			}}
-			onClick={handleContainerClick}
+			onClick={(e) => {
+				handleContainerClick(e);
+				handleCanvasBackgroundClick(e);
+			}}
 			onMouseMove={handleContainerMouseMove}
 			onMouseUp={handleContainerMouseUp}
 			onDragOver={handleDragOver}
@@ -295,6 +402,26 @@ export default function Canvas({
 					pointerEvents: isDrawing && !selectedComponentType ? "auto" : "none",
 				}}
 			/>
+			{/* Grid overlay */}
+			{snapToGrid && (
+				<Box
+					sx={{
+						position: "absolute",
+						top: 0,
+						left: 0,
+						width: "100%",
+						height: "100%",
+						pointerEvents: "none",
+						zIndex: 1,
+						backgroundImage: `
+							linear-gradient(to right, rgba(0, 0, 0, 0.1) 1px, transparent 1px),
+							linear-gradient(to bottom, rgba(0, 0, 0, 0.1) 1px, transparent 1px)
+						`,
+						backgroundSize: `${gridCellWidth}px ${gridCellHeight}px`,
+					}}
+				/>
+			)}
+
 			{/* Component overlay */}
 			<Box
 				sx={{
@@ -304,6 +431,7 @@ export default function Canvas({
 					width: "100%",
 					height: "100%",
 					pointerEvents: selectedComponentType ? "auto" : "none",
+					zIndex: 2,
 				}}
 				onClick={handleOverlayClick}
 			>
@@ -313,6 +441,7 @@ export default function Canvas({
 						component={component}
 						onMouseDown={handleComponentMouseDown}
 						isDragging={draggedComponentId === component.id}
+						isSelected={selectedComponentId === component.id}
 					/>
 				))}
 			</Box>
