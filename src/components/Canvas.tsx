@@ -1,5 +1,5 @@
 import { Box } from "@mui/material";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CanvasComponent, ComponentType } from "../types/component";
 import ComponentRenderer from "./ComponentRenderer";
 
@@ -103,10 +103,27 @@ export default function Canvas({
 		[],
 	);
 
-	// Grid configuration: 12 columns
+	// Grid configuration: 12 columns, rows calculated to fit canvas
 	const gridColumns = 12;
-	const gridCellWidth = actualWidth / gridColumns;
-	const gridCellHeight = 40; // Row height in pixels
+	
+	// Calculate grid dimensions with useMemo to ensure consistency
+	// All columns will be exactly the same width, all rows exactly the same height
+	const { gridCellWidth, gridCellHeight } = useMemo(() => {
+		// Calculate cell width: divide canvas width by 12 columns, floor to ensure integer pixels
+		const cellWidth = Math.floor(actualWidth / gridColumns);
+		
+		// Calculate number of rows based on 40px base height
+		const rows = Math.max(1, Math.floor(actualHeight / 40));
+		
+		// Calculate cell height: divide canvas height by number of rows, floor to ensure integer pixels
+		// This ensures all rows are exactly the same height
+		const cellHeight = Math.floor(actualHeight / rows);
+		
+		return {
+			gridCellWidth: cellWidth,
+			gridCellHeight: cellHeight,
+		};
+	}, [actualWidth, actualHeight]);
 
 	// Measure container size and update canvas dimensions
 	useEffect(() => {
@@ -140,13 +157,13 @@ export default function Canvas({
 		(point: Point): Point => {
 			if (!snapToGrid) return point;
 
-			const cellWidth = actualWidth / gridColumns;
-			const cellHeight = 40;
-			const snappedX = Math.round(point.x / cellWidth) * cellWidth;
-			const snappedY = Math.round(point.y / cellHeight) * cellHeight;
+			// Use the calculated grid cell dimensions for consistency
+			// Round to nearest grid point
+			const snappedX = Math.round(point.x / gridCellWidth) * gridCellWidth;
+			const snappedY = Math.round(point.y / gridCellHeight) * gridCellHeight;
 			return { x: snappedX, y: snappedY };
 		},
-		[snapToGrid, actualWidth],
+		[snapToGrid, gridCellWidth, gridCellHeight],
 	);
 
 	// Handle drawing on canvas
