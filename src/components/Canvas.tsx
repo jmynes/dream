@@ -37,6 +37,8 @@ export default function Canvas({
 }: CanvasProps) {
 	const canvasRef = useRef<HTMLCanvasElement>(null);
 	const containerRef = useRef<HTMLDivElement>(null);
+	const [actualWidth, setActualWidth] = useState(width);
+	const [actualHeight, setActualHeight] = useState(height);
 	const [isDraggingPen, setIsDraggingPen] = useState(false);
 	const [lastPoint, setLastPoint] = useState<Point | null>(null);
 	const [draggedComponentId, setDraggedComponentId] = useState<string | null>(
@@ -103,21 +105,48 @@ export default function Canvas({
 
 	// Grid configuration: 12 columns
 	const gridColumns = 12;
-	const gridCellWidth = width / gridColumns;
+	const gridCellWidth = actualWidth / gridColumns;
 	const gridCellHeight = 40; // Row height in pixels
+
+	// Measure container size and update canvas dimensions
+	useEffect(() => {
+		const container = containerRef.current;
+		if (!container) return;
+
+		const updateSize = () => {
+			const rect = container.getBoundingClientRect();
+			setActualWidth(rect.width);
+			setActualHeight(rect.height);
+		};
+
+		// Initial size
+		updateSize();
+
+		// Use ResizeObserver to track size changes
+		const resizeObserver = new ResizeObserver(updateSize);
+		resizeObserver.observe(container);
+
+		// Also listen to window resize as fallback
+		window.addEventListener("resize", updateSize);
+
+		return () => {
+			resizeObserver.disconnect();
+			window.removeEventListener("resize", updateSize);
+		};
+	}, []);
 
 	// Snap point to grid
 	const snapToGridPoint = useCallback(
 		(point: Point): Point => {
 			if (!snapToGrid) return point;
 
-			const cellWidth = width / gridColumns;
+			const cellWidth = actualWidth / gridColumns;
 			const cellHeight = 40;
 			const snappedX = Math.round(point.x / cellWidth) * cellWidth;
 			const snappedY = Math.round(point.y / cellHeight) * cellHeight;
 			return { x: snappedX, y: snappedY };
 		},
-		[snapToGrid, width],
+		[snapToGrid, actualWidth],
 	);
 
 	// Handle drawing on canvas
@@ -449,14 +478,14 @@ export default function Canvas({
 		const ctx = canvas.getContext("2d");
 		if (!ctx) return;
 
-		// Set canvas size
-		canvas.width = width;
-		canvas.height = height;
+		// Set canvas size to match container
+		canvas.width = actualWidth;
+		canvas.height = actualHeight;
 
 		// Set default background
 		ctx.fillStyle = "#ffffff";
-		ctx.fillRect(0, 0, width, height);
-	}, [width, height]);
+		ctx.fillRect(0, 0, actualWidth, actualHeight);
+	}, [actualWidth, actualHeight]);
 
 	// Hide default cursor when showing brush preview
 	const cursor =
@@ -475,8 +504,8 @@ export default function Canvas({
 				borderRadius: 1,
 				overflow: "hidden",
 				cursor,
-				width,
-				height,
+				width: "100%",
+				height: "100%",
 			}}
 			onClick={(e) => {
 				handleContainerClick(e);
@@ -503,6 +532,8 @@ export default function Canvas({
 					top: 0,
 					left: 0,
 					display: "block",
+					width: "100%",
+					height: "100%",
 					pointerEvents:
 						(isDrawing || isEraser) && !selectedComponentType ? "auto" : "none",
 					cursor,

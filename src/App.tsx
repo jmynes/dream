@@ -81,10 +81,8 @@ function App() {
 						onComponentSelect={handleComponentSelect}
 						selectedComponentType={selectedComponentType}
 					/>
-					<Box sx={{ flex: 1, overflow: "hidden" }}>
+					<Box sx={{ flex: 1, overflow: "hidden", display: "flex" }}>
 						<Canvas
-							width={1200}
-							height={800}
 							penColor={penColor}
 							penSize={penSize}
 							isDrawing={isDrawing}
