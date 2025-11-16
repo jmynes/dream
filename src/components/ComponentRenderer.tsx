@@ -55,6 +55,7 @@ export default function ComponentRenderer({
 
 	const renderComponent = () => {
 		const widthProps = componentWidth ? { sx: { width: "100%" } } : {};
+		const centeredAlignment = { sx: { textAlign: "center" as const } };
 
 		switch (component.type) {
 			case "Button":
@@ -63,6 +64,7 @@ export default function ComponentRenderer({
 						variant="contained"
 						{...(component.props as object)}
 						{...widthProps}
+						{...centeredAlignment}
 					>
 						{(component.props?.text as string) || "Button"}
 					</Button>
@@ -74,12 +76,16 @@ export default function ComponentRenderer({
 						size="small"
 						{...(component.props as object)}
 						{...widthProps}
+						sx={{
+							...(widthProps.sx || {}),
+							"& input": { textAlign: "center" },
+						}}
 					/>
 				);
 			case "Card":
 				return (
 					<Card sx={{ width: "100%", minWidth: componentWidth || 200 }}>
-						<CardContent>
+						<CardContent sx={{ textAlign: "center" }}>
 							<Typography variant="body2">
 								{(component.props?.text as string) || "Card Content"}
 							</Typography>
@@ -92,6 +98,7 @@ export default function ComponentRenderer({
 						variant="body1"
 						{...(component.props as object)}
 						{...widthProps}
+						{...centeredAlignment}
 					>
 						{(component.props?.text as string) || "Typography"}
 					</Typography>
