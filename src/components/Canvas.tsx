@@ -51,6 +51,11 @@ export default function Canvas({
 	);
 	const [resizeStartX, setResizeStartX] = useState<number | null>(null);
 	const [resizeStartWidth, setResizeStartWidth] = useState<number | null>(null);
+	const [resizeStartY, setResizeStartY] = useState<number | null>(null);
+	const [resizeStartHeight, setResizeStartHeight] = useState<number | null>(null);
+	const [resizeDirection, setResizeDirection] = useState<"width" | "height" | null>(
+		null,
+	);
 	const [brushPosition, setBrushPosition] = useState<Point | null>(null);
 
 	const drawLine = useCallback(
@@ -185,6 +190,7 @@ export default function Canvas({
 					x: snappedPoint.x,
 					y: snappedPoint.y,
 					width: gridCellWidth,
+					height: gridCellHeight,
 					props: {},
 				};
 				onComponentsChange([...components, newComponent]);
@@ -215,6 +221,7 @@ export default function Canvas({
 					x: snappedPoint.x,
 					y: snappedPoint.y,
 					width: gridCellWidth,
+					height: gridCellHeight,
 					props: {},
 				};
 				onComponentsChange([...components, newComponent]);
@@ -246,18 +253,34 @@ export default function Canvas({
 			const component = components.find((c) => c.id === componentId);
 			if (!component) return;
 
-			// Check if clicking on resize handle (right edge)
+			// Check if clicking on resize handle (right edge or bottom edge)
 			const point = getPointFromEvent(e);
 			const componentWidth = component.width || 100; // Default width
+			const componentHeight = component.height || 40; // Default height
 			const handleRightEdge = component.x + componentWidth;
-			// Resize handle is 16px wide, positioned at right-8, so extends from right-8 to right+8
-			const isResizeHandle =
-				point.x >= handleRightEdge - 8 && point.x <= handleRightEdge + 8;
+			const handleBottomEdge = component.y + componentHeight;
+			// Resize handle is 16px wide/tall, positioned at edge-8, so extends from edge-8 to edge+8
+			const isWidthResizeHandle =
+				point.x >= handleRightEdge - 8 &&
+				point.x <= handleRightEdge + 8 &&
+				point.y >= component.y &&
+				point.y <= component.y + componentHeight;
+			const isHeightResizeHandle =
+				point.y >= handleBottomEdge - 8 &&
+				point.y <= handleBottomEdge + 8 &&
+				point.x >= component.x &&
+				point.x <= component.x + componentWidth;
 
-			if (isResizeHandle) {
+			if (isWidthResizeHandle) {
 				setResizingComponentId(componentId);
 				setResizeStartX(point.x);
 				setResizeStartWidth(componentWidth);
+				setResizeDirection("width");
+			} else if (isHeightResizeHandle) {
+				setResizingComponentId(componentId);
+				setResizeStartY(point.y);
+				setResizeStartHeight(componentHeight);
+				setResizeDirection("height");
 			} else {
 				setSelectedComponentId(componentId);
 				setDragOffset({
@@ -275,27 +298,50 @@ export default function Canvas({
 			const point = getPointFromEvent(e);
 
 			// Handle resizing
-			if (resizingComponentId && resizeStartX !== null && resizeStartWidth !== null) {
-				const deltaX = point.x - resizeStartX;
-				const newWidth = Math.max(50, resizeStartWidth + deltaX); // Minimum width
+			if (resizingComponentId && resizeDirection) {
+				if (resizeDirection === "width" && resizeStartX !== null && resizeStartWidth !== null) {
+					const deltaX = point.x - resizeStartX;
+					const newWidth = Math.max(50, resizeStartWidth + deltaX); // Minimum width
 
-				// Snap to grid columns
-				let snappedWidth = newWidth;
-				if (snapToGrid) {
-					const numColumns = Math.round(newWidth / gridCellWidth);
-					snappedWidth = numColumns * gridCellWidth;
+					// Snap to grid columns
+					let snappedWidth = newWidth;
+					if (snapToGrid) {
+						const numColumns = Math.round(newWidth / gridCellWidth);
+						snappedWidth = numColumns * gridCellWidth;
+					}
+
+					const updatedComponents = components.map((comp) =>
+						comp.id === resizingComponentId
+							? {
+									...comp,
+									width: snappedWidth,
+								}
+							: comp,
+					);
+					onComponentsChange(updatedComponents);
+					return;
+				} else if (resizeDirection === "height" && resizeStartY !== null && resizeStartHeight !== null) {
+					const deltaY = point.y - resizeStartY;
+					const newHeight = Math.max(30, resizeStartHeight + deltaY); // Minimum height
+
+					// Snap to grid rows
+					let snappedHeight = newHeight;
+					if (snapToGrid) {
+						const numRows = Math.round(newHeight / gridCellHeight);
+						snappedHeight = numRows * gridCellHeight;
+					}
+
+					const updatedComponents = components.map((comp) =>
+						comp.id === resizingComponentId
+							? {
+									...comp,
+									height: snappedHeight,
+								}
+							: comp,
+					);
+					onComponentsChange(updatedComponents);
+					return;
 				}
-
-				const updatedComponents = components.map((comp) =>
-					comp.id === resizingComponentId
-						? {
-								...comp,
-								width: snappedWidth,
-							}
-						: comp,
-				);
-				onComponentsChange(updatedComponents);
-				return;
 			}
 
 			// Handle dragging
@@ -319,10 +365,14 @@ export default function Canvas({
 		},
 		[
 			resizingComponentId,
+			resizeDirection,
 			resizeStartX,
 			resizeStartWidth,
+			resizeStartY,
+			resizeStartHeight,
 			snapToGrid,
 			gridCellWidth,
+			gridCellHeight,
 			draggedComponentId,
 			dragOffset,
 			components,
@@ -338,6 +388,9 @@ export default function Canvas({
 		setResizingComponentId(null);
 		setResizeStartX(null);
 		setResizeStartWidth(null);
+		setResizeStartY(null);
+		setResizeStartHeight(null);
+		setResizeDirection(null);
 	}, []);
 
 	// Handle clicking on canvas background to deselect
@@ -372,6 +425,7 @@ export default function Canvas({
 				x: snappedPoint.x,
 				y: snappedPoint.y,
 				width: gridCellWidth,
+				height: gridCellHeight,
 				props: {},
 			};
 			onComponentsChange([...components, newComponent]);

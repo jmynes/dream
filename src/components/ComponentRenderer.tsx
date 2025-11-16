@@ -26,6 +26,7 @@ export default function ComponentRenderer({
 	};
 
 	const componentWidth = component.width;
+	const componentHeight = component.height;
 
 	const containerStyle: React.CSSProperties = {
 		position: "absolute",
@@ -36,21 +37,34 @@ export default function ComponentRenderer({
 		zIndex: 10,
 		pointerEvents: "auto",
 		width: componentWidth ? `${componentWidth}px` : "auto",
+		height: componentHeight ? `${componentHeight}px` : "auto",
 	};
 
-	const resizeHandleStyle: React.CSSProperties = {
+	const resizeHandleBaseStyle: React.CSSProperties = {
 		position: "absolute",
-		right: -8,
-		top: "50%",
-		transform: "translateY(-50%)",
 		width: 16,
 		height: 16,
-		cursor: "ew-resize",
 		backgroundColor: isSelected ? "#1976d2" : "rgba(25, 118, 210, 0.5)",
 		border: "2px solid #fff",
 		borderRadius: "2px",
 		zIndex: 11,
 		boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+	};
+
+	const widthResizeHandleStyle: React.CSSProperties = {
+		...resizeHandleBaseStyle,
+		right: -8,
+		top: "50%",
+		transform: "translateY(-50%)",
+		cursor: "ew-resize",
+	};
+
+	const heightResizeHandleStyle: React.CSSProperties = {
+		...resizeHandleBaseStyle,
+		bottom: -8,
+		left: "50%",
+		transform: "translateX(-50%)",
+		cursor: "ns-resize",
 	};
 
 	const renderComponent = () => {
@@ -92,8 +106,8 @@ export default function ComponentRenderer({
 				);
 			case "Card":
 				return (
-					<Card sx={{ width: "100%", minWidth: componentWidth || 200 }}>
-						<CardContent sx={{ textAlign: "center" }}>
+					<Card sx={{ width: "100%", height: "100%", minWidth: componentWidth || 200 }}>
+						<CardContent sx={{ textAlign: "center", height: "100%" }}>
 							<Typography variant="body2">
 								{(component.props?.text as string) || "Card Content"}
 							</Typography>
@@ -121,8 +135,14 @@ export default function ComponentRenderer({
 		<div style={containerStyle} onMouseDown={handleMouseDown}>
 			{renderComponent()}
 			{isSelected && (
-				// biome-ignore lint/a11y/noStaticElementInteractions: Resize handle
-				<div style={resizeHandleStyle} onMouseDown={handleMouseDown} />
+				<>
+					{/* Width resize handle (right edge) */}
+					{/* biome-ignore lint/a11y/noStaticElementInteractions: Resize handle */}
+					<div style={widthResizeHandleStyle} onMouseDown={handleMouseDown} />
+					{/* Height resize handle (bottom edge) */}
+					{/* biome-ignore lint/a11y/noStaticElementInteractions: Resize handle */}
+					<div style={heightResizeHandleStyle} onMouseDown={handleMouseDown} />
+				</>
 			)}
 		</div>
 	);
