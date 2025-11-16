@@ -184,6 +184,7 @@ export default function Canvas({
 					type: selectedComponentType,
 					x: snappedPoint.x,
 					y: snappedPoint.y,
+					width: gridCellWidth,
 					props: {},
 				};
 				onComponentsChange([...components, newComponent]);
@@ -194,6 +195,7 @@ export default function Canvas({
 			selectedComponentType,
 			getPointFromEvent,
 			snapToGridPoint,
+			gridCellWidth,
 			components,
 			onComponentsChange,
 			onComponentPlaced,
@@ -212,6 +214,7 @@ export default function Canvas({
 					type: selectedComponentType,
 					x: snappedPoint.x,
 					y: snappedPoint.y,
+					width: gridCellWidth,
 					props: {},
 				};
 				onComponentsChange([...components, newComponent]);
@@ -222,6 +225,7 @@ export default function Canvas({
 			selectedComponentType,
 			getPointFromEvent,
 			snapToGridPoint,
+			gridCellWidth,
 			components,
 			onComponentsChange,
 			onComponentPlaced,
@@ -367,6 +371,7 @@ export default function Canvas({
 				type: componentType,
 				x: snappedPoint.x,
 				y: snappedPoint.y,
+				width: gridCellWidth,
 				props: {},
 			};
 			onComponentsChange([...components, newComponent]);
@@ -375,6 +380,7 @@ export default function Canvas({
 		[
 			getPointFromEvent,
 			snapToGridPoint,
+			gridCellWidth,
 			components,
 			onComponentsChange,
 			onComponentPlaced,
