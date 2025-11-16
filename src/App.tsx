@@ -3,6 +3,8 @@ import CssBaseline from "@mui/material/CssBaseline";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { useState } from "react";
 import Canvas from "./components/Canvas";
+import Footer from "./components/Footer";
+import RightSidebar from "./components/RightSidebar";
 import Sidebar from "./components/Sidebar";
 import Toolbar from "./components/Toolbar";
 import type { CanvasComponent, ComponentType } from "./types/component";
@@ -94,7 +96,9 @@ function App() {
 							snapToGrid={snapToGrid}
 						/>
 					</Box>
+					<RightSidebar />
 				</Box>
+				<Footer />
 			</Box>
 		</ThemeProvider>
 	);
