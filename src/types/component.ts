@@ -1,4 +1,16 @@
-export type ComponentType = "Button" | "TextField" | "Card" | "Typography";
+export type ComponentType =
+	| "Button"
+	| "TextField"
+	| "Card"
+	| "Typography"
+	| "Checkbox"
+	| "Switch"
+	| "Slider"
+	| "Chip"
+	| "Avatar"
+	| "Divider"
+	| "Paper"
+	| "Box";
 
 export interface CanvasComponent {
 	id: string;

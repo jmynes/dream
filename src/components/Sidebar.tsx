@@ -1,13 +1,19 @@
 import { Add as AddIcon } from "@mui/icons-material";
 import {
+	Avatar,
 	Box,
 	Button,
 	Card,
 	CardContent,
+	Checkbox,
+	Chip,
+	Divider,
 	List,
 	ListItem,
 	ListItemButton,
 	Paper,
+	Slider,
+	Switch,
 	TextField,
 	Typography,
 } from "@mui/material";
@@ -50,6 +56,62 @@ const componentItems: ComponentItem[] = [
 		type: "Typography",
 		label: "Typography",
 		preview: <Typography variant="body1">Typography</Typography>,
+	},
+	{
+		type: "Checkbox",
+		label: "Checkbox",
+		preview: <Checkbox defaultChecked />,
+	},
+	{
+		type: "Switch",
+		label: "Switch",
+		preview: <Switch defaultChecked />,
+	},
+	{
+		type: "Slider",
+		label: "Slider",
+		preview: <Slider defaultValue={50} sx={{ width: 120 }} />,
+	},
+	{
+		type: "Chip",
+		label: "Chip",
+		preview: <Chip label="Chip" />,
+	},
+	{
+		type: "Avatar",
+		label: "Avatar",
+		preview: <Avatar>A</Avatar>,
+	},
+	{
+		type: "Divider",
+		label: "Divider",
+		preview: <Divider sx={{ width: 120 }} />,
+	},
+	{
+		type: "Paper",
+		label: "Paper",
+		preview: (
+			<Paper sx={{ p: 2, minWidth: 120, textAlign: "center" }}>
+				<Typography variant="body2">Paper</Typography>
+			</Paper>
+		),
+	},
+	{
+		type: "Box",
+		label: "Box",
+		preview: (
+			<Box
+				sx={{
+					p: 2,
+					minWidth: 120,
+					border: "1px dashed",
+					borderColor: "divider",
+					textAlign: "center",
+				}}
+			>
+				<Typography variant="body2">Box</Typography>
+			</Box>
+		),
 	},
 ];
 

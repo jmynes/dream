@@ -1,7 +1,15 @@
 import {
+	Avatar,
+	Box,
 	Button,
 	Card,
 	CardContent,
+	Checkbox,
+	Chip,
+	Divider,
+	Paper,
+	Slider,
+	Switch,
 	TextField,
 	Typography,
 } from "@mui/material";
@@ -124,6 +132,150 @@ export default function ComponentRenderer({
 					>
 						{(component.props?.text as string) || "Typography"}
 					</Typography>
+				);
+			case "Checkbox":
+				return (
+					<Box
+						sx={{
+							display: "flex",
+							alignItems: "center",
+							justifyContent: "center",
+							width: "100%",
+							height: "100%",
+						}}
+					>
+						<Checkbox
+							{...(component.props as object)}
+							defaultChecked={component.props?.checked as boolean}
+						/>
+					</Box>
+				);
+			case "Switch":
+				return (
+					<Box
+						sx={{
+							display: "flex",
+							alignItems: "center",
+							justifyContent: "center",
+							width: "100%",
+							height: "100%",
+						}}
+					>
+						<Switch
+							{...(component.props as object)}
+							defaultChecked={component.props?.checked as boolean}
+						/>
+					</Box>
+				);
+			case "Slider":
+				return (
+					<Box
+						sx={{
+							display: "flex",
+							alignItems: "center",
+							justifyContent: "center",
+							width: "100%",
+							height: "100%",
+							px: 2,
+						}}
+					>
+						<Slider
+							{...(component.props as object)}
+							defaultValue={component.props?.value as number || 50}
+							sx={{ width: "100%" }}
+						/>
+					</Box>
+				);
+			case "Chip":
+				return (
+					<Box
+						sx={{
+							display: "flex",
+							alignItems: "center",
+							justifyContent: "center",
+							width: "100%",
+							height: "100%",
+						}}
+					>
+						<Chip
+							{...(component.props as object)}
+							label={(component.props?.label as string) || "Chip"}
+						/>
+					</Box>
+				);
+			case "Avatar":
+				return (
+					<Box
+						sx={{
+							display: "flex",
+							alignItems: "center",
+							justifyContent: "center",
+							width: "100%",
+							height: "100%",
+						}}
+					>
+						<Avatar
+							{...(component.props as object)}
+							sx={{ width: Math.min(componentWidth || 40, componentHeight || 40), height: Math.min(componentWidth || 40, componentHeight || 40) }}
+						>
+							{(component.props?.text as string) || "A"}
+						</Avatar>
+					</Box>
+				);
+			case "Divider":
+				return (
+					<Box
+						sx={{
+							display: "flex",
+							alignItems: "center",
+							width: "100%",
+							height: "100%",
+						}}
+					>
+						<Divider
+							{...(component.props as object)}
+							orientation={componentHeight && componentWidth && componentHeight > componentWidth ? "vertical" : "horizontal"}
+							sx={{ width: "100%" }}
+						/>
+					</Box>
+				);
+			case "Paper":
+				return (
+					<Paper
+						sx={{
+							width: "100%",
+							height: "100%",
+							display: "flex",
+							alignItems: "center",
+							justifyContent: "center",
+							...centeredAlignment.sx,
+						}}
+						{...(component.props as object)}
+					>
+						<Typography variant="body2">
+							{(component.props?.text as string) || "Paper"}
+						</Typography>
+					</Paper>
+				);
+			case "Box":
+				return (
+					<Box
+						sx={{
+							width: "100%",
+							height: "100%",
+							display: "flex",
+							alignItems: "center",
+							justifyContent: "center",
+							border: "1px dashed",
+							borderColor: "divider",
+							...centeredAlignment.sx,
+						}}
+						{...(component.props as object)}
+					>
+						<Typography variant="body2">
+							{(component.props?.text as string) || "Box"}
+						</Typography>
+					</Box>
 				);
 			default:
 				return null;
