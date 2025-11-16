@@ -51,6 +51,7 @@ export default function Canvas({
 	);
 	const [resizeStartX, setResizeStartX] = useState<number | null>(null);
 	const [resizeStartWidth, setResizeStartWidth] = useState<number | null>(null);
+	const [brushPosition, setBrushPosition] = useState<Point | null>(null);
 
 	const drawLine = useCallback(
 		(from: Point, to: Point) => {
@@ -125,6 +126,21 @@ export default function Canvas({
 		},
 		[isDrawing, isEraser, selectedComponentType, getPointFromEvent],
 	);
+
+	// Track mouse position for brush preview
+	const handleCanvasMouseMoveForBrush = useCallback(
+		(e: React.MouseEvent<HTMLCanvasElement>) => {
+			if ((isDrawing || isEraser) && !selectedComponentType) {
+				const point = getPointFromEvent(e);
+				setBrushPosition(point);
+			}
+		},
+		[isDrawing, isEraser, selectedComponentType, getPointFromEvent],
+	);
+
+	const handleCanvasMouseLeave = useCallback(() => {
+		setBrushPosition(null);
+	}, []);
 
 	const handleCanvasMouseMove = useCallback(
 		(e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -382,14 +398,13 @@ export default function Canvas({
 		ctx.fillRect(0, 0, width, height);
 	}, [width, height]);
 
+	// Hide default cursor when showing brush preview
 	const cursor =
-		isEraser
-			? "grab"
-			: isDrawing && !selectedComponentType
+		(isDrawing || isEraser) && !selectedComponentType
+			? "none"
+			: selectedComponentType
 				? "crosshair"
-				: selectedComponentType
-					? "crosshair"
-					: "default";
+				: "default";
 
 	return (
 		<Box
@@ -415,8 +430,12 @@ export default function Canvas({
 			<canvas
 				ref={canvasRef}
 				onMouseDown={handleCanvasMouseDown}
-				onMouseMove={handleCanvasMouseMove}
+				onMouseMove={(e) => {
+					handleCanvasMouseMove(e);
+					handleCanvasMouseMoveForBrush(e);
+				}}
 				onMouseUp={handleCanvasMouseUp}
+				onMouseLeave={handleCanvasMouseLeave}
 				onDragOver={handleDragOver}
 				onDrop={handleDrop}
 				style={{
@@ -426,6 +445,7 @@ export default function Canvas({
 					display: "block",
 					pointerEvents:
 						(isDrawing || isEraser) && !selectedComponentType ? "auto" : "none",
+					cursor,
 				}}
 			/>
 			{/* Grid overlay */}
@@ -448,6 +468,27 @@ export default function Canvas({
 				/>
 			)}
 
+			{/* Brush preview - shows brush size circle */}
+			{(isDrawing || isEraser) &&
+				!selectedComponentType &&
+				brushPosition && (
+					<Box
+						sx={{
+							position: "absolute",
+							left: brushPosition.x - penSize / 2,
+							top: brushPosition.y - penSize / 2,
+							width: penSize,
+							height: penSize,
+							border: "1px solid",
+							borderColor: isEraser ? "#f44336" : "#1976d2",
+							borderRadius: "50%",
+							pointerEvents: "none",
+							zIndex: 3,
+							boxShadow: "0 0 0 1px rgba(0,0,0,0.1)",
+						}}
+					/>
+				)}
+
 			{/* Component overlay */}
 			<Box
 				sx={{
@@ -458,8 +499,16 @@ export default function Canvas({
 					height: "100%",
 					pointerEvents: selectedComponentType || isEraser ? "auto" : "none",
 					zIndex: 2,
+					cursor,
 				}}
 				onClick={handleOverlayClick}
+				onMouseMove={(e) => {
+					if ((isDrawing || isEraser) && !selectedComponentType) {
+						const point = getPointFromEvent(e);
+						setBrushPosition(point);
+					}
+				}}
+				onMouseLeave={() => setBrushPosition(null)}
 			>
 				{components.map((component) => (
 					<ComponentRenderer
