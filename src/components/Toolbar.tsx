@@ -2,7 +2,6 @@ import {
 	GridOn as GridIcon,
 	Palette as ColorIcon,
 	Edit as PenIcon,
-	Delete as EraserIcon,
 } from "@mui/icons-material";
 import { Box, IconButton, Slider, Tooltip, Typography } from "@mui/material";
 
@@ -62,7 +61,7 @@ export default function Toolbar({
 						if (!isEraser) onDrawingToggle(false);
 					}}
 				>
-					<EraserIcon />
+					<i className="fas fa-eraser" style={{ fontSize: "1.25rem" }} />
 				</IconButton>
 			</Tooltip>
 
