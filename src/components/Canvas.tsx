@@ -14,6 +14,7 @@ interface CanvasProps {
 	penColor?: string;
 	penSize?: number;
 	isDrawing?: boolean;
+	isEraser?: boolean;
 	components: CanvasComponent[];
 	onComponentsChange: (components: CanvasComponent[]) => void;
 	selectedComponentType: ComponentType | null;
@@ -27,6 +28,7 @@ export default function Canvas({
 	penColor = "#000000",
 	penSize = 2,
 	isDrawing = true,
+	isEraser = false,
 	components,
 	onComponentsChange,
 	selectedComponentType,
@@ -58,7 +60,15 @@ export default function Canvas({
 			const ctx = canvas.getContext("2d");
 			if (!ctx) return;
 
-			ctx.strokeStyle = penColor;
+			if (isEraser) {
+				// Use destination-out composite for erasing
+				ctx.globalCompositeOperation = "destination-out";
+				ctx.strokeStyle = "rgba(0,0,0,1)";
+			} else {
+				ctx.globalCompositeOperation = "source-over";
+				ctx.strokeStyle = penColor;
+			}
+
 			ctx.lineWidth = penSize;
 			ctx.lineCap = "round";
 			ctx.lineJoin = "round";
@@ -68,7 +78,7 @@ export default function Canvas({
 			ctx.lineTo(to.x, to.y);
 			ctx.stroke();
 		},
-		[penColor, penSize],
+		[penColor, penSize, isEraser],
 	);
 
 	const getPointFromEvent = useCallback(
@@ -107,18 +117,23 @@ export default function Canvas({
 	// Handle drawing on canvas
 	const handleCanvasMouseDown = useCallback(
 		(e: React.MouseEvent<HTMLCanvasElement>) => {
-			if (!isDrawing || selectedComponentType) return;
+			if ((!isDrawing && !isEraser) || selectedComponentType) return;
 
 			const point = getPointFromEvent(e);
 			setLastPoint(point);
 			setIsDraggingPen(true);
 		},
-		[isDrawing, selectedComponentType, getPointFromEvent],
+		[isDrawing, isEraser, selectedComponentType, getPointFromEvent],
 	);
 
 	const handleCanvasMouseMove = useCallback(
 		(e: React.MouseEvent<HTMLCanvasElement>) => {
-			if (!isDraggingPen || !isDrawing || !lastPoint || selectedComponentType)
+			if (
+				!isDraggingPen ||
+				(!isDrawing && !isEraser) ||
+				!lastPoint ||
+				selectedComponentType
+			)
 				return;
 
 			const point = getPointFromEvent(e);
@@ -128,6 +143,7 @@ export default function Canvas({
 		[
 			isDraggingPen,
 			isDrawing,
+			isEraser,
 			lastPoint,
 			selectedComponentType,
 			getPointFromEvent,
@@ -200,6 +216,13 @@ export default function Canvas({
 	const handleComponentMouseDown = useCallback(
 		(e: React.MouseEvent, componentId: string) => {
 			e.stopPropagation();
+
+			// If eraser is active, remove the component
+			if (isEraser) {
+				onComponentsChange(components.filter((c) => c.id !== componentId));
+				return;
+			}
+
 			const component = components.find((c) => c.id === componentId);
 			if (!component) return;
 
@@ -224,7 +247,7 @@ export default function Canvas({
 				setDraggedComponentId(componentId);
 			}
 		},
-		[components, getPointFromEvent],
+		[components, isEraser, getPointFromEvent, onComponentsChange],
 	);
 
 	const handleContainerMouseMove = useCallback(
@@ -232,7 +255,11 @@ export default function Canvas({
 			const point = getPointFromEvent(e);
 
 			// Handle resizing
-			if (resizingComponentId && resizeStartX !== null && resizeStartWidth !== null) {
+			if (
+				resizingComponentId &&
+				resizeStartX !== null &&
+				resizeStartWidth !== null
+			) {
 				const deltaX = point.x - resizeStartX;
 				const newWidth = Math.max(50, resizeStartWidth + deltaX); // Minimum width
 
@@ -359,8 +386,9 @@ export default function Canvas({
 		ctx.fillRect(0, 0, width, height);
 	}, [width, height]);
 
-	const cursor =
-		isDrawing && !selectedComponentType
+	const cursor = isEraser
+		? "grab"
+		: isDrawing && !selectedComponentType
 			? "crosshair"
 			: selectedComponentType
 				? "crosshair"
@@ -399,7 +427,8 @@ export default function Canvas({
 					top: 0,
 					left: 0,
 					display: "block",
-					pointerEvents: isDrawing && !selectedComponentType ? "auto" : "none",
+					pointerEvents:
+						(isDrawing || isEraser) && !selectedComponentType ? "auto" : "none",
 				}}
 			/>
 			{/* Grid overlay */}
@@ -430,7 +459,7 @@ export default function Canvas({
 					left: 0,
 					width: "100%",
 					height: "100%",
-					pointerEvents: selectedComponentType ? "auto" : "none",
+					pointerEvents: selectedComponentType || isEraser ? "auto" : "none",
 					zIndex: 2,
 				}}
 				onClick={handleOverlayClick}

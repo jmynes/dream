@@ -17,6 +17,7 @@ function App() {
 	const [penColor, setPenColor] = useState("#000000");
 	const [penSize, setPenSize] = useState(2);
 	const [isDrawing, setIsDrawing] = useState(true);
+	const [isEraser, setIsEraser] = useState(false);
 	const [snapToGrid, setSnapToGrid] = useState(false);
 	const [components, setComponents] = useState<CanvasComponent[]>([]);
 	const [selectedComponentType, setSelectedComponentType] =
@@ -53,10 +54,19 @@ function App() {
 							setIsDrawing(drawing);
 							if (drawing) {
 								setSelectedComponentType(null);
+								setIsEraser(false);
 							}
 						}}
 						snapToGrid={snapToGrid}
 						onSnapToGridToggle={setSnapToGrid}
+						isEraser={isEraser}
+						onEraserToggle={(eraser) => {
+							setIsEraser(eraser);
+							if (eraser) {
+								setIsDrawing(false);
+								setSelectedComponentType(null);
+							}
+						}}
 					/>
 
 					<Box
@@ -77,6 +87,7 @@ function App() {
 								penColor={penColor}
 								penSize={penSize}
 								isDrawing={isDrawing}
+								isEraser={isEraser}
 								components={components}
 								onComponentsChange={setComponents}
 								selectedComponentType={selectedComponentType}

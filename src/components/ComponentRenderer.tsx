@@ -54,9 +54,7 @@ export default function ComponentRenderer({
 	};
 
 	const renderComponent = () => {
-		const widthProps = componentWidth
-			? { sx: { width: "100%" } }
-			: {};
+		const widthProps = componentWidth ? { sx: { width: "100%" } } : {};
 
 		switch (component.type) {
 			case "Button":
@@ -90,7 +88,11 @@ export default function ComponentRenderer({
 				);
 			case "Typography":
 				return (
-					<Typography variant="body1" {...(component.props as object)} {...widthProps}>
+					<Typography
+						variant="body1"
+						{...(component.props as object)}
+						{...widthProps}
+					>
 						{(component.props?.text as string) || "Typography"}
 					</Typography>
 				);

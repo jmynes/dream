@@ -2,6 +2,7 @@ import {
 	GridOn as GridIcon,
 	Palette as ColorIcon,
 	Edit as PenIcon,
+	Delete as EraserIcon,
 } from "@mui/icons-material";
 import { Box, IconButton, Slider, Tooltip, Typography } from "@mui/material";
 
@@ -14,6 +15,8 @@ interface ToolbarProps {
 	onDrawingToggle: (drawing: boolean) => void;
 	snapToGrid: boolean;
 	onSnapToGridToggle: (snap: boolean) => void;
+	isEraser: boolean;
+	onEraserToggle: (eraser: boolean) => void;
 }
 
 export default function Toolbar({
@@ -25,6 +28,8 @@ export default function Toolbar({
 	onDrawingToggle,
 	snapToGrid,
 	onSnapToGridToggle,
+	isEraser,
+	onEraserToggle,
 }: ToolbarProps) {
 	return (
 		<Box
@@ -40,9 +45,24 @@ export default function Toolbar({
 			<Tooltip title="Pen Tool">
 				<IconButton
 					color={isDrawing ? "primary" : "default"}
-					onClick={() => onDrawingToggle(!isDrawing)}
+					onClick={() => {
+						onDrawingToggle(!isDrawing);
+						if (!isDrawing) onEraserToggle(false);
+					}}
 				>
 					<PenIcon />
+				</IconButton>
+			</Tooltip>
+
+			<Tooltip title="Eraser Tool">
+				<IconButton
+					color={isEraser ? "primary" : "default"}
+					onClick={() => {
+						onEraserToggle(!isEraser);
+						if (!isEraser) onDrawingToggle(false);
+					}}
+				>
+					<EraserIcon />
 				</IconButton>
 			</Tooltip>
 
