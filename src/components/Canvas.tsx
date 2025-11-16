@@ -504,6 +504,34 @@ export default function Canvas({
 		ctx.fillRect(0, 0, actualWidth, actualHeight);
 	}, [actualWidth, actualHeight]);
 
+	// Handle keyboard events for deleting selected components
+	useEffect(() => {
+		const handleKeyDown = (e: KeyboardEvent) => {
+			// Only handle if a component is selected and key is Backspace or Delete
+			if (
+				selectedComponentId &&
+				(e.key === "Backspace" || e.key === "Delete")
+			) {
+				// Prevent default browser behavior (e.g., going back in history)
+				e.preventDefault();
+
+				// Remove the selected component
+				onComponentsChange(
+					components.filter((c) => c.id !== selectedComponentId),
+				);
+				setSelectedComponentId(null);
+			}
+		};
+
+		// Add event listener
+		window.addEventListener("keydown", handleKeyDown);
+
+		// Cleanup
+		return () => {
+			window.removeEventListener("keydown", handleKeyDown);
+		};
+	}, [selectedComponentId, components, onComponentsChange]);
+
 	// Hide default cursor when showing brush preview
 	const cursor =
 		(isDrawing || isEraser) && !selectedComponentType
