@@ -633,7 +633,7 @@ export default function Canvas({
 					left: 0,
 					width: "100%",
 					height: "100%",
-					pointerEvents: selectedComponentType || isEraser ? "auto" : "none",
+					pointerEvents: selectedComponentType ? "auto" : "none",
 					zIndex: 2,
 					cursor,
 				}}
