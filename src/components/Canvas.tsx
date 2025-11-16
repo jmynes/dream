@@ -255,11 +255,7 @@ export default function Canvas({
 			const point = getPointFromEvent(e);
 
 			// Handle resizing
-			if (
-				resizingComponentId &&
-				resizeStartX !== null &&
-				resizeStartWidth !== null
-			) {
+			if (resizingComponentId && resizeStartX !== null && resizeStartWidth !== null) {
 				const deltaX = point.x - resizeStartX;
 				const newWidth = Math.max(50, resizeStartWidth + deltaX); // Minimum width
 
@@ -386,13 +382,14 @@ export default function Canvas({
 		ctx.fillRect(0, 0, width, height);
 	}, [width, height]);
 
-	const cursor = isEraser
-		? "grab"
-		: isDrawing && !selectedComponentType
-			? "crosshair"
-			: selectedComponentType
+	const cursor =
+		isEraser
+			? "grab"
+			: isDrawing && !selectedComponentType
 				? "crosshair"
-				: "default";
+				: selectedComponentType
+					? "crosshair"
+					: "default";
 
 	return (
 		<Box
