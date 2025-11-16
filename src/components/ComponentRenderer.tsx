@@ -58,17 +58,25 @@ export default function ComponentRenderer({
 		const centeredAlignment = { sx: { textAlign: "center" as const } };
 
 		switch (component.type) {
-			case "Button":
+			case "Button": {
+				const { sx: propsSx, ...otherProps } = (component.props || {}) as {
+					sx?: unknown;
+					[key: string]: unknown;
+				};
 				return (
 					<Button
 						variant="contained"
-						{...(component.props as object)}
-						{...widthProps}
-						{...centeredAlignment}
+						{...otherProps}
+						sx={{
+							...(widthProps.sx || {}),
+							...(centeredAlignment.sx || {}),
+							...(propsSx as object || {}),
+						}}
 					>
 						{(component.props?.text as string) || "Button"}
 					</Button>
 				);
+			}
 			case "TextField":
 				return (
 					<TextField
