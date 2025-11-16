@@ -18,7 +18,7 @@ function App() {
 	const [penSize, setPenSize] = useState(2);
 	const [isDrawing, setIsDrawing] = useState(true);
 	const [isEraser, setIsEraser] = useState(false);
-	const [snapToGrid, setSnapToGrid] = useState(false);
+	const [snapToGrid, setSnapToGrid] = useState(true);
 	const [components, setComponents] = useState<CanvasComponent[]>([]);
 	const [selectedComponentType, setSelectedComponentType] =
 		useState<ComponentType | null>(null);
