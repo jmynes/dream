@@ -210,6 +210,34 @@ export default function Canvas({
 		setDragOffset(null);
 	}, []);
 
+	// Handle drag and drop from sidebar
+	const handleDragOver = useCallback((e: React.DragEvent) => {
+		e.preventDefault();
+		e.dataTransfer.dropEffect = "copy";
+	}, []);
+
+	const handleDrop = useCallback(
+		(e: React.DragEvent) => {
+			e.preventDefault();
+			const componentType = e.dataTransfer.getData(
+				"componentType",
+			) as ComponentType;
+			if (!componentType) return;
+
+			const point = getPointFromEvent(e);
+			const newComponent: CanvasComponent = {
+				id: `component-${Date.now()}`,
+				type: componentType,
+				x: point.x,
+				y: point.y,
+				props: {},
+			};
+			onComponentsChange([...components, newComponent]);
+			onComponentPlaced();
+		},
+		[getPointFromEvent, components, onComponentsChange, onComponentPlaced],
+	);
+
 	// Initialize canvas
 	useEffect(() => {
 		const canvas = canvasRef.current;
@@ -249,12 +277,16 @@ export default function Canvas({
 			onClick={handleContainerClick}
 			onMouseMove={handleContainerMouseMove}
 			onMouseUp={handleContainerMouseUp}
+			onDragOver={handleDragOver}
+			onDrop={handleDrop}
 		>
 			<canvas
 				ref={canvasRef}
 				onMouseDown={handleCanvasMouseDown}
 				onMouseMove={handleCanvasMouseMove}
 				onMouseUp={handleCanvasMouseUp}
+				onDragOver={handleDragOver}
+				onDrop={handleDrop}
 				style={{
 					position: "absolute",
 					top: 0,

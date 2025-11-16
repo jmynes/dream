@@ -71,7 +71,7 @@ export default function Sidebar({
 				Components
 			</Typography>
 			<Typography variant="caption" color="text.secondary" gutterBottom>
-				Click to add to canvas
+				Click or drag to add to canvas
 			</Typography>
 			<List>
 				{componentItems.map((item) => (
@@ -79,6 +79,11 @@ export default function Sidebar({
 						<ListItemButton
 							selected={selectedComponentType === item.type}
 							onClick={() => onComponentSelect(item.type)}
+							draggable
+							onDragStart={(e) => {
+								e.dataTransfer.setData("componentType", item.type);
+								e.dataTransfer.effectAllowed = "copy";
+							}}
 							sx={{
 								flexDirection: "column",
 								alignItems: "flex-start",
@@ -88,8 +93,12 @@ export default function Sidebar({
 										? "primary.main"
 										: "divider",
 								borderRadius: 1,
+								cursor: "grab",
 								"&:hover": {
 									borderColor: "primary.main",
+								},
+								"&:active": {
+									cursor: "grabbing",
 								},
 							}}
 						>
