@@ -65,6 +65,7 @@ export default function Sidebar({
         padding: 2,
         borderRadius: 1,
         overflow: "auto",
+        userSelect: "none",
       }}
     >
       <Typography variant="h6" gutterBottom>

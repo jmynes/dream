@@ -10,6 +10,7 @@ export default function Footer() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
+        userSelect: "none",
       }}
     >
       <Typography variant="caption" color="text.secondary">
