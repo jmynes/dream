@@ -136,20 +136,25 @@ const getComponentItems = (componentColor: string): ComponentItem[] => {
       type: "Checkbox",
       label: "Checkbox",
       preview: (
-        <Checkbox 
-          defaultChecked 
-          sx={{ 
-            color: componentColor,
-            "&.Mui-checked": { 
-              color: componentColor,
-            },
-            "& .MuiSvgIcon-root": {
-              color: componentColor,
-            },
-            "&.Mui-checked .MuiSvgIcon-root": {
-              color: componentColor,
-            },
-          }} 
+        <FormControlLabel
+          control={
+            <Checkbox 
+              defaultChecked 
+              sx={{ 
+                color: componentColor,
+                "&.Mui-checked": { 
+                  color: componentColor,
+                },
+                "& .MuiSvgIcon-root": {
+                  color: componentColor,
+                },
+                "&.Mui-checked .MuiSvgIcon-root": {
+                  color: componentColor,
+                },
+              }} 
+            />
+          }
+          label="Checkbox"
         />
       ),
     },
