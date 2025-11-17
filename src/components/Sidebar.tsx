@@ -44,7 +44,8 @@ interface SidebarProps {
   onUrlBarToggle: (show: boolean) => void;
   showBookmarkBar: boolean;
   onBookmarkBarToggle: (show: boolean) => void;
-  onAllBrowserUIToggle: (show: boolean) => void;
+  isBrowserUIEnabled: boolean;
+  onBrowserUIEnabledToggle: (enabled: boolean) => void;
   isMacOSStyle: boolean;
   onMacOSStyleToggle: (isMacOS: boolean) => void;
 }
@@ -74,7 +75,8 @@ export default function Sidebar({
   onUrlBarToggle,
   showBookmarkBar,
   onBookmarkBarToggle,
-  onAllBrowserUIToggle,
+  isBrowserUIEnabled,
+  onBrowserUIEnabledToggle,
   isMacOSStyle,
   onMacOSStyleToggle,
 }: SidebarProps) {
@@ -270,8 +272,8 @@ export default function Sidebar({
           <WebIcon />
           <Typography variant="h6">Browser UI</Typography>
           <Switch
-            checked={showTitleBar && showUrlBar && showBookmarkBar}
-            onChange={(e) => onAllBrowserUIToggle(e.target.checked)}
+            checked={isBrowserUIEnabled}
+            onChange={(e) => onBrowserUIEnabledToggle(e.target.checked)}
             size="small"
           />
         </Box>
@@ -280,6 +282,7 @@ export default function Sidebar({
             <Switch
               checked={showTitleBar}
               onChange={(e) => onTitleBarToggle(e.target.checked)}
+              disabled={!isBrowserUIEnabled}
               size="small"
             />
           }
@@ -290,6 +293,7 @@ export default function Sidebar({
             <Switch
               checked={showUrlBar}
               onChange={(e) => onUrlBarToggle(e.target.checked)}
+              disabled={!isBrowserUIEnabled}
               size="small"
             />
           }
@@ -300,6 +304,7 @@ export default function Sidebar({
             <Switch
               checked={showBookmarkBar}
               onChange={(e) => onBookmarkBarToggle(e.target.checked)}
+              disabled={!isBrowserUIEnabled}
               size="small"
             />
           }
@@ -310,6 +315,7 @@ export default function Sidebar({
             <Switch
               checked={isMacOSStyle}
               onChange={(e) => onMacOSStyleToggle(e.target.checked)}
+              disabled={!isBrowserUIEnabled}
               size="small"
             />
           }

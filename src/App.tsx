@@ -29,6 +29,7 @@ function App() {
   const [showTitleBar, setShowTitleBar] = useState(false);
   const [showUrlBar, setShowUrlBar] = useState(false);
   const [showBookmarkBar, setShowBookmarkBar] = useState(false);
+  const [isBrowserUIEnabled, setIsBrowserUIEnabled] = useState(false);
   const [isMacOSStyle, setIsMacOSStyle] = useState(false);
   const [components, setComponents] = useState<CanvasComponent[]>([]);
   const [selectedComponentType, setSelectedComponentType] =
@@ -287,11 +288,8 @@ function App() {
             onUrlBarToggle={setShowUrlBar}
             showBookmarkBar={showBookmarkBar}
             onBookmarkBarToggle={setShowBookmarkBar}
-            onAllBrowserUIToggle={(show) => {
-              setShowTitleBar(show);
-              setShowUrlBar(show);
-              setShowBookmarkBar(show);
-            }}
+            isBrowserUIEnabled={isBrowserUIEnabled}
+            onBrowserUIEnabledToggle={setIsBrowserUIEnabled}
             isMacOSStyle={isMacOSStyle}
             onMacOSStyleToggle={setIsMacOSStyle}
           />
@@ -314,6 +312,7 @@ function App() {
               showTitleBar={showTitleBar}
               showUrlBar={showUrlBar}
               showBookmarkBar={showBookmarkBar}
+              isBrowserUIEnabled={isBrowserUIEnabled}
               isMacOSStyle={isMacOSStyle}
               resizeMode={resizeMode}
             />

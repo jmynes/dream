@@ -42,6 +42,7 @@ interface CanvasProps {
   showTitleBar?: boolean;
   showUrlBar?: boolean;
   showBookmarkBar?: boolean;
+  isBrowserUIEnabled?: boolean;
   isMacOSStyle?: boolean;
 }
 
@@ -65,6 +66,7 @@ export default function Canvas({
   showTitleBar = false,
   showUrlBar = false,
   showBookmarkBar = false,
+  isBrowserUIEnabled = false,
   isMacOSStyle = false,
 }: CanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -596,12 +598,14 @@ export default function Canvas({
         }}
       />
 
-      <BrowserUI
-        showTitleBar={showTitleBar}
-        showUrlBar={showUrlBar}
-        showBookmarkBar={showBookmarkBar}
-        isMacOSStyle={isMacOSStyle}
-      />
+      {isBrowserUIEnabled && (
+        <BrowserUI
+          showTitleBar={showTitleBar}
+          showUrlBar={showUrlBar}
+          showBookmarkBar={showBookmarkBar}
+          isMacOSStyle={isMacOSStyle}
+        />
+      )}
 
       <GridOverlay
         snapToGrid={snapToGrid}
