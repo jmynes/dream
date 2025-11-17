@@ -82,6 +82,8 @@ export default function Canvas({
 		width: number;
 		height: number;
 	} | null>(null);
+	const [selectionBoxStart, setSelectionBoxStart] = useState<Point | null>(null);
+	const [selectionBoxEnd, setSelectionBoxEnd] = useState<Point | null>(null);
 
 	// Save canvas state as base64 image
 	const saveCanvasState = useCallback(() => {
@@ -875,6 +877,13 @@ export default function Canvas({
 				}
 			}
 
+			// Handle selection box dragging in cursor mode
+			const isCursorMode = !isDrawing && !isEraser && !isThinkingPen && !selectedComponentType;
+			if (isCursorMode && selectionBoxStart && !draggedComponentId && !resizingComponentId) {
+				setSelectionBoxEnd(point);
+				return;
+			}
+
 			// Handle dragging
 			if (!draggedComponentId || !dragOffset) return;
 
@@ -895,6 +904,10 @@ export default function Canvas({
 			onComponentsChange(updatedComponents);
 		},
 		[
+			isDrawing,
+			isEraser,
+			isThinkingPen,
+			selectedComponentType,
 			resizingComponentId,
 			resizeDirection,
 			resizeStartX,
@@ -907,13 +920,56 @@ export default function Canvas({
 			draggedComponentId,
 			dragOffset,
 			components,
+			selectionBoxStart,
 			getPointFromEvent,
 			snapToGridPoint,
 			onComponentsChange,
 		],
 	);
 
+	const handleContainerMouseDown = useCallback(
+		(e: React.MouseEvent<HTMLDivElement>) => {
+			// Start selection box in cursor mode when clicking on background (not on components)
+			const isCursorMode = !isDrawing && !isEraser && !isThinkingPen && !selectedComponentType;
+			// Only start selection box if clicking directly on the container (background), not on any child elements
+			if (isCursorMode && e.target === e.currentTarget) {
+				// Make sure we're not clicking on a component or the overlay
+				const point = getPointFromEvent(e);
+				setSelectionBoxStart(point);
+				setSelectionBoxEnd(point);
+				setSelectedComponentId(null);
+			}
+		},
+		[isDrawing, isEraser, isThinkingPen, selectedComponentType, getPointFromEvent],
+	);
+
 	const handleContainerMouseUp = useCallback(() => {
+		// End selection box and select components within it
+		if (selectionBoxStart && selectionBoxEnd) {
+			const minX = Math.min(selectionBoxStart.x, selectionBoxEnd.x);
+			const maxX = Math.max(selectionBoxStart.x, selectionBoxEnd.x);
+			const minY = Math.min(selectionBoxStart.y, selectionBoxEnd.y);
+			const maxY = Math.max(selectionBoxStart.y, selectionBoxEnd.y);
+
+			// Find components that are within the selection box
+			const selectedComponents = components.filter((comp) => {
+				const compRight = comp.x + (comp.width || 100);
+				const compBottom = comp.y + (comp.height || 40);
+				return (
+					comp.x < maxX &&
+					compRight > minX &&
+					comp.y < maxY &&
+					compBottom > minY
+				);
+			});
+
+			// Select the first component if any are in the box (for now, just single selection)
+			// Could extend to multi-selection later
+			if (selectedComponents.length > 0) {
+				setSelectedComponentId(selectedComponents[0].id);
+			}
+		}
+
 		setDraggedComponentId(null);
 		setDragOffset(null);
 		setResizingComponentId(null);
@@ -922,7 +978,9 @@ export default function Canvas({
 		setResizeStartY(null);
 		setResizeStartHeight(null);
 		setResizeDirection(null);
-	}, []);
+		setSelectionBoxStart(null);
+		setSelectionBoxEnd(null);
+	}, [selectionBoxStart, selectionBoxEnd, components]);
 
 	// Handle clicking on canvas background to deselect
 	const handleCanvasBackgroundClick = useCallback(
@@ -1200,6 +1258,7 @@ export default function Canvas({
 				width: "100%",
 				height: "100%",
 			}}
+			onMouseDown={handleContainerMouseDown}
 			onClick={(e) => {
 				handleContainerClick(e);
 				handleCanvasBackgroundClick(e);
@@ -1279,6 +1338,24 @@ export default function Canvas({
 					/>
 				)}
 
+			{/* Selection box - dashed rectangle in cursor mode */}
+			{selectionBoxStart && selectionBoxEnd && (
+				<Box
+					sx={{
+						position: "absolute",
+						left: Math.min(selectionBoxStart.x, selectionBoxEnd.x),
+						top: Math.min(selectionBoxStart.y, selectionBoxEnd.y),
+						width: Math.abs(selectionBoxEnd.x - selectionBoxStart.x),
+						height: Math.abs(selectionBoxEnd.y - selectionBoxStart.y),
+						border: "2px dashed",
+						borderColor: "#1976d2",
+						backgroundColor: "rgba(25, 118, 210, 0.1)",
+						pointerEvents: "none",
+						zIndex: 4,
+					}}
+				/>
+			)}
+
 			{/* Component overlay */}
 			<Box
 				sx={{
@@ -1292,8 +1369,25 @@ export default function Canvas({
 					zIndex: 2,
 					cursor,
 				}}
-				onClick={handleOverlayClick}
+				onMouseDown={(e) => {
+					// Start selection box in cursor mode when clicking on overlay background
+					const isCursorMode = !isDrawing && !isEraser && !isThinkingPen && !selectedComponentType;
+					if (isCursorMode && e.target === e.currentTarget) {
+						const point = getPointFromEvent(e);
+						setSelectionBoxStart(point);
+						setSelectionBoxEnd(point);
+						setSelectedComponentId(null);
+					}
+				}}
 				onMouseMove={(e) => {
+					// Handle selection box dragging in cursor mode
+					// Allow dragging even when mouse moves over components
+					const isCursorMode = !isDrawing && !isEraser && !isThinkingPen && !selectedComponentType;
+					if (isCursorMode && selectionBoxStart && !draggedComponentId && !resizingComponentId) {
+						const point = getPointFromEvent(e);
+						setSelectionBoxEnd(point);
+					}
+					// Handle brush preview for drawing tools
 					if ((isDrawing || isEraser || isThinkingPen) && !selectedComponentType) {
 						const point = getPointFromEvent(e);
 						// Throttle updates using requestAnimationFrame
@@ -1306,12 +1400,47 @@ export default function Canvas({
 						});
 					}
 				}}
+				onMouseUp={() => {
+					// End selection box when releasing (can be anywhere, not just on overlay)
+					if (selectionBoxStart && selectionBoxEnd) {
+						const minX = Math.min(selectionBoxStart.x, selectionBoxEnd.x);
+						const maxX = Math.max(selectionBoxStart.x, selectionBoxEnd.x);
+						const minY = Math.min(selectionBoxStart.y, selectionBoxEnd.y);
+						const maxY = Math.max(selectionBoxStart.y, selectionBoxEnd.y);
+
+						// Find components that are within the selection box
+						const selectedComponents = components.filter((comp) => {
+							const compRight = comp.x + (comp.width || 100);
+							const compBottom = comp.y + (comp.height || 40);
+							return (
+								comp.x < maxX &&
+								compRight > minX &&
+								comp.y < maxY &&
+								compBottom > minY
+							);
+						});
+
+						// Select the first component if any are in the box
+						if (selectedComponents.length > 0) {
+							setSelectedComponentId(selectedComponents[0].id);
+						}
+
+						setSelectionBoxStart(null);
+						setSelectionBoxEnd(null);
+					}
+				}}
+				onClick={handleOverlayClick}
 				onMouseLeave={() => {
 					if (brushAnimationFrameRef.current !== null) {
 						cancelAnimationFrame(brushAnimationFrameRef.current);
 						brushAnimationFrameRef.current = null;
 					}
 					setBrushPosition(null);
+					// Clear selection box if mouse leaves while dragging
+					if (selectionBoxStart && selectionBoxEnd) {
+						setSelectionBoxStart(null);
+						setSelectionBoxEnd(null);
+					}
 				}}
 			>
 				{components.map((component) => (
