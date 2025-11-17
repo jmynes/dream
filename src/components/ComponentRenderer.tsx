@@ -75,6 +75,23 @@ export default function ComponentRenderer({
     cursor: "ns-resize",
   };
 
+  // Helper function to determine if a color is dark (for text contrast)
+  const isDarkColor = (color: string): boolean => {
+    // Convert hex to RGB
+    const hex = color.replace("#", "");
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    // Calculate luminance
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance < 0.5;
+  };
+
+  // Helper to get text color for filled components
+  const getTextColorForFilled = (bgColor: string): string => {
+    return isDarkColor(bgColor) ? "#ffffff" : "#000000";
+  };
+
   const renderComponent = () => {
     const widthProps = componentWidth ? { sx: { width: "100%" } } : {};
     const heightProps = componentHeight ? { sx: { height: "100%" } } : {};
@@ -96,6 +113,7 @@ export default function ComponentRenderer({
               ...(heightProps.sx || {}),
               ...(centeredAlignment.sx || {}),
               backgroundColor: componentColor,
+              color: getTextColorForFilled(componentColor),
               "&:hover": { backgroundColor: componentColor },
               ...((propsSx as object) || {}),
             }}
@@ -113,7 +131,13 @@ export default function ComponentRenderer({
             {...widthProps}
             sx={{
               ...(widthProps.sx || {}),
-              "& input": { textAlign: "center" },
+              "& input": { textAlign: "center", color: componentColor },
+              "& label": { color: componentColor },
+              "& .MuiOutlinedInput-root": {
+                "& fieldset": { borderColor: componentColor },
+                "&:hover fieldset": { borderColor: componentColor },
+                "&.Mui-focused fieldset": { borderColor: componentColor },
+              },
             }}
           />
         );
@@ -127,8 +151,16 @@ export default function ComponentRenderer({
               border: `2px solid ${componentColor}`,
             }}
           >
-            <CardContent sx={{ textAlign: "center", height: "100%" }}>
-              <Typography variant="body2">
+            <CardContent
+              sx={{
+                textAlign: "center",
+                height: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Typography variant="body2" sx={{ color: componentColor }}>
                 {(component.props?.text as string) || "Card Content"}
               </Typography>
             </CardContent>
@@ -222,7 +254,10 @@ export default function ComponentRenderer({
             <Chip
               {...(component.props as object)}
               label={(component.props?.label as string) || "Chip"}
-              sx={{ backgroundColor: componentColor, color: "#fff" }}
+              sx={{
+                backgroundColor: componentColor,
+                color: getTextColorForFilled(componentColor),
+              }}
             />
           </Box>
         );
@@ -243,6 +278,7 @@ export default function ComponentRenderer({
                 width: Math.min(componentWidth || 40, componentHeight || 40),
                 height: Math.min(componentWidth || 40, componentHeight || 40),
                 bgcolor: componentColor,
+                color: getTextColorForFilled(componentColor),
               }}
             >
               {(component.props?.text as string) || "A"}
@@ -290,7 +326,10 @@ export default function ComponentRenderer({
             }}
             {...(component.props as object)}
           >
-            <Typography variant="body2">
+            <Typography
+              variant="body2"
+              sx={{ color: getTextColorForFilled(componentColor) }}
+            >
               {(component.props?.text as string) || "Paper"}
             </Typography>
           </Paper>
