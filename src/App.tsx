@@ -25,12 +25,12 @@ function App() {
   const [isEraser, setIsEraser] = useState(false);
   const [isMagicWand, setIsMagicWand] = useState(false);
   const [snapToGrid, setSnapToGrid] = useState(true);
-  const [resizeMode, setResizeMode] = useState<"relative" | "clone">(
+  const [resizeMode, setResizeMode] = useState<"relative" | "match">(
     "relative",
   );
-  const [showTitleBar, setShowTitleBar] = useState(false);
-  const [showUrlBar, setShowUrlBar] = useState(false);
-  const [showBookmarkBar, setShowBookmarkBar] = useState(false);
+  const [showTitleBar, setShowTitleBar] = useState(true);
+  const [showUrlBar, setShowUrlBar] = useState(true);
+  const [showBookmarkBar, setShowBookmarkBar] = useState(true);
   const [isBrowserUIEnabled, setIsBrowserUIEnabled] = useState(false);
   const [isMacOSStyle, setIsMacOSStyle] = useState(false);
   const [components, setComponents] = useState<CanvasComponent[]>([]);

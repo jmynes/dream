@@ -28,6 +28,7 @@ export default function MenuBar({
   canUndo,
   canRedo,
 }: MenuBarProps) {
+  const tooltipSlotProps = { tooltip: { sx: { fontSize: "0.85rem" } } };
   const [fileMenuAnchor, setFileMenuAnchor] = useState<null | HTMLElement>(
     null,
   );
@@ -180,7 +181,7 @@ export default function MenuBar({
 
       <Box sx={{ flex: 1 }} />
 
-      <Tooltip title="Undo (Ctrl+Z / Cmd+Z)">
+      <Tooltip title="Undo (Ctrl+Z / Cmd+Z)" slotProps={tooltipSlotProps}>
         <span style={{ display: "inline-flex" }}>
           <IconButton
             disabled={!canUndo}
@@ -194,7 +195,7 @@ export default function MenuBar({
         </span>
       </Tooltip>
 
-      <Tooltip title="Redo (Ctrl+Y / Cmd+Y)">
+      <Tooltip title="Redo (Ctrl+Y / Cmd+Y)" slotProps={tooltipSlotProps}>
         <span style={{ display: "inline-flex" }}>
           <IconButton
             disabled={!canRedo}
@@ -207,7 +208,7 @@ export default function MenuBar({
         </span>
       </Tooltip>
 
-      <Tooltip title="Delete Everything">
+      <Tooltip title="Delete Everything" slotProps={tooltipSlotProps}>
         <IconButton
           color="error"
           onClick={() => {

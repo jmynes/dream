@@ -9,7 +9,7 @@ interface UseComponentDragResizeProps {
   snapToGrid: boolean;
   gridCellWidth: number;
   gridCellHeight: number;
-  resizeMode: "relative" | "clone";
+  resizeMode: "relative" | "match";
   snapToGridPoint: (point: Point) => Point;
 }
 
@@ -311,8 +311,8 @@ export function useComponentDragResize({
             const initialState = initialSelectedComponentStates.get(comp.id);
             if (!initialState) return comp;
 
-            if (resizeMode === "clone") {
-              // In clone mode, all selected components match the resized component's dimensions
+            if (resizeMode === "match") {
+              // In match mode, all selected components match the resized component's dimensions
               return {
                 ...comp,
                 width: snappedWidth,

@@ -43,8 +43,8 @@ interface ToolsBarProps {
   onMagicWandToggle: (magicWand: boolean) => void;
   onCursorMode: () => void;
   isCursorMode: boolean;
-  resizeMode: "relative" | "clone";
-  onResizeModeChange: (mode: "relative" | "clone") => void;
+  resizeMode: "relative" | "match";
+  onResizeModeChange: (mode: "relative" | "match") => void;
   showTitleBar: boolean;
   onTitleBarToggle: (show: boolean) => void;
   showUrlBar: boolean;
@@ -89,6 +89,7 @@ export default function ToolsBar({
   isMacOSStyle,
   onMacOSStyleToggle,
 }: ToolsBarProps) {
+  const tooltipSlotProps = { tooltip: { sx: { fontSize: "0.85rem" } } };
   // State for color picker popovers
   const [componentColorAnchor, setComponentColorAnchor] = useState<HTMLElement | null>(null);
   const [penColorAnchor, setPenColorAnchor] = useState<HTMLElement | null>(null);
@@ -210,7 +211,10 @@ export default function ToolsBar({
             Selection Tools
           </Typography>
           <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-            <Tooltip title="Cursor Mode - Select and move components">
+            <Tooltip
+              title="Cursor Mode - Select and move components"
+              slotProps={tooltipSlotProps}
+            >
               <IconButton
                 color={isCursorMode ? "primary" : "default"}
                 onClick={onCursorMode}
@@ -220,7 +224,7 @@ export default function ToolsBar({
               </IconButton>
             </Tooltip>
 
-            <Tooltip title="Pen Tool">
+            <Tooltip title="Pen Tool" slotProps={tooltipSlotProps}>
               <IconButton
                 color={isDrawing ? "primary" : "default"}
                 onClick={() => {
@@ -236,7 +240,7 @@ export default function ToolsBar({
               </IconButton>
             </Tooltip>
 
-            <Tooltip title="Eraser Tool">
+            <Tooltip title="Eraser Tool" slotProps={tooltipSlotProps}>
               <IconButton
                 color={isEraser ? "primary" : "default"}
                 onClick={() => {
@@ -252,7 +256,10 @@ export default function ToolsBar({
               </IconButton>
             </Tooltip>
 
-            <Tooltip title="Magic Wand - Draw shapes to create components">
+            <Tooltip
+              title="Magic Wand - Draw shapes to create components"
+              slotProps={tooltipSlotProps}
+            >
               <IconButton
                 color={isMagicWand ? "primary" : "default"}
                 onClick={() => {
@@ -265,16 +272,6 @@ export default function ToolsBar({
                 size="small"
               >
                 <MagicWandIcon />
-              </IconButton>
-            </Tooltip>
-
-            <Tooltip title="Snap to Grid">
-              <IconButton
-                color={snapToGrid ? "primary" : "default"}
-                onClick={() => onSnapToGridToggle(!snapToGrid)}
-                size="small"
-              >
-                <GridIcon />
               </IconButton>
             </Tooltip>
           </Box>
@@ -293,11 +290,11 @@ export default function ToolsBar({
               Relative
             </Button>
             <Button
-              variant={resizeMode === "clone" ? "contained" : "outlined"}
-              onClick={() => onResizeModeChange("clone")}
+              variant={resizeMode === "match" ? "contained" : "outlined"}
+              onClick={() => onResizeModeChange("match")}
               sx={{ fontSize: "0.75rem" }}
             >
-              Clone
+              Match
             </Button>
           </ButtonGroup>
           <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
@@ -368,7 +365,7 @@ export default function ToolsBar({
               </Box>
             </Popover>
             {penColor !== "#1976d2" && (
-              <Tooltip title="Reset to default">
+              <Tooltip title="Reset to default" slotProps={tooltipSlotProps}>
                 <IconButton
                   size="small"
                   onClick={() => onPenColorChange("#1976d2")}
@@ -428,7 +425,7 @@ export default function ToolsBar({
               </Box>
             </Popover>
             {componentColor !== "#1976d2" && (
-              <Tooltip title="Reset to default">
+              <Tooltip title="Reset to default" slotProps={tooltipSlotProps}>
                 <IconButton
                   size="small"
                   onClick={() => onComponentColorChange("#1976d2", Date.now())}
@@ -488,7 +485,7 @@ export default function ToolsBar({
               </Box>
             </Popover>
             {canvasColor !== "#ffffff" && (
-              <Tooltip title="Reset to default">
+              <Tooltip title="Reset to default" slotProps={tooltipSlotProps}>
                 <IconButton
                   size="small"
                   onClick={() => onCanvasColorChange("#ffffff")}
@@ -498,6 +495,20 @@ export default function ToolsBar({
                 </IconButton>
               </Tooltip>
             )}
+          </Box>
+        </Box>
+
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <GridIcon />
+            <Typography variant="body2" color="text.secondary">
+              Snap to Grid
+            </Typography>
+            <Switch
+              checked={snapToGrid}
+              onChange={(e) => onSnapToGridToggle(e.target.checked)}
+              size="small"
+            />
           </Box>
         </Box>
       </Box>

@@ -37,7 +37,7 @@ interface CanvasProps {
   selectedComponentType: ComponentType | null;
   onComponentPlaced: () => void;
   snapToGrid?: boolean;
-  resizeMode?: "relative" | "clone";
+  resizeMode?: "relative" | "match";
   onCanvasStateChange?: (imageData: string | null) => void;
   restoreCanvasImageData?: string | null;
   showTitleBar?: boolean;
