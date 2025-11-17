@@ -61,6 +61,7 @@ export default function ComponentRenderer({
   const [editValue, setEditValue] = useState("");
   const [editingField, setEditingField] = useState<string | null>(null); // Track which field is being edited (e.g., "radio1", "radio2", "header1", "cell1_1", etc.)
   const inputRef = useRef<HTMLInputElement>(null);
+  const textWidthRef = useRef<number>(0); // Store original text width to prevent expansion
   const isInteractingWithSliderRef = useRef(false);
   const sliderValueRef = useRef<number>(
     (component.props?.value as number) ?? 50,
@@ -289,6 +290,33 @@ export default function ComponentRenderer({
       // Check if clicking on a specific field (radio option or table cell)
       const target = e.target as HTMLElement;
       const dataField = target.getAttribute("data-field") || target.closest("[data-field]")?.getAttribute("data-field");
+      
+      // Store the width of the text element before editing (to prevent expansion)
+      if (component.type === "Chip") {
+        // Find the Chip label element
+        const chipLabel = target.closest(".MuiChip-label, [class*='MuiChip']");
+        if (chipLabel) {
+          const computedStyle = window.getComputedStyle(chipLabel as Element);
+          // Create a temporary span to measure text width
+          const tempSpan = document.createElement("span");
+          tempSpan.style.visibility = "hidden";
+          tempSpan.style.position = "absolute";
+          tempSpan.style.whiteSpace = "nowrap";
+          tempSpan.style.fontSize = computedStyle.fontSize;
+          tempSpan.style.fontFamily = computedStyle.fontFamily;
+          tempSpan.style.fontWeight = computedStyle.fontWeight;
+          tempSpan.textContent = (component.props?.label as string) || "Chip";
+          document.body.appendChild(tempSpan);
+          textWidthRef.current = tempSpan.offsetWidth;
+          document.body.removeChild(tempSpan);
+        } else {
+          // Fallback: measure using a simple calculation
+          const labelText = (component.props?.label as string) || "Chip";
+          textWidthRef.current = labelText.length * 8; // Rough estimate: 8px per character
+        }
+      } else {
+        textWidthRef.current = 0;
+      }
       
       if (component.type === "Radio") {
         if (dataField === "radio2") {
@@ -855,6 +883,7 @@ export default function ComponentRenderer({
                     onBlur={handleBlur}
                     onKeyDown={handleKeyDown}
                     onClick={(e) => e.stopPropagation()}
+                    size={Math.max(editValue.length || 1, 4)}
                     style={{
                       background: "transparent",
                       border: "none",
@@ -864,7 +893,9 @@ export default function ComponentRenderer({
                       fontFamily: "inherit",
                       padding: 0,
                       margin: 0,
-                      width: "auto",
+                      width: isEditing && textWidthRef.current > 0 ? `${textWidthRef.current}px` : "auto",
+                      minWidth: 0,
+                      maxWidth: isEditing && textWidthRef.current > 0 ? `${textWidthRef.current * 2}px` : "none",
                     }}
                   />
                 ) : (
@@ -874,6 +905,11 @@ export default function ComponentRenderer({
               sx={{
                 backgroundColor: componentColor,
                 color: getTextColorForFilled(componentColor),
+                ...(isEditing && editingField === "label" && textWidthRef.current > 0 ? {
+                  width: `${textWidthRef.current + 40}px`,
+                  minWidth: `${textWidthRef.current + 40}px`,
+                  maxWidth: `${textWidthRef.current * 3 + 40}px`,
+                } : {}),
               }}
             />
           </Box>
@@ -1053,6 +1089,7 @@ export default function ComponentRenderer({
               justifyContent: "center",
               width: "100%",
               height: "100%",
+              pl: 2, // Add left padding
             }}
           >
             <RadioGroup
@@ -1082,6 +1119,7 @@ export default function ComponentRenderer({
                       onBlur={handleBlur}
                       onKeyDown={handleKeyDown}
                       onClick={(e) => e.stopPropagation()}
+                      size={Math.max(editValue.length || 1, 4)}
                       style={{
                         background: "transparent",
                         border: "none",
@@ -1092,6 +1130,7 @@ export default function ComponentRenderer({
                         padding: 0,
                         margin: 0,
                         width: "auto",
+                        minWidth: 0,
                       }}
                     />
                   ) : (
@@ -1132,6 +1171,7 @@ export default function ComponentRenderer({
                       onBlur={handleBlur}
                       onKeyDown={handleKeyDown}
                       onClick={(e) => e.stopPropagation()}
+                      size={Math.max(editValue.length || 1, 4)}
                       style={{
                         background: "transparent",
                         border: "none",
@@ -1142,6 +1182,7 @@ export default function ComponentRenderer({
                         padding: 0,
                         margin: 0,
                         width: "auto",
+                        minWidth: 0,
                       }}
                     />
                   ) : (
