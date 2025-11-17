@@ -303,39 +303,20 @@ export default function Canvas({
   );
 
   // Container mouse handlers
-  const handleContainerMouseDown = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
-      if (isCursorMode && e.target === e.currentTarget) {
-        const point = getPointFromEventFn(e);
-        startSelectionBox(point);
-      }
-    },
-    [isCursorMode, getPointFromEventFn, startSelectionBox],
-  );
-
+  // Note: Selection box is handled by ComponentOverlay in cursor mode
+  // These handlers are only needed for drag/resize which must work outside component bounds
   const handleContainerMouseMove = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
       const point = getPointFromEventFn(e);
-
-      // Update selection box
-      updateSelectionBox(point, draggedComponentId, resizingComponentId);
-
-      // Handle drag/resize
+      // Handle drag/resize (needed even when dragging outside component bounds)
       handleContainerMouseMoveBase(point);
     },
-    [
-      getPointFromEventFn,
-      updateSelectionBox,
-      draggedComponentId,
-      resizingComponentId,
-      handleContainerMouseMoveBase,
-    ],
+    [getPointFromEventFn, handleContainerMouseMoveBase],
   );
 
   const handleContainerMouseUp = useCallback(() => {
-    finishSelectionBox();
     handleContainerMouseUpBase();
-  }, [finishSelectionBox, handleContainerMouseUpBase]);
+  }, [handleContainerMouseUpBase]);
 
   // Handle clicking on canvas background to deselect
   const handleCanvasBackgroundClick = useCallback(
@@ -440,7 +421,6 @@ export default function Canvas({
         width: "100%",
         height: "100%",
       }}
-      onMouseDown={handleContainerMouseDown}
       onClick={(e) => {
         handleContainerClick(e);
         handleCanvasBackgroundClick(e);
