@@ -52,8 +52,8 @@ export default function Canvas({
 		null,
 	);
 	const [dragOffset, setDragOffset] = useState<Point | null>(null);
-	const [selectedComponentId, setSelectedComponentId] = useState<string | null>(
-		null,
+	const [selectedComponentIds, setSelectedComponentIds] = useState<string[]>(
+		[],
 	);
 	const [resizingComponentId, setResizingComponentId] = useState<string | null>(
 		null,
@@ -65,6 +65,10 @@ export default function Canvas({
 	const [resizeDirection, setResizeDirection] = useState<"width" | "height" | null>(
 		null,
 	);
+	// Store initial sizes/positions of selected components for multi-resize/multi-drag
+	const [initialSelectedComponentStates, setInitialSelectedComponentStates] = useState<
+		Map<string, { width: number; height: number; x: number; y: number }>
+	>(new Map());
 	const [brushPosition, setBrushPosition] = useState<Point | null>(null);
 	const brushAnimationFrameRef = useRef<number | null>(null);
 	const thinkingPenPathRef = useRef<Point[]>([]);
@@ -737,7 +741,7 @@ export default function Canvas({
 			if (e.target === e.currentTarget) {
 				// In cursor mode (no drawing tools active), deselect components when clicking empty space
 				if (!isDrawing && !isEraser && !isThinkingPen && !selectedComponentType) {
-					setSelectedComponentId(null);
+					setSelectedComponentIds([]);
 					return;
 				}
 				// Place component if a component type is selected
@@ -809,21 +813,120 @@ export default function Canvas({
 				setResizeStartX(point.x);
 				setResizeStartWidth(componentWidth);
 				setResizeDirection("width");
+				// Store initial states of all selected components for multi-resize
+				const initialStates = new Map<string, { width: number; height: number; x: number; y: number }>();
+				selectedComponentIds.forEach((id) => {
+					const comp = components.find((c) => c.id === id);
+					if (comp) {
+						initialStates.set(id, {
+							width: comp.width || 100,
+							height: comp.height || 40,
+							x: comp.x,
+							y: comp.y,
+						});
+					}
+				});
+				setInitialSelectedComponentStates(initialStates);
 			} else if (isHeightResizeHandle) {
 				setResizingComponentId(componentId);
 				setResizeStartY(point.y);
 				setResizeStartHeight(componentHeight);
 				setResizeDirection("height");
-			} else {
-				setSelectedComponentId(componentId);
-				setDragOffset({
-					x: point.x - component.x,
-					y: point.y - component.y,
+				// Store initial states of all selected components for multi-resize
+				const initialStates = new Map<string, { width: number; height: number; x: number; y: number }>();
+				selectedComponentIds.forEach((id) => {
+					const comp = components.find((c) => c.id === id);
+					if (comp) {
+						initialStates.set(id, {
+							width: comp.width || 100,
+							height: comp.height || 40,
+							x: comp.x,
+							y: comp.y,
+						});
+					}
 				});
-				setDraggedComponentId(componentId);
+				setInitialSelectedComponentStates(initialStates);
+			} else {
+				// Handle multi-selection with Ctrl or Shift
+				const isCtrlClick = e.ctrlKey || e.metaKey;
+				const isShiftClick = e.shiftKey;
+
+				// Calculate final selection state before updating
+				let finalSelectedIds: string[];
+				if (isCtrlClick) {
+					// Ctrl+Click: toggle individual component
+					const isSelected = selectedComponentIds.includes(componentId);
+					if (isSelected) {
+						finalSelectedIds = selectedComponentIds.filter((id) => id !== componentId);
+					} else {
+						finalSelectedIds = [...selectedComponentIds, componentId];
+					}
+				} else if (isShiftClick) {
+					// Shift+Click: select range from last selected to clicked
+					if (selectedComponentIds.length === 0) {
+						finalSelectedIds = [componentId];
+					} else {
+						const lastSelectedId = selectedComponentIds[selectedComponentIds.length - 1];
+						const lastSelectedIndex = components.findIndex((c) => c.id === lastSelectedId);
+						const clickedIndex = components.findIndex((c) => c.id === componentId);
+						
+						if (lastSelectedIndex === -1 || clickedIndex === -1) {
+							finalSelectedIds = [...selectedComponentIds, componentId];
+						} else {
+							const startIndex = Math.min(lastSelectedIndex, clickedIndex);
+							const endIndex = Math.max(lastSelectedIndex, clickedIndex);
+							const rangeIds = components
+								.slice(startIndex, endIndex + 1)
+								.map((c) => c.id);
+							
+							// Merge with existing selection, avoiding duplicates
+							finalSelectedIds = [...new Set([...selectedComponentIds, ...rangeIds])];
+						}
+					}
+				} else {
+					// Regular click: 
+					// - If clicking on an already-selected component in a multi-selection, preserve the selection
+					// - Otherwise, select only this component
+					if (selectedComponentIds.length > 1 && selectedComponentIds.includes(componentId)) {
+						// Keep existing multi-selection when clicking on already-selected component
+						finalSelectedIds = selectedComponentIds;
+					} else {
+						// Select single component
+						finalSelectedIds = [componentId];
+					}
+				}
+
+				// Update selection state
+				setSelectedComponentIds(finalSelectedIds);
+				
+				// Only start dragging if the component will be selected
+				const willBeSelected = finalSelectedIds.includes(componentId);
+				
+				if (willBeSelected) {
+					// Store initial positions of all selected components for multi-drag
+					// Use the final selection state (after toggle/range selection)
+					const initialStates = new Map<string, { width: number; height: number; x: number; y: number }>();
+					finalSelectedIds.forEach((id) => {
+						const comp = components.find((c) => c.id === id);
+						if (comp) {
+							initialStates.set(id, {
+								width: comp.width || 100,
+								height: comp.height || 40,
+								x: comp.x,
+								y: comp.y,
+							});
+						}
+					});
+					setInitialSelectedComponentStates(initialStates);
+					setDragOffset({
+						x: point.x - component.x,
+						y: point.y - component.y,
+					});
+					setDraggedComponentId(componentId);
+				}
 			}
 		},
-		[components, isEraser, getPointFromEvent, onComponentsChange],
+		[components, isEraser, getPointFromEvent, onComponentsChange, selectedComponentIds],
 	);
 
 	const handleContainerMouseMove = useCallback(
@@ -843,14 +946,23 @@ export default function Canvas({
 						snappedWidth = numColumns * gridCellWidth;
 					}
 
-					const updatedComponents = components.map((comp) =>
-						comp.id === resizingComponentId
-							? {
+					// Calculate scale factor based on the resized component
+					const scaleFactor = snappedWidth / resizeStartWidth;
+
+					// Apply resize to all selected components
+					const updatedComponents = components.map((comp) => {
+						if (selectedComponentIds.includes(comp.id)) {
+							const initialState = initialSelectedComponentStates.get(comp.id);
+							if (initialState) {
+								const newCompWidth = Math.max(50, initialState.width * scaleFactor);
+								return {
 									...comp,
-									width: snappedWidth,
-								}
-							: comp,
-					);
+									width: snapToGrid ? Math.round(newCompWidth / gridCellWidth) * gridCellWidth : newCompWidth,
+								};
+							}
+						}
+						return comp;
+					});
 					onComponentsChange(updatedComponents);
 					return;
 				} else if (resizeDirection === "height" && resizeStartY !== null && resizeStartHeight !== null) {
@@ -864,14 +976,23 @@ export default function Canvas({
 						snappedHeight = numRows * gridCellHeight;
 					}
 
-					const updatedComponents = components.map((comp) =>
-						comp.id === resizingComponentId
-							? {
+					// Calculate scale factor based on the resized component
+					const scaleFactor = snappedHeight / resizeStartHeight;
+
+					// Apply resize to all selected components
+					const updatedComponents = components.map((comp) => {
+						if (selectedComponentIds.includes(comp.id)) {
+							const initialState = initialSelectedComponentStates.get(comp.id);
+							if (initialState) {
+								const newCompHeight = Math.max(30, initialState.height * scaleFactor);
+								return {
 									...comp,
-									height: snappedHeight,
-								}
-							: comp,
-					);
+									height: snapToGrid ? Math.round(newCompHeight / gridCellHeight) * gridCellHeight : newCompHeight,
+								};
+							}
+						}
+						return comp;
+					});
 					onComponentsChange(updatedComponents);
 					return;
 				}
@@ -887,20 +1008,40 @@ export default function Canvas({
 			// Handle dragging
 			if (!draggedComponentId || !dragOffset) return;
 
+			const draggedComponent = components.find((c) => c.id === draggedComponentId);
+			if (!draggedComponent) return;
+
 			const targetPoint = {
 				x: point.x - dragOffset.x,
 				y: point.y - dragOffset.y,
 			};
 			const snappedPoint = snapToGridPoint(targetPoint);
-			const updatedComponents = components.map((comp) =>
-				comp.id === draggedComponentId
-					? {
-							...comp,
-							x: snappedPoint.x,
-							y: snappedPoint.y,
-						}
-					: comp,
-			);
+			
+			// Calculate offset from initial position
+			const draggedInitialState = initialSelectedComponentStates.get(draggedComponentId);
+			if (!draggedInitialState) return;
+			
+			const deltaX = snappedPoint.x - draggedInitialState.x;
+			const deltaY = snappedPoint.y - draggedInitialState.y;
+
+			// Apply offset to all components that have initial states stored (i.e., all selected components)
+			const updatedComponents = components.map((comp) => {
+				const initialState = initialSelectedComponentStates.get(comp.id);
+				if (initialState) {
+					// This component was in the selection when drag started
+					const newPoint = {
+						x: initialState.x + deltaX,
+						y: initialState.y + deltaY,
+					};
+					const snappedNewPoint = snapToGridPoint(newPoint);
+					return {
+						...comp,
+						x: snappedNewPoint.x,
+						y: snappedNewPoint.y,
+					};
+				}
+				return comp;
+			});
 			onComponentsChange(updatedComponents);
 		},
 		[
@@ -914,6 +1055,8 @@ export default function Canvas({
 			resizeStartWidth,
 			resizeStartY,
 			resizeStartHeight,
+			selectedComponentIds,
+			initialSelectedComponentStates,
 			snapToGrid,
 			gridCellWidth,
 			gridCellHeight,
@@ -932,13 +1075,13 @@ export default function Canvas({
 			// Start selection box in cursor mode when clicking on background (not on components)
 			const isCursorMode = !isDrawing && !isEraser && !isThinkingPen && !selectedComponentType;
 			// Only start selection box if clicking directly on the container (background), not on any child elements
-			if (isCursorMode && e.target === e.currentTarget) {
-				// Make sure we're not clicking on a component or the overlay
-				const point = getPointFromEvent(e);
-				setSelectionBoxStart(point);
-				setSelectionBoxEnd(point);
-				setSelectedComponentId(null);
-			}
+					if (isCursorMode && e.target === e.currentTarget) {
+						// Make sure we're not clicking on a component or the overlay
+						const point = getPointFromEvent(e);
+						setSelectionBoxStart(point);
+						setSelectionBoxEnd(point);
+						setSelectedComponentIds([]);
+					}
 		},
 		[isDrawing, isEraser, isThinkingPen, selectedComponentType, getPointFromEvent],
 	);
@@ -963,10 +1106,9 @@ export default function Canvas({
 				);
 			});
 
-			// Select the first component if any are in the box (for now, just single selection)
-			// Could extend to multi-selection later
+			// Select all components in the box
 			if (selectedComponents.length > 0) {
-				setSelectedComponentId(selectedComponents[0].id);
+				setSelectedComponentIds(selectedComponents.map((c) => c.id));
 			}
 		}
 
@@ -980,13 +1122,17 @@ export default function Canvas({
 		setResizeDirection(null);
 		setSelectionBoxStart(null);
 		setSelectionBoxEnd(null);
+		setInitialSelectedComponentStates(new Map());
 	}, [selectionBoxStart, selectionBoxEnd, components]);
 
 	// Handle clicking on canvas background to deselect
 	const handleCanvasBackgroundClick = useCallback(
 		(e: React.MouseEvent<HTMLDivElement>) => {
 			if (e.target === e.currentTarget) {
-				setSelectedComponentId(null);
+				// Only deselect if not using Ctrl/Shift (allow multi-selection)
+				if (!e.ctrlKey && !e.metaKey && !e.shiftKey) {
+					setSelectedComponentIds([]);
+				}
 				// Cancel pending recognition if clicking on background
 				if (pendingRecognition || recognitionFailed || hasDrawing) {
 					handleCancelRecognition();
@@ -1204,19 +1350,19 @@ export default function Canvas({
 				}
 			}
 
-			// Only handle if a component is selected and key is Backspace or Delete
+			// Only handle if components are selected and key is Backspace or Delete
 			if (
-				selectedComponentId &&
+				selectedComponentIds.length > 0 &&
 				(e.key === "Backspace" || e.key === "Delete")
 			) {
 				// Prevent default browser behavior (e.g., going back in history)
 				e.preventDefault();
 
-				// Remove the selected component
+				// Remove all selected components
 				onComponentsChange(
-					components.filter((c) => c.id !== selectedComponentId),
+					components.filter((c) => !selectedComponentIds.includes(c.id)),
 				);
-				setSelectedComponentId(null);
+				setSelectedComponentIds([]);
 			}
 		};
 
@@ -1228,7 +1374,7 @@ export default function Canvas({
 			window.removeEventListener("keydown", handleKeyDown);
 		};
 	}, [
-		selectedComponentId,
+		selectedComponentIds,
 		components,
 		onComponentsChange,
 		isThinkingPen,
@@ -1376,7 +1522,7 @@ export default function Canvas({
 						const point = getPointFromEvent(e);
 						setSelectionBoxStart(point);
 						setSelectionBoxEnd(point);
-						setSelectedComponentId(null);
+						setSelectedComponentIds([]);
 					}
 				}}
 				onMouseMove={(e) => {
@@ -1420,9 +1566,9 @@ export default function Canvas({
 							);
 						});
 
-						// Select the first component if any are in the box
+						// Select all components in the box
 						if (selectedComponents.length > 0) {
-							setSelectedComponentId(selectedComponents[0].id);
+							setSelectedComponentIds(selectedComponents.map((c) => c.id));
 						}
 
 						setSelectionBoxStart(null);
@@ -1449,7 +1595,7 @@ export default function Canvas({
 						component={component}
 						onMouseDown={handleComponentMouseDown}
 						isDragging={draggedComponentId === component.id}
-						isSelected={selectedComponentId === component.id}
+						isSelected={selectedComponentIds.includes(component.id)}
 					/>
 				))}
 			</Box>
