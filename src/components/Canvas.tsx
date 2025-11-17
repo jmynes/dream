@@ -1314,36 +1314,25 @@ export default function Canvas({
 	// Handle keyboard events for deleting selected components and pending recognition
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {
-			// Handle thinking pen shortcuts
-			if (isThinkingPen) {
-				// Enter to recognize/submit
-				if (e.key === "Enter") {
-					e.preventDefault();
-					if (pendingRecognition) {
-						handleSubmitRecognition();
-					} else if (hasDrawing) {
-						handleRecognizePath();
-					}
-					return;
-				}
-				// Escape to cancel
-				if (e.key === "Escape") {
-					e.preventDefault();
-					if (pendingRecognition || hasDrawing) {
-						handleCancelRecognition();
-					}
-					return;
-				}
-			}
-
-			// Handle pending recognition keyboard shortcuts
-			if (pendingRecognition) {
-				if (e.key === "Enter") {
+			// Handle Enter key for shape recognition/submission
+			if (e.key === "Enter") {
+				// Submit pending recognition if it exists
+				if (pendingRecognition) {
 					e.preventDefault();
 					handleSubmitRecognition();
 					return;
 				}
-				if (e.key === "Escape") {
+				// Recognize shape if there's a drawing (thinking pen mode)
+				if (isThinkingPen && hasDrawing) {
+					e.preventDefault();
+					handleRecognizePath();
+					return;
+				}
+			}
+
+			// Handle Escape key to cancel recognition
+			if (e.key === "Escape") {
+				if (pendingRecognition || recognitionFailed || (isThinkingPen && hasDrawing)) {
 					e.preventDefault();
 					handleCancelRecognition();
 					return;
@@ -1379,6 +1368,8 @@ export default function Canvas({
 		onComponentsChange,
 		isThinkingPen,
 		pendingRecognition,
+		recognitionFailed,
+		hasDrawing,
 		handleRecognizePath,
 		handleSubmitRecognition,
 		handleCancelRecognition,
