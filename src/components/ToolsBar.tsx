@@ -54,6 +54,7 @@ const materialColorGroups = [
       teal[500],
       indigo[500],
       deepPurple[500],
+      "#1976D2",
     ],
   },
   {
@@ -90,6 +91,144 @@ const materialColorGroups = [
     ],
   },
 ];
+
+interface ColorPickerProps {
+  currentColor: string;
+  onColorChange: (color: string) => void;
+  onClose: () => void;
+}
+
+function ColorPicker({ currentColor, onColorChange, onClose }: ColorPickerProps) {
+  const [hexValue, setHexValue] = useState(currentColor.toUpperCase().replace("#", ""));
+  const [displayColor, setDisplayColor] = useState(currentColor);
+
+  // Update local state when currentColor prop changes
+  useEffect(() => {
+    setHexValue(currentColor.toUpperCase().replace("#", ""));
+    setDisplayColor(currentColor);
+  }, [currentColor]);
+
+  const handleHexChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const hex = e.target.value.replace(/[^0-9A-Fa-f]/g, "").toUpperCase();
+    if (hex.length <= 6) {
+      setHexValue(hex);
+      // Only apply color if we have a complete 6-character hex
+      if (hex.length === 6) {
+        const color = `#${hex}`;
+        setDisplayColor(color);
+        onColorChange(color);
+      }
+    }
+  };
+
+  const handleHexBlur = () => {
+    // Apply color when user leaves the field, padding with zeros if needed
+    const hex = hexValue.padEnd(6, "0").substring(0, 6);
+    const color = `#${hex}`;
+    setHexValue(hex);
+    setDisplayColor(color);
+    onColorChange(color);
+  };
+
+  const handleHexKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleHexBlur();
+    }
+  };
+
+  return (
+    <Box sx={{ p: 2, minWidth: 300 }}>
+      <Typography variant="body2" sx={{ mb: 1.5, fontWeight: 500 }}>
+        Choose Color
+      </Typography>
+
+      {materialColorGroups.map((group) => (
+        <Box key={group.label} sx={{ mb: 1.5 }}>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ display: "block", mb: 0.5, letterSpacing: 0.5 }}
+          >
+            {group.label.toUpperCase()}
+          </Typography>
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: "repeat(6, minmax(0, 1fr))",
+              gap: 0.5,
+            }}
+          >
+            {group.colors.map((color) => (
+              <Box
+                key={`${group.label}-${color}`}
+                onClick={() => {
+                  onColorChange(color);
+                }}
+                sx={{
+                  width: "100%",
+                  aspectRatio: "1",
+                  backgroundColor: color,
+                  border:
+                    displayColor.toUpperCase() === color.toUpperCase()
+                      ? "2px solid #1976d2"
+                      : "1px solid #ccc",
+                  borderRadius: 0.5,
+                  cursor: "pointer",
+                  "&:hover": {
+                    border: "2px solid #1976d2",
+                    transform: "scale(1.05)",
+                  },
+                  transition: "all 0.15s ease",
+                }}
+              />
+            ))}
+          </Box>
+        </Box>
+      ))}
+
+      {/* Native color picker and hex input */}
+      <Box sx={{ display: "flex", gap: 1, alignItems: "center", mb: 2 }}>
+        <Box
+          component="input"
+          type="color"
+          value={displayColor}
+          onChange={(e) => onColorChange(e.target.value)}
+          sx={{
+            width: 50,
+            height: 40,
+            border: "1px solid #ccc",
+            borderRadius: 1,
+            cursor: "pointer",
+            padding: 0,
+          }}
+        />
+        <TextField
+          size="small"
+          label="Hex"
+          value={hexValue}
+          onChange={handleHexChange}
+          onBlur={handleHexBlur}
+          onKeyDown={handleHexKeyDown}
+          sx={{ flex: 1 }}
+          inputProps={{
+            maxLength: 6,
+            style: { textTransform: "uppercase" },
+          }}
+        />
+      </Box>
+      
+      <Button
+        variant="contained"
+        fullWidth
+        onClick={onClose}
+        size="small"
+      >
+        Done
+      </Button>
+    </Box>
+  );
+}
 
 interface ToolsBarProps {
   penColor: string;
@@ -164,106 +303,6 @@ export default function ToolsBar({
   const [canvasColorAnchor, setCanvasColorAnchor] =
     useState<HTMLElement | null>(null);
   
-  // Helper to render color picker
-  const renderColorPicker = (
-    currentColor: string,
-    onColorChange: (color: string) => void,
-    onClose: () => void
-  ) => (
-    <Box sx={{ p: 2, minWidth: 300 }}>
-      <Typography variant="body2" sx={{ mb: 1.5, fontWeight: 500 }}>
-        Choose Color
-      </Typography>
-
-      {materialColorGroups.map((group) => (
-        <Box key={group.label} sx={{ mb: 1.5 }}>
-          <Typography
-            variant="caption"
-            color="text.secondary"
-            sx={{ display: "block", mb: 0.5, letterSpacing: 0.5 }}
-          >
-            {group.label.toUpperCase()}
-          </Typography>
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: "repeat(6, minmax(0, 1fr))",
-              gap: 0.5,
-            }}
-          >
-            {group.colors.map((color) => (
-              <Box
-                key={`${group.label}-${color}`}
-                onClick={() => {
-                  onColorChange(color);
-                }}
-                sx={{
-                  width: "100%",
-                  aspectRatio: "1",
-                  backgroundColor: color,
-                  border:
-                    currentColor.toUpperCase() === color.toUpperCase()
-                      ? "2px solid #1976d2"
-                      : "1px solid #ccc",
-                  borderRadius: 0.5,
-                  cursor: "pointer",
-                  "&:hover": {
-                    border: "2px solid #1976d2",
-                    transform: "scale(1.05)",
-                  },
-                  transition: "all 0.15s ease",
-                }}
-              />
-            ))}
-          </Box>
-        </Box>
-      ))}
-
-      {/* Native color picker and hex input */}
-      <Box sx={{ display: "flex", gap: 1, alignItems: "center", mb: 2 }}>
-        <Box
-          component="input"
-          type="color"
-          value={currentColor}
-          onChange={(e) => onColorChange(e.target.value)}
-          sx={{
-            width: 50,
-            height: 40,
-            border: "1px solid #ccc",
-            borderRadius: 1,
-            cursor: "pointer",
-            padding: 0,
-          }}
-        />
-        <TextField
-          size="small"
-          label="Hex"
-          value={currentColor.toUpperCase().replace("#", "")}
-          onChange={(e) => {
-            const hex = e.target.value.replace(/[^0-9A-Fa-f]/g, "");
-            if (hex.length <= 6) {
-              const color = hex.length === 6 ? `#${hex}` : `#${hex.padEnd(6, "0")}`;
-              onColorChange(color);
-            }
-          }}
-          sx={{ flex: 1 }}
-          inputProps={{
-            maxLength: 6,
-            style: { textTransform: "uppercase" },
-          }}
-        />
-      </Box>
-      
-      <Button
-        variant="contained"
-        fullWidth
-        onClick={onClose}
-        size="small"
-      >
-        Done
-      </Button>
-    </Box>
-  );
   
   // Brush size slider refs/state for performant updates
   const [displayPenSize, setDisplayPenSize] = useState(penSize);
@@ -487,7 +526,11 @@ export default function ToolsBar({
                 horizontal: "left",
               }}
             >
-              {renderColorPicker(penColor, onPenColorChange, handlePenColorClose)}
+              <ColorPicker
+                currentColor={penColor}
+                onColorChange={onPenColorChange}
+                onClose={handlePenColorClose}
+              />
             </Popover>
             {penColor !== "#1976d2" && (
               <Tooltip title="Reset to default" slotProps={tooltipSlotProps}>
@@ -534,7 +577,11 @@ export default function ToolsBar({
                 horizontal: "left",
               }}
             >
-              {renderColorPicker(componentColor, handleComponentColorChange, handleComponentColorClose)}
+              <ColorPicker
+                currentColor={componentColor}
+                onColorChange={handleComponentColorChange}
+                onClose={handleComponentColorClose}
+              />
             </Popover>
             {componentColor !== "#1976d2" && (
               <Tooltip title="Reset to default" slotProps={tooltipSlotProps}>
@@ -581,7 +628,11 @@ export default function ToolsBar({
                 horizontal: "left",
               }}
             >
-              {renderColorPicker(canvasColor, onCanvasColorChange, handleCanvasColorClose)}
+              <ColorPicker
+                currentColor={canvasColor}
+                onColorChange={onCanvasColorChange}
+                onClose={handleCanvasColorClose}
+              />
             </Popover>
             {canvasColor !== "#ffffff" && (
               <Tooltip title="Reset to default" slotProps={tooltipSlotProps}>
