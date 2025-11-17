@@ -330,7 +330,17 @@ export default function ComponentRenderer({
               defaultChecked={component.props?.checked as boolean}
               sx={{
                 "& .MuiSwitch-switchBase.Mui-checked": { color: componentColor },
-                "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": { backgroundColor: componentColor },
+                "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": { 
+                  backgroundColor: componentColor,
+                  ...(isDarkColor(componentColor) ? {} : {
+                    boxShadow: "0 0 0 1px rgba(0, 0, 0, 0.2)",
+                  }),
+                },
+                "& .MuiSwitch-thumb": {
+                  ...(isDarkColor(componentColor) ? {} : {
+                    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
+                  }),
+                },
               }}
             />
           </Box>
@@ -350,7 +360,25 @@ export default function ComponentRenderer({
             <Slider
               {...(component.props as object)}
               defaultValue={(component.props?.value as number) || 50}
-              sx={{ width: "100%", color: componentColor }}
+              sx={{ 
+                width: "100%", 
+                color: componentColor,
+                "& .MuiSlider-thumb": {
+                  ...(isDarkColor(componentColor) ? {} : {
+                    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
+                  }),
+                },
+                "& .MuiSlider-track": {
+                  ...(isDarkColor(componentColor) ? {} : {
+                    border: "1px solid rgba(0, 0, 0, 0.1)",
+                  }),
+                },
+                "& .MuiSlider-rail": {
+                  ...(isDarkColor(componentColor) ? {} : {
+                    border: "1px solid rgba(0, 0, 0, 0.1)",
+                  }),
+                },
+              }}
             />
           </Box>
         );
