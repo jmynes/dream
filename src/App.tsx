@@ -19,10 +19,9 @@ function App() {
   const [penColor, setPenColor] = useState("#1976d2");
   const [componentColor, setComponentColor] = useState("#1976d2");
   const [penSize, setPenSize] = useState(2);
-  const [eraserSize] = useState(15);
   const [isDrawing, setIsDrawing] = useState(false);
   const [isEraser, setIsEraser] = useState(false);
-  const [isThinkingPen, setIsThinkingPen] = useState(false);
+  const [isMagicWand, setIsMagicWand] = useState(false);
   const [snapToGrid, setSnapToGrid] = useState(true);
   const [resizeMode, setResizeMode] = useState<"relative" | "clone">(
     "relative",
@@ -246,7 +245,7 @@ function App() {
               if (drawing) {
                 setSelectedComponentType(null);
                 setIsEraser(false);
-                setIsThinkingPen(false);
+                setIsMagicWand(false);
               }
             }}
             snapToGrid={snapToGrid}
@@ -256,14 +255,14 @@ function App() {
               setIsEraser(eraser);
               if (eraser) {
                 setIsDrawing(false);
-                setIsThinkingPen(false);
+                setIsMagicWand(false);
                 setSelectedComponentType(null);
               }
             }}
-            isThinkingPen={isThinkingPen}
-            onThinkingPenToggle={(thinkingPen) => {
-              setIsThinkingPen(thinkingPen);
-              if (thinkingPen) {
+            isMagicWand={isMagicWand}
+            onMagicWandToggle={(magicWand) => {
+              setIsMagicWand(magicWand);
+              if (magicWand) {
                 setIsDrawing(false);
                 setIsEraser(false);
                 setSelectedComponentType(null);
@@ -272,10 +271,10 @@ function App() {
             onCursorMode={() => {
               setIsDrawing(false);
               setIsEraser(false);
-              setIsThinkingPen(false);
+              setIsMagicWand(false);
               setSelectedComponentType(null);
             }}
-            isCursorMode={!isDrawing && !isEraser && !isThinkingPen}
+            isCursorMode={!isDrawing && !isEraser && !isMagicWand}
             resizeMode={resizeMode}
             onResizeModeChange={setResizeMode}
           />
@@ -284,10 +283,10 @@ function App() {
               key={clearCanvasKey}
               penColor={penColor}
               componentColor={componentColor}
-              penSize={isEraser ? eraserSize : penSize}
+              penSize={penSize}
               isDrawing={isDrawing}
               isEraser={isEraser}
-              isThinkingPen={isThinkingPen}
+              isMagicWand={isMagicWand}
               components={components}
               onComponentsChange={handleComponentsChange}
               onCanvasStateChange={handleCanvasStateChange}

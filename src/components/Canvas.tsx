@@ -18,7 +18,7 @@ import { useBrushPreview } from "../hooks/useBrushPreview";
 import { useCanvasDrawing } from "../hooks/useCanvasDrawing";
 import { useSelectionBox } from "../hooks/useSelectionBox";
 import { useComponentDragResize } from "../hooks/useComponentDragResize";
-import { useThinkingPen } from "../hooks/useThinkingPen";
+import { useMagicWand } from "../hooks/useMagicWand";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
 
 interface CanvasProps {
@@ -29,7 +29,7 @@ interface CanvasProps {
   penSize?: number;
   isDrawing?: boolean;
   isEraser?: boolean;
-  isThinkingPen?: boolean;
+  isMagicWand?: boolean;
   components: CanvasComponent[];
   onComponentsChange: (components: CanvasComponent[]) => void;
   selectedComponentType: ComponentType | null;
@@ -48,7 +48,7 @@ export default function Canvas({
   penSize = 2,
   isDrawing = true,
   isEraser = false,
-  isThinkingPen = false,
+  isMagicWand = false,
   components,
   onComponentsChange,
   selectedComponentType,
@@ -104,12 +104,12 @@ export default function Canvas({
     penSize,
     isDrawing,
     isEraser,
-    isThinkingPen,
+    isMagicWand,
     selectedComponentType,
     onCanvasStateChange,
   });
 
-  // Thinking pen hook
+  // Magic wand hook
   const {
     hasDrawing,
     pendingRecognition,
@@ -119,7 +119,7 @@ export default function Canvas({
     handleSubmitRecognition,
     handleSelectComponentType,
     handleCancelRecognition,
-  } = useThinkingPen({
+  } = useMagicWand({
     canvasRef,
     penSize,
     components,
@@ -144,7 +144,7 @@ export default function Canvas({
   } = useSelectionBox({
     isDrawing,
     isEraser,
-    isThinkingPen,
+    isMagicWand,
     selectedComponentType,
     components,
     onSelectionChange: setSelectedComponentIds,
@@ -176,21 +176,21 @@ export default function Canvas({
   } = useBrushPreview({
     isDrawing,
     isEraser,
-    isThinkingPen,
+    isMagicWand,
     selectedComponentType,
     getPointFromEvent: getPointFromEventFn,
   });
 
-  // Clear pending recognition when thinking pen is disabled
+  // Clear pending recognition when magic wand is disabled
   useEffect(() => {
     if (
-      !isThinkingPen &&
+      !isMagicWand &&
       (pendingRecognition || recognitionFailed || hasDrawing)
     ) {
       handleCancelRecognition();
     }
   }, [
-    isThinkingPen,
+    isMagicWand,
     pendingRecognition,
     recognitionFailed,
     hasDrawing,
@@ -202,14 +202,14 @@ export default function Canvas({
     (e: React.MouseEvent<HTMLCanvasElement>) => {
       const point = getPointFromEventFn(e);
       handleCanvasMouseDownBase(point);
-      if (isThinkingPen) {
+      if (isMagicWand) {
         addPathPoint(point);
       }
     },
     [
       getPointFromEventFn,
       handleCanvasMouseDownBase,
-      isThinkingPen,
+      isMagicWand,
       addPathPoint,
     ],
   );
@@ -219,13 +219,13 @@ export default function Canvas({
       const point = getPointFromEventFn(e);
       handleCanvasMouseMoveBase(
         point,
-        isThinkingPen ? addPathPoint : undefined,
+        isMagicWand ? addPathPoint : undefined,
       );
     },
     [
       getPointFromEventFn,
       handleCanvasMouseMoveBase,
-      isThinkingPen,
+      isMagicWand,
       addPathPoint,
     ],
   );
@@ -385,7 +385,7 @@ export default function Canvas({
   useKeyboardShortcuts({
     components,
     selectedComponentIds,
-    isThinkingPen,
+    isMagicWand,
     pendingRecognition,
     recognitionFailed,
     hasDrawing,
@@ -410,7 +410,7 @@ export default function Canvas({
 
   // Hide default cursor when showing brush preview
   const cursor =
-    (isDrawing || isEraser || isThinkingPen) && !selectedComponentType
+    (isDrawing || isEraser || isMagicWand) && !selectedComponentType
       ? "none"
       : selectedComponentType
         ? "crosshair"
@@ -456,7 +456,7 @@ export default function Canvas({
           width: "100%",
           height: "100%",
           pointerEvents:
-            (isDrawing || isEraser || isThinkingPen) && !selectedComponentType
+            (isDrawing || isEraser || isMagicWand) && !selectedComponentType
               ? "auto"
               : "none",
           cursor,
@@ -472,7 +472,7 @@ export default function Canvas({
       <BrushPreview
         isDrawing={isDrawing}
         isEraser={isEraser}
-        isThinkingPen={isThinkingPen}
+        isMagicWand={isMagicWand}
         selectedComponentType={selectedComponentType}
         brushPosition={brushPosition}
         penSize={penSize}
@@ -488,7 +488,7 @@ export default function Canvas({
         resizingComponentId={resizingComponentId}
         isDrawing={isDrawing}
         isEraser={isEraser}
-        isThinkingPen={isThinkingPen}
+        isMagicWand={isMagicWand}
         selectedComponentType={selectedComponentType}
         cursor={cursor}
         selectedComponentIds={selectedComponentIds}
@@ -505,8 +505,8 @@ export default function Canvas({
         onOverlayClick={handleOverlayClick}
       />
 
-      {/* Submit button for thinking pen - shown when drawing */}
-      {isThinkingPen &&
+      {/* Submit button for magic wand - shown when drawing */}
+      {isMagicWand &&
         hasDrawing &&
         !pendingRecognition &&
         !recognitionFailed && (

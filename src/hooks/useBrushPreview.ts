@@ -4,7 +4,7 @@ import type { Point } from "../utils/canvasUtils";
 interface UseBrushPreviewProps {
   isDrawing: boolean;
   isEraser: boolean;
-  isThinkingPen: boolean;
+  isMagicWand: boolean;
   selectedComponentType: string | null;
   getPointFromEvent: (e: React.MouseEvent | MouseEvent) => Point;
 }
@@ -12,7 +12,7 @@ interface UseBrushPreviewProps {
 export function useBrushPreview({
   isDrawing,
   isEraser,
-  isThinkingPen,
+  isMagicWand,
   selectedComponentType,
   getPointFromEvent,
 }: UseBrushPreviewProps) {
@@ -30,7 +30,7 @@ export function useBrushPreview({
 
   const handleBrushMouseMove = useCallback(
     (e: React.MouseEvent<HTMLCanvasElement | HTMLDivElement>) => {
-      if ((isDrawing || isEraser || isThinkingPen) && !selectedComponentType) {
+      if ((isDrawing || isEraser || isMagicWand) && !selectedComponentType) {
         const point = getPointFromEvent(e);
         if (brushAnimationFrameRef.current !== null) {
           cancelAnimationFrame(brushAnimationFrameRef.current);
@@ -44,7 +44,7 @@ export function useBrushPreview({
     [
       isDrawing,
       isEraser,
-      isThinkingPen,
+      isMagicWand,
       selectedComponentType,
       getPointFromEvent,
     ],

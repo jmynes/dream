@@ -4,7 +4,7 @@ import type { CanvasComponent, ComponentType } from "../types/component";
 interface UseKeyboardShortcutsProps {
   components: CanvasComponent[];
   selectedComponentIds: string[];
-  isThinkingPen: boolean;
+  isMagicWand: boolean;
   pendingRecognition: {
     type: ComponentType;
     x: number;
@@ -30,7 +30,7 @@ interface UseKeyboardShortcutsProps {
 export function useKeyboardShortcuts({
   components,
   selectedComponentIds,
-  isThinkingPen,
+  isMagicWand,
   pendingRecognition,
   recognitionFailed,
   hasDrawing,
@@ -69,7 +69,7 @@ export function useKeyboardShortcuts({
           onSubmitRecognition();
           return;
         }
-        if (isThinkingPen && hasDrawing) {
+        if (isMagicWand && hasDrawing) {
           e.preventDefault();
           onRecognizePath();
           return;
@@ -79,7 +79,7 @@ export function useKeyboardShortcuts({
       // Handle Escape key to cancel recognition or deselect components
       if (e.key === "Escape") {
         e.preventDefault();
-        if (pendingRecognition || recognitionFailed || (isThinkingPen && hasDrawing)) {
+        if (pendingRecognition || recognitionFailed || (isMagicWand && hasDrawing)) {
           onCancelRecognition();
           return;
         }
@@ -107,7 +107,7 @@ export function useKeyboardShortcuts({
   }, [
     components.length,
     selectedComponentIds.length,
-    isThinkingPen,
+    isMagicWand,
     pendingRecognition,
     recognitionFailed,
     hasDrawing,

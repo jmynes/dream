@@ -2,7 +2,7 @@ import {
   GridOn as GridIcon,
   Palette as ColorIcon,
   Edit as PenIcon,
-  AutoFixHigh as ThinkingPenIcon,
+  AutoFixHigh as MagicWandIcon,
   NearMe as CursorIcon,
 } from "@mui/icons-material";
 import {
@@ -29,8 +29,8 @@ interface SidebarProps {
   onSnapToGridToggle: (snap: boolean) => void;
   isEraser: boolean;
   onEraserToggle: (eraser: boolean) => void;
-  isThinkingPen: boolean;
-  onThinkingPenToggle: (thinkingPen: boolean) => void;
+  isMagicWand: boolean;
+  onMagicWandToggle: (magicWand: boolean) => void;
   onCursorMode: () => void;
   isCursorMode: boolean;
   resizeMode: "relative" | "clone";
@@ -50,8 +50,8 @@ export default function Sidebar({
   onSnapToGridToggle,
   isEraser,
   onEraserToggle,
-  isThinkingPen,
-  onThinkingPenToggle,
+  isMagicWand,
+  onMagicWandToggle,
   onCursorMode,
   isCursorMode,
   resizeMode,
@@ -94,7 +94,7 @@ export default function Sidebar({
                   onDrawingToggle(!isDrawing);
                   if (!isDrawing) {
                     onEraserToggle(false);
-                    onThinkingPenToggle(false);
+                    onMagicWandToggle(false);
                   }
                 }}
                 size="small"
@@ -110,7 +110,7 @@ export default function Sidebar({
                   onEraserToggle(!isEraser);
                   if (!isEraser) {
                     onDrawingToggle(false);
-                    onThinkingPenToggle(false);
+                    onMagicWandToggle(false);
                   }
                 }}
                 size="small"
@@ -119,19 +119,19 @@ export default function Sidebar({
               </IconButton>
             </Tooltip>
 
-            <Tooltip title="Thinking Pen - Draw shapes to create components">
+            <Tooltip title="Magic Wand - Draw shapes to create components">
               <IconButton
-                color={isThinkingPen ? "primary" : "default"}
+                color={isMagicWand ? "primary" : "default"}
                 onClick={() => {
-                  onThinkingPenToggle(!isThinkingPen);
-                  if (!isThinkingPen) {
+                  onMagicWandToggle(!isMagicWand);
+                  if (!isMagicWand) {
                     onDrawingToggle(false);
                     onEraserToggle(false);
                   }
                 }}
                 size="small"
               >
-                <ThinkingPenIcon />
+                <MagicWandIcon />
               </IconButton>
             </Tooltip>
 

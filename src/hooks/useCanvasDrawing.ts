@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import type { Point } from "../utils/canvasUtils";
 
 interface UseCanvasDrawingProps {
@@ -7,7 +7,7 @@ interface UseCanvasDrawingProps {
   penSize: number;
   isDrawing: boolean;
   isEraser: boolean;
-  isThinkingPen: boolean;
+  isMagicWand: boolean;
   selectedComponentType: string | null;
   onCanvasStateChange?: (imageData: string | null) => void;
 }
@@ -18,12 +18,15 @@ export function useCanvasDrawing({
   penSize,
   isDrawing,
   isEraser,
-  isThinkingPen,
+  isMagicWand,
   selectedComponentType,
   onCanvasStateChange,
 }: UseCanvasDrawingProps) {
+  // Use refs to avoid re-renders on every mouse move
+  const isDraggingPenRef = useRef(false);
+  const lastPointRef = useRef<Point | null>(null);
+  // Keep state for external consumers if needed, but update refs for performance
   const [isDraggingPen, setIsDraggingPen] = useState(false);
-  const [lastPoint, setLastPoint] = useState<Point | null>(null);
 
   const drawLine = useCallback(
     (from: Point, to: Point) => {
@@ -42,9 +45,18 @@ export function useCanvasDrawing({
         ctx.strokeStyle = penColor;
       }
 
+      // Use exact penSize for both drawing and erasing
       ctx.lineWidth = penSize;
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
+
+      // Use square caps for very small sizes to avoid oversized appearance
+      // Round caps add radius that makes small lines appear much larger
+      if (penSize <= 2) {
+        ctx.lineCap = "square";
+        ctx.lineJoin = "miter";
+      } else {
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+      }
 
       ctx.beginPath();
       ctx.moveTo(from.x, from.y);
@@ -64,55 +76,63 @@ export function useCanvasDrawing({
 
   const handleCanvasMouseDown = useCallback(
     (point: Point) => {
-      if ((!isDrawing && !isEraser && !isThinkingPen) || selectedComponentType)
+      if ((!isDrawing && !isEraser && !isMagicWand) || selectedComponentType)
         return;
 
-      setLastPoint(point);
+      // Update refs immediately (no re-render)
+      lastPointRef.current = point;
+      isDraggingPenRef.current = true;
+      // Update state only for external consumers
       setIsDraggingPen(true);
     },
-    [isDrawing, isEraser, isThinkingPen, selectedComponentType],
+    [isDrawing, isEraser, isMagicWand, selectedComponentType],
   );
 
   const handleCanvasMouseMove = useCallback(
     (point: Point, onPathPoint?: (point: Point) => void) => {
+      // Use refs to avoid re-renders
+      const dragging = isDraggingPenRef.current;
+      const lastPoint = lastPointRef.current;
+
       if (
-        !isDraggingPen ||
-        (!isDrawing && !isEraser && !isThinkingPen) ||
+        !dragging ||
+        (!isDrawing && !isEraser && !isMagicWand) ||
         !lastPoint ||
         selectedComponentType
       )
         return;
 
-      // Track path for thinking pen
-      if (isThinkingPen && onPathPoint) {
+      // Track path for magic wand
+      if (isMagicWand && onPathPoint) {
         onPathPoint(point);
       }
 
       // Draw line for regular drawing or eraser
       if (isDrawing || isEraser) {
         drawLine(lastPoint, point);
-      } else if (isThinkingPen) {
-        // Draw temporary line for thinking pen
+      } else if (isMagicWand) {
+        // Draw temporary line for magic wand
         drawLine(lastPoint, point);
       }
 
-      setLastPoint(point);
+      // Update ref (no re-render)
+      lastPointRef.current = point;
     },
     [
-      isDraggingPen,
       isDrawing,
       isEraser,
-      isThinkingPen,
-      lastPoint,
+      isMagicWand,
       selectedComponentType,
       drawLine,
     ],
   );
 
   const handleCanvasMouseUp = useCallback(() => {
-    // Just reset drag state - allow multiple strokes before submit
+    // Reset refs immediately (no re-render)
+    isDraggingPenRef.current = false;
+    lastPointRef.current = null;
+    // Update state for external consumers
     setIsDraggingPen(false);
-    setLastPoint(null);
 
     // Save canvas state after drawing/erasing
     if (isDrawing || isEraser) {

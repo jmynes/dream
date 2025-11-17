@@ -5,7 +5,7 @@ import type { CanvasComponent } from "../types/component";
 interface UseSelectionBoxProps {
   isDrawing: boolean;
   isEraser: boolean;
-  isThinkingPen: boolean;
+  isMagicWand: boolean;
   selectedComponentType: string | null;
   components: CanvasComponent[];
   onSelectionChange: (ids: string[]) => void;
@@ -14,7 +14,7 @@ interface UseSelectionBoxProps {
 export function useSelectionBox({
   isDrawing,
   isEraser,
-  isThinkingPen,
+  isMagicWand,
   selectedComponentType,
   components,
   onSelectionChange,
@@ -27,7 +27,7 @@ export function useSelectionBox({
   const justFinishedSelectionBoxRef = useRef(false);
 
   const isCursorMode =
-    !isDrawing && !isEraser && !isThinkingPen && !selectedComponentType;
+    !isDrawing && !isEraser && !isMagicWand && !selectedComponentType;
 
   const startSelectionBox = useCallback(
     (point: Point) => {

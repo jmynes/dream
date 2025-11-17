@@ -11,7 +11,7 @@ interface ComponentOverlayProps {
   resizingComponentId: string | null;
   isDrawing: boolean;
   isEraser: boolean;
-  isThinkingPen: boolean;
+  isMagicWand: boolean;
   selectedComponentType: string | null;
   cursor: string;
   selectedComponentIds: string[];
@@ -34,7 +34,7 @@ export default function ComponentOverlay({
   resizingComponentId,
   isDrawing,
   isEraser,
-  isThinkingPen,
+  isMagicWand,
   selectedComponentType,
   cursor,
   selectedComponentIds,
@@ -57,7 +57,7 @@ export default function ComponentOverlay({
         width: "100%",
         height: "100%",
         pointerEvents:
-          (!isDrawing && !isEraser && !isThinkingPen) || selectedComponentType
+          (!isDrawing && !isEraser && !isMagicWand) || selectedComponentType
             ? "auto"
             : "none",
         zIndex: 2,
@@ -80,7 +80,7 @@ export default function ComponentOverlay({
           onSelectionBoxUpdate(point);
         }
         if (
-          (isDrawing || isEraser || isThinkingPen) &&
+          (isDrawing || isEraser || isMagicWand) &&
           !selectedComponentType
         ) {
           onBrushMouseMove(e);

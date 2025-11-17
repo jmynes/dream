@@ -4,7 +4,7 @@ import type { CanvasComponent } from "../types/component";
 import type { Point } from "../utils/canvasUtils";
 import { recognizeShape } from "../utils/shapeRecognition";
 
-interface UseThinkingPenProps {
+interface UseMagicWandProps {
   canvasRef: React.RefObject<HTMLCanvasElement | null>;
   penSize: number;
   components: CanvasComponent[];
@@ -15,7 +15,7 @@ interface UseThinkingPenProps {
   snapToGridPoint: (point: Point) => Point;
 }
 
-export function useThinkingPen({
+export function useMagicWand({
   canvasRef,
   penSize,
   components,
@@ -24,8 +24,9 @@ export function useThinkingPen({
   gridCellWidth,
   gridCellHeight,
   snapToGridPoint,
-}: UseThinkingPenProps) {
-  const thinkingPenPathRef = useRef<Point[]>([]);
+}: UseMagicWandProps) {
+  const magicWandPathRef = useRef<Point[]>([]);
+  const hasDrawingRef = useRef(false);
   const [hasDrawing, setHasDrawing] = useState(false);
   const [pendingRecognition, setPendingRecognition] = useState<{
     type: ComponentType;
@@ -42,21 +43,27 @@ export function useThinkingPen({
   } | null>(null);
 
   const addPathPoint = useCallback((point: Point) => {
-    if (thinkingPenPathRef.current.length === 0) {
-      thinkingPenPathRef.current = [point];
+    // Update ref immediately (no re-render)
+    if (magicWandPathRef.current.length === 0) {
+      magicWandPathRef.current = [point];
+      // Only update state when transitioning from no drawing to drawing
+      if (!hasDrawingRef.current) {
+        hasDrawingRef.current = true;
+        setHasDrawing(true);
+      }
     } else {
-      thinkingPenPathRef.current.push(point);
+      magicWandPathRef.current.push(point);
+      // No state update needed - already drawing
     }
-    setHasDrawing(true);
   }, []);
 
   const handleRecognizePath = useCallback(() => {
-    if (thinkingPenPathRef.current.length === 0) return;
+    if (magicWandPathRef.current.length === 0) return;
 
-    const recognizedType = recognizeShape(thinkingPenPathRef.current);
+    const recognizedType = recognizeShape(magicWandPathRef.current);
 
     // Calculate bounding box for placement
-    const path = thinkingPenPathRef.current;
+    const path = magicWandPathRef.current;
     let minX = Infinity,
       maxX = -Infinity,
       minY = Infinity,
@@ -96,7 +103,7 @@ export function useThinkingPen({
 
   const handleSubmitRecognition = useCallback(() => {
     // If no pending recognition but we have a path, recognize first
-    if (!pendingRecognition && thinkingPenPathRef.current.length > 0) {
+    if (!pendingRecognition && magicWandPathRef.current.length > 0) {
       handleRecognizePath();
       return;
     }
@@ -105,10 +112,10 @@ export function useThinkingPen({
 
     // Clear the drawn shape from canvas
     const canvas = canvasRef.current;
-    if (canvas && thinkingPenPathRef.current.length > 0) {
+    if (canvas && magicWandPathRef.current.length > 0) {
       const ctx = canvas.getContext("2d");
       if (ctx) {
-        const path = thinkingPenPathRef.current;
+        const path = magicWandPathRef.current;
         // Save current content
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         // Clear and restore
@@ -145,7 +152,8 @@ export function useThinkingPen({
     // Clear pending recognition and path
     setPendingRecognition(null);
     setRecognitionFailed(null);
-    thinkingPenPathRef.current = [];
+    magicWandPathRef.current = [];
+    hasDrawingRef.current = false;
     setHasDrawing(false);
   }, [
     pendingRecognition,
@@ -176,10 +184,10 @@ export function useThinkingPen({
   const handleCancelRecognition = useCallback(() => {
     // Clear the drawn shape from canvas
     const canvas = canvasRef.current;
-    if (canvas && thinkingPenPathRef.current.length > 0) {
+    if (canvas && magicWandPathRef.current.length > 0) {
       const ctx = canvas.getContext("2d");
       if (ctx) {
-        const path = thinkingPenPathRef.current;
+        const path = magicWandPathRef.current;
         // Save current content
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         // Clear and restore
@@ -203,7 +211,8 @@ export function useThinkingPen({
     // Clear pending recognition and path
     setPendingRecognition(null);
     setRecognitionFailed(null);
-    thinkingPenPathRef.current = [];
+    magicWandPathRef.current = [];
+    hasDrawingRef.current = false;
     setHasDrawing(false);
   }, [penSize, canvasRef]);
 
