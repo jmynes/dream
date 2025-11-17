@@ -726,11 +726,10 @@ const getTextColorForFilled = (bgColor: string): string => {
                   style={{
                     ...inlineInputStyle,
                     textAlign: "center",
-                    color: componentColor,
                   }}
                 />
               ) : (
-                <Typography variant="body2" sx={{ color: componentColor }}>
+                <Typography variant="body2">
                   {(component.props?.text as string) || "Card Content"}
                 </Typography>
               )}
