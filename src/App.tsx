@@ -18,6 +18,7 @@ const theme = createTheme({
 function App() {
   const [penColor, setPenColor] = useState("#1976d2");
   const [componentColor, setComponentColor] = useState("#1976d2");
+  const [componentColorTimestamp, setComponentColorTimestamp] = useState(0);
   const [canvasColor, setCanvasColor] = useState("#ffffff");
   const [penSize, setPenSize] = useState(2);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -242,7 +243,12 @@ function App() {
             penColor={penColor}
             onPenColorChange={setPenColor}
             componentColor={componentColor}
-            onComponentColorChange={setComponentColor}
+            onComponentColorChange={(color, timestamp) => {
+              setComponentColor(color);
+              if (timestamp !== undefined) {
+                setComponentColorTimestamp(timestamp);
+              }
+            }}
             canvasColor={canvasColor}
             onCanvasColorChange={setCanvasColor}
             penSize={penSize}
@@ -301,6 +307,7 @@ function App() {
               key={clearCanvasKey}
               penColor={penColor}
               componentColor={componentColor}
+              componentColorTimestamp={componentColorTimestamp}
               penSize={penSize}
               isDrawing={isDrawing}
               isEraser={isEraser}

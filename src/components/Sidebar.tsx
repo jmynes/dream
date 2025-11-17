@@ -13,18 +13,22 @@ import {
   ButtonGroup,
   IconButton,
   Paper,
+  Popover,
   Slider,
   Tooltip,
   Typography,
   Switch,
   FormControlLabel,
 } from "@mui/material";
+import { useState, useEffect } from "react";
+import { SketchPicker } from "react-color";
+import type { ColorResult } from "react-color";
 
 interface SidebarProps {
   penColor: string;
   onPenColorChange: (color: string) => void;
   componentColor: string;
-  onComponentColorChange: (color: string) => void;
+  onComponentColorChange: (color: string, timestamp?: number) => void;
   canvasColor: string;
   onCanvasColorChange: (color: string) => void;
   penSize: number;
@@ -85,6 +89,71 @@ export default function Sidebar({
   isMacOSStyle,
   onMacOSStyleToggle,
 }: SidebarProps) {
+  // State for color picker popovers
+  const [componentColorAnchor, setComponentColorAnchor] = useState<HTMLElement | null>(null);
+  const [penColorAnchor, setPenColorAnchor] = useState<HTMLElement | null>(null);
+  const [canvasColorAnchor, setCanvasColorAnchor] = useState<HTMLElement | null>(null);
+  
+  // Local color states for the pickers (before applying)
+  const [localComponentColor, setLocalComponentColor] = useState(componentColor);
+  const [localPenColor, setLocalPenColor] = useState(penColor);
+  const [localCanvasColor, setLocalCanvasColor] = useState(canvasColor);
+  
+  // Sync local states when props change
+  useEffect(() => {
+    setLocalComponentColor(componentColor);
+  }, [componentColor]);
+  
+  useEffect(() => {
+    setLocalPenColor(penColor);
+  }, [penColor]);
+  
+  useEffect(() => {
+    setLocalCanvasColor(canvasColor);
+  }, [canvasColor]);
+  
+  const handleComponentColorOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setComponentColorAnchor(event.currentTarget);
+    setLocalComponentColor(componentColor);
+  };
+  
+  const handleComponentColorClose = () => {
+    setComponentColorAnchor(null);
+  };
+  
+  const handleComponentColorApply = () => {
+    onComponentColorChange(localComponentColor, Date.now());
+    handleComponentColorClose();
+  };
+  
+  const handlePenColorOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setPenColorAnchor(event.currentTarget);
+    setLocalPenColor(penColor);
+  };
+  
+  const handlePenColorClose = () => {
+    setPenColorAnchor(null);
+  };
+  
+  const handlePenColorApply = () => {
+    onPenColorChange(localPenColor);
+    handlePenColorClose();
+  };
+  
+  const handleCanvasColorOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setCanvasColorAnchor(event.currentTarget);
+    setLocalCanvasColor(canvasColor);
+  };
+  
+  const handleCanvasColorClose = () => {
+    setCanvasColorAnchor(null);
+  };
+  
+  const handleCanvasColorApply = () => {
+    onCanvasColorChange(localCanvasColor);
+    handleCanvasColorClose();
+  };
+  
   return (
     <Paper
       sx={{
@@ -224,18 +293,46 @@ export default function Sidebar({
           </Typography>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <ColorIcon sx={{ color: "#1976d2" }} />
-            <input
-              type="color"
-              value={penColor}
-              onChange={(e) => onPenColorChange(e.target.value)}
-              style={{
+            <Button
+              variant="outlined"
+              onClick={handlePenColorOpen}
+              sx={{
                 width: 60,
                 height: 30,
+                minWidth: 60,
+                padding: 0,
+                backgroundColor: localPenColor,
                 border: "1px solid #ccc",
-                borderRadius: 4,
-                cursor: "pointer",
+                "&:hover": {
+                  backgroundColor: localPenColor,
+                  border: "1px solid #999",
+                },
               }}
             />
+            <Popover
+              open={Boolean(penColorAnchor)}
+              anchorEl={penColorAnchor}
+              onClose={handlePenColorClose}
+              anchorOrigin={{
+                vertical: "bottom",
+                horizontal: "left",
+              }}
+            >
+              <Box sx={{ p: 2 }}>
+                <SketchPicker
+                  color={localPenColor}
+                  onChange={(color: ColorResult) => setLocalPenColor(color.hex)}
+                />
+                <Box sx={{ display: "flex", gap: 1, mt: 2, justifyContent: "flex-end" }}>
+                  <Button size="small" onClick={handlePenColorClose}>
+                    Cancel
+                  </Button>
+                  <Button size="small" variant="contained" onClick={handlePenColorApply}>
+                    Apply
+                  </Button>
+                </Box>
+              </Box>
+            </Popover>
             {penColor !== "#1976d2" && (
               <Tooltip title="Reset to default">
                 <IconButton
@@ -256,23 +353,51 @@ export default function Sidebar({
           </Typography>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <ColorIcon sx={{ color: "#1976d2" }} />
-            <input
-              type="color"
-              value={componentColor}
-              onChange={(e) => onComponentColorChange(e.target.value)}
-              style={{
+            <Button
+              variant="outlined"
+              onClick={handleComponentColorOpen}
+              sx={{
                 width: 60,
                 height: 30,
+                minWidth: 60,
+                padding: 0,
+                backgroundColor: localComponentColor,
                 border: "1px solid #ccc",
-                borderRadius: 4,
-                cursor: "pointer",
+                "&:hover": {
+                  backgroundColor: localComponentColor,
+                  border: "1px solid #999",
+                },
               }}
             />
+            <Popover
+              open={Boolean(componentColorAnchor)}
+              anchorEl={componentColorAnchor}
+              onClose={handleComponentColorClose}
+              anchorOrigin={{
+                vertical: "bottom",
+                horizontal: "left",
+              }}
+            >
+              <Box sx={{ p: 2 }}>
+                <SketchPicker
+                  color={localComponentColor}
+                  onChange={(color: ColorResult) => setLocalComponentColor(color.hex)}
+                />
+                <Box sx={{ display: "flex", gap: 1, mt: 2, justifyContent: "flex-end" }}>
+                  <Button size="small" onClick={handleComponentColorClose}>
+                    Cancel
+                  </Button>
+                  <Button size="small" variant="contained" onClick={handleComponentColorApply}>
+                    Apply
+                  </Button>
+                </Box>
+              </Box>
+            </Popover>
             {componentColor !== "#1976d2" && (
               <Tooltip title="Reset to default">
                 <IconButton
                   size="small"
-                  onClick={() => onComponentColorChange("#1976d2")}
+                  onClick={() => onComponentColorChange("#1976d2", Date.now())}
                   sx={{ padding: 0.5 }}
                 >
                   <RefreshIcon fontSize="small" />
@@ -288,18 +413,46 @@ export default function Sidebar({
           </Typography>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <ColorIcon sx={{ color: "#1976d2" }} />
-            <input
-              type="color"
-              value={canvasColor}
-              onChange={(e) => onCanvasColorChange(e.target.value)}
-              style={{
+            <Button
+              variant="outlined"
+              onClick={handleCanvasColorOpen}
+              sx={{
                 width: 60,
                 height: 30,
+                minWidth: 60,
+                padding: 0,
+                backgroundColor: localCanvasColor,
                 border: "1px solid #ccc",
-                borderRadius: 4,
-                cursor: "pointer",
+                "&:hover": {
+                  backgroundColor: localCanvasColor,
+                  border: "1px solid #999",
+                },
               }}
             />
+            <Popover
+              open={Boolean(canvasColorAnchor)}
+              anchorEl={canvasColorAnchor}
+              onClose={handleCanvasColorClose}
+              anchorOrigin={{
+                vertical: "bottom",
+                horizontal: "left",
+              }}
+            >
+              <Box sx={{ p: 2 }}>
+                <SketchPicker
+                  color={localCanvasColor}
+                  onChange={(color: ColorResult) => setLocalCanvasColor(color.hex)}
+                />
+                <Box sx={{ display: "flex", gap: 1, mt: 2, justifyContent: "flex-end" }}>
+                  <Button size="small" onClick={handleCanvasColorClose}>
+                    Cancel
+                  </Button>
+                  <Button size="small" variant="contained" onClick={handleCanvasColorApply}>
+                    Apply
+                  </Button>
+                </Box>
+              </Box>
+            </Popover>
             {canvasColor !== "#ffffff" && (
               <Tooltip title="Reset to default">
                 <IconButton

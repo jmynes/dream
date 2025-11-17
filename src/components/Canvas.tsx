@@ -27,6 +27,7 @@ interface CanvasProps {
   height?: number;
   penColor?: string;
   componentColor?: string;
+  componentColorTimestamp?: number;
   penSize?: number;
   isDrawing?: boolean;
   isEraser?: boolean;
@@ -52,6 +53,7 @@ export default function Canvas({
   height = 600,
   penColor = "#1976d2",
   componentColor = "#1976d2",
+  componentColorTimestamp = 0,
   penSize = 2,
   isDrawing = true,
   isEraser = false,
@@ -80,9 +82,12 @@ export default function Canvas({
     [],
   );
 
-  // Update selected components' colors when componentColor changes
+  // Update selected components' colors when componentColor changes or when timestamp changes
+  // The timestamp allows us to force updates even when the same color is selected
+  const lastAppliedTimestampRef = useRef<number>(componentColorTimestamp);
+  
   useEffect(() => {
-    if (selectedComponentIds.length > 0) {
+    if (selectedComponentIds.length > 0 && componentColorTimestamp > lastAppliedTimestampRef.current) {
       const updatedComponents = components.map((comp) => {
         if (selectedComponentIds.includes(comp.id)) {
           return {
@@ -93,9 +98,10 @@ export default function Canvas({
         return comp;
       });
       onComponentsChange(updatedComponents);
+      lastAppliedTimestampRef.current = componentColorTimestamp;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [componentColor]); // Only run when componentColor changes
+  }, [componentColor, componentColorTimestamp]); // Run when componentColor or timestamp changes
 
   // Canvas lifecycle management
   const { actualWidth, actualHeight } = useCanvasLifecycle({

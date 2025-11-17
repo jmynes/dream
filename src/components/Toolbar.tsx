@@ -181,26 +181,30 @@ export default function Toolbar({
       <Box sx={{ flex: 1 }} />
 
       <Tooltip title="Undo (Ctrl+Z / Cmd+Z)">
-        <IconButton
-          disabled={!canUndo}
-          onClick={onUndo}
-          color="default"
-          size="small"
-          sx={{ marginLeft: 1 }}
-        >
-          <UndoIcon />
-        </IconButton>
+        <span style={{ display: "inline-flex" }}>
+          <IconButton
+            disabled={!canUndo}
+            onClick={onUndo}
+            color="default"
+            size="small"
+            sx={{ marginLeft: 1 }}
+          >
+            <UndoIcon />
+          </IconButton>
+        </span>
       </Tooltip>
 
       <Tooltip title="Redo (Ctrl+Y / Cmd+Y)">
-        <IconButton
-          disabled={!canRedo}
-          onClick={onRedo}
-          color="default"
-          size="small"
-        >
-          <RedoIcon />
-        </IconButton>
+        <span style={{ display: "inline-flex" }}>
+          <IconButton
+            disabled={!canRedo}
+            onClick={onRedo}
+            color="default"
+            size="small"
+          >
+            <RedoIcon />
+          </IconButton>
+        </span>
       </Tooltip>
 
       <Tooltip title="Delete Everything">
