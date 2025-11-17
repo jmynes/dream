@@ -7,7 +7,6 @@ import {
   deepPurple,
   green,
   grey,
-  indigo,
   lightBlue,
   lightGreen,
   lime,
@@ -31,12 +30,12 @@ const materialColorGroups = [
   {
     label: "Blues & Teals",
     colors: [
+      { hex: "#1976D2", name: "Primary Blue" },
       { hex: blue[500], name: "Blue" },
       { hex: lightBlue[500], name: "Light Blue" },
       { hex: cyan[500], name: "Cyan" },
       { hex: teal[500], name: "Teal" },
-      { hex: indigo[500], name: "Indigo" },
-      { hex: "#1976D2", name: "Primary Blue" },
+      { hex: "#40E0D0", name: "Turquoise" },
     ],
   },
   {
