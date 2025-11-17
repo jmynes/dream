@@ -53,7 +53,14 @@ const getComponentItems = (componentColor: string): ComponentItem[] => [
     type: "Button",
     label: "Button",
     preview: (
-      <Button variant="contained" sx={{ backgroundColor: componentColor, "&:hover": { backgroundColor: componentColor } }}>
+      <Button 
+        variant="contained" 
+        sx={{ 
+          backgroundColor: componentColor, 
+          "&:hover": { backgroundColor: componentColor },
+          color: getTextColorForFilled(componentColor),
+        }}
+      >
         Button
       </Button>
     ),
