@@ -42,7 +42,7 @@ interface CanvasProps {
 export default function Canvas({
   width = 800,
   height = 600,
-  penColor = "#000000",
+  penColor = "#1976d2",
   penSize = 2,
   isDrawing = true,
   isEraser = false,

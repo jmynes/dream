@@ -16,7 +16,7 @@ const theme = createTheme({
 });
 
 function App() {
-  const [penColor, setPenColor] = useState("#000000");
+  const [penColor, setPenColor] = useState("#1976d2");
   const [penSize, setPenSize] = useState(2);
   const [eraserSize] = useState(15);
   const [isDrawing, setIsDrawing] = useState(false);
