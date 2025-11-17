@@ -656,6 +656,7 @@ export default function Canvas({
         selectedComponentIds.includes(c.id),
       );
       setCopiedComponents(selectedComps);
+      setToastMessage("Component copied to clipboard");
     },
     onPaste: () => {
       if (copiedComponents.length === 0) return;
@@ -684,6 +685,7 @@ export default function Canvas({
       const newComponentIds = newComponents.map((c) => c.id);
       onComponentsChange([...components, ...newComponents]);
       setSelectedComponentIds(newComponentIds);
+      setToastMessage(`${newComponents.length} component${newComponents.length === 1 ? '' : 's'} pasted`);
     },
     onRecognizePath: handleRecognizePath,
     onSubmitRecognition: handleSubmitRecognition,
@@ -862,6 +864,15 @@ export default function Canvas({
         onSelectComponentType={handleSelectComponentType}
         onSubmitRecognition={handleSubmitRecognition}
         onCancelRecognition={handleCancelRecognition}
+      />
+
+      {/* Toast notification */}
+      <Snackbar
+        open={toastMessage !== null}
+        autoHideDuration={3000}
+        onClose={() => setToastMessage(null)}
+        message={toastMessage}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       />
     </Box>
   );
