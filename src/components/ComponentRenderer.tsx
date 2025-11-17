@@ -59,6 +59,7 @@ export default function ComponentRenderer({
 }: ComponentRendererProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState("");
+  const [editingField, setEditingField] = useState<string | null>(null); // Track which field is being edited (e.g., "radio1", "radio2", "header1", "cell1_1", etc.)
   const inputRef = useRef<HTMLInputElement>(null);
   const isInteractingWithSliderRef = useRef(false);
   const sliderValueRef = useRef<number>(
@@ -192,7 +193,7 @@ export default function ComponentRenderer({
     setSpeedDialOpen(false);
     setSpeedDialAnchor(null);
     // Trigger text editing mode (same as double-click)
-    const hasText = ["Button", "Card", "Typography", "Avatar", "Paper", "Box", "Radio", "Table"].includes(component.type);
+    const hasText = ["Button", "Card", "Typography", "Avatar", "Paper", "Box", "Radio", "Table", "TextField", "Chip"].includes(component.type);
     if (hasText && onComponentUpdate) {
       let currentText = "";
       if (component.type === "Radio") {
@@ -201,6 +202,9 @@ export default function ComponentRenderer({
       } else if (component.type === "Table") {
         // Edit the first header
         currentText = (component.props?.header1 as string) || "Header 1";
+      } else if (component.type === "TextField") {
+        // Edit the input value
+        currentText = (component.props?.value as string) || "";
       } else {
         currentText = (component.props?.text as string) || "";
       }
@@ -269,48 +273,93 @@ export default function ComponentRenderer({
   const handleDoubleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     // Only allow editing for components that have text
-    const hasText = ["Button", "Card", "Typography", "Avatar", "Paper", "Box", "Radio", "Table"].includes(component.type);
+    const hasText = ["Button", "Card", "Typography", "Avatar", "Paper", "Box", "Radio", "Table", "TextField", "Chip"].includes(component.type);
     if (hasText && onComponentUpdate) {
       let currentText = "";
+      let field = "";
+      
+      // Check if clicking on a specific field (radio option or table cell)
+      const target = e.target as HTMLElement;
+      const dataField = target.getAttribute("data-field") || target.closest("[data-field]")?.getAttribute("data-field");
+      
       if (component.type === "Radio") {
-        // Edit the first option label
-        currentText = (component.props?.label as string) || "Option 1";
+        if (dataField === "radio2") {
+          field = "radio2";
+          currentText = "Option 2";
+        } else {
+          field = "radio1";
+          currentText = (component.props?.label as string) || "Option 1";
+        }
       } else if (component.type === "Table") {
-        // Edit the first header
-        currentText = (component.props?.header1 as string) || "Header 1";
+        if (dataField) {
+          field = dataField;
+          // Get the current value for the specific field
+          const fieldMap: Record<string, string> = {
+            header1: (component.props?.header1 as string) || "Header 1",
+            header2: (component.props?.header2 as string) || "Header 2",
+            header3: (component.props?.header3 as string) || "Header 3",
+            cell1_1: (component.props?.cell1_1 as string) || "Cell 1-1",
+            cell1_2: (component.props?.cell1_2 as string) || "Cell 1-2",
+            cell1_3: (component.props?.cell1_3 as string) || "Cell 1-3",
+            cell2_1: (component.props?.cell2_1 as string) || "Cell 2-1",
+            cell2_2: (component.props?.cell2_2 as string) || "Cell 2-2",
+            cell2_3: (component.props?.cell2_3 as string) || "Cell 2-3",
+          };
+          currentText = fieldMap[dataField] || "";
+        } else {
+          // Default to first header if no field specified
+          field = "header1";
+          currentText = (component.props?.header1 as string) || "Header 1";
+        }
+      } else if (component.type === "TextField") {
+        field = "value";
+        currentText = (component.props?.value as string) || "";
       } else {
+        field = "text";
         currentText = (component.props?.text as string) || "";
       }
+      
+      setEditingField(field);
       setEditValue(currentText);
       setIsEditing(true);
     }
   };
 
   const handleBlur = () => {
-    if (onComponentUpdate && isEditing) {
+    if (onComponentUpdate && isEditing && editingField) {
+      const updateProps: Record<string, unknown> = {};
+      
       if (component.type === "Radio") {
-        // Update the first option label
-        onComponentUpdate(component.id, { label: editValue });
+        if (editingField === "radio2") {
+          // Update second option (stored as label2 or similar - need to add this prop)
+          updateProps.label2 = editValue;
+        } else {
+          // Update first option label
+          updateProps.label = editValue;
+        }
       } else if (component.type === "Table") {
-        // Update the first header
-        onComponentUpdate(component.id, { header1: editValue });
+        // Update the specific field that was edited
+        updateProps[editingField] = editValue;
+      } else if (component.type === "TextField") {
+        updateProps.value = editValue;
       } else {
-        onComponentUpdate(component.id, { text: editValue });
+        updateProps.text = editValue;
       }
+      
+      onComponentUpdate(component.id, updateProps);
       setIsEditing(false);
+      setEditingField(null);
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       e.preventDefault();
-      if (onComponentUpdate) {
-        onComponentUpdate(component.id, { text: editValue });
-        setIsEditing(false);
-      }
+      handleBlur();
     } else if (e.key === "Escape") {
       setIsEditing(false);
-      setEditValue((component.props?.text as string) || "");
+      setEditingField(null);
+      setEditValue("");
     }
   };
 
@@ -529,7 +578,7 @@ export default function ComponentRenderer({
               ...((propsSx as object) || {}),
             }}
           >
-            {(component.props?.text as string) || "Button"}
+            {isEditing ? "" : (component.props?.text as string) || "Button"}
           </Button>
         );
       }
@@ -540,6 +589,7 @@ export default function ComponentRenderer({
             size="small"
             {...(component.props as object)}
             {...widthProps}
+            value={isEditing ? "" : (component.props?.value as string) || ""}
             sx={{
               ...(widthProps.sx || {}),
               "& input": { textAlign: "center", color: componentColor },
@@ -571,9 +621,11 @@ export default function ComponentRenderer({
                 justifyContent: "center",
               }}
             >
-              <Typography variant="body2" sx={{ color: componentColor }}>
-                {(component.props?.text as string) || "Card Content"}
-              </Typography>
+              {isEditing ? null : (
+                <Typography variant="body2" sx={{ color: componentColor }}>
+                  {(component.props?.text as string) || "Card Content"}
+                </Typography>
+              )}
             </CardContent>
           </Card>
         );
@@ -591,7 +643,7 @@ export default function ComponentRenderer({
                 color: componentColor,
               }}
             >
-              {(component.props?.text as string) || "Typography"}
+              {isEditing ? "" : (component.props?.text as string) || "Typography"}
             </Typography>
           </Box>
         );
@@ -710,7 +762,7 @@ export default function ComponentRenderer({
           >
             <Chip
               {...(component.props as object)}
-              label={(component.props?.label as string) || "Chip"}
+              label={isEditing ? "" : (component.props?.label as string) || "Chip"}
               sx={{
                 backgroundColor: componentColor,
                 color: getTextColorForFilled(componentColor),
@@ -738,7 +790,7 @@ export default function ComponentRenderer({
                 color: getTextColorForFilled(componentColor),
               }}
             >
-              {(component.props?.text as string) || "A"}
+              {isEditing ? "" : (component.props?.text as string) || "A"}
             </Avatar>
           </Box>
         );
@@ -783,12 +835,14 @@ export default function ComponentRenderer({
             }}
             {...(component.props as object)}
           >
-            <Typography
-              variant="body2"
-              sx={{ color: getTextColorForFilled(componentColor) }}
-            >
-              {(component.props?.text as string) || "Paper"}
-            </Typography>
+            {isEditing ? null : (
+              <Typography
+                variant="body2"
+                sx={{ color: getTextColorForFilled(componentColor) }}
+              >
+                {(component.props?.text as string) || "Paper"}
+              </Typography>
+            )}
           </Paper>
         );
       case "Box":
@@ -807,9 +861,11 @@ export default function ComponentRenderer({
             }}
             {...(component.props as object)}
           >
-            <Typography variant="body2">
-              {(component.props?.text as string) || "Box"}
-            </Typography>
+            {isEditing ? null : (
+              <Typography variant="body2">
+                {(component.props?.text as string) || "Box"}
+              </Typography>
+            )}
           </Box>
         );
       case "Radio":
@@ -840,7 +896,20 @@ export default function ComponentRenderer({
                     }}
                   />
                 }
-                label={(component.props?.label as string) || "Option 1"}
+                label={
+                  <span
+                    data-field="radio1"
+                    onDoubleClick={(e) => {
+                      e.stopPropagation();
+                      const currentText = (component.props?.label as string) || "Option 1";
+                      setEditingField("radio1");
+                      setEditValue(currentText);
+                      setIsEditing(true);
+                    }}
+                  >
+                    {(isEditing && editingField === "radio1") ? "" : (component.props?.label as string) || "Option 1"}
+                  </span>
+                }
               />
               <FormControlLabel
                 value="option2"
@@ -854,7 +923,20 @@ export default function ComponentRenderer({
                     }}
                   />
                 }
-                label="Option 2"
+                label={
+                  <span
+                    data-field="radio2"
+                    onDoubleClick={(e) => {
+                      e.stopPropagation();
+                      const currentText = (component.props?.label2 as string) || "Option 2";
+                      setEditingField("radio2");
+                      setEditValue(currentText);
+                      setIsEditing(true);
+                    }}
+                  >
+                    {(isEditing && editingField === "radio2") ? "" : (component.props?.label2 as string) || "Option 2"}
+                  </span>
+                }
               />
             </RadioGroup>
           </Box>
@@ -871,38 +953,128 @@ export default function ComponentRenderer({
             <Table size="small" sx={{ border: `1px solid ${componentColor}` }}>
               <TableHead>
                 <TableRow>
-                  <TableCell sx={{ borderColor: componentColor, fontWeight: "bold" }}>
-                    {(component.props?.header1 as string) || "Header 1"}
+                  <TableCell
+                    sx={{ borderColor: componentColor, fontWeight: "bold" }}
+                    data-field="header1"
+                    onDoubleClick={(e) => {
+                      e.stopPropagation();
+                      const currentText = (component.props?.header1 as string) || "Header 1";
+                      setEditingField("header1");
+                      setEditValue(currentText);
+                      setIsEditing(true);
+                    }}
+                  >
+                    {(isEditing && editingField === "header1") ? "" : (component.props?.header1 as string) || "Header 1"}
                   </TableCell>
-                  <TableCell sx={{ borderColor: componentColor, fontWeight: "bold" }}>
-                    {(component.props?.header2 as string) || "Header 2"}
+                  <TableCell
+                    sx={{ borderColor: componentColor, fontWeight: "bold" }}
+                    data-field="header2"
+                    onDoubleClick={(e) => {
+                      e.stopPropagation();
+                      const currentText = (component.props?.header2 as string) || "Header 2";
+                      setEditingField("header2");
+                      setEditValue(currentText);
+                      setIsEditing(true);
+                    }}
+                  >
+                    {(isEditing && editingField === "header2") ? "" : (component.props?.header2 as string) || "Header 2"}
                   </TableCell>
-                  <TableCell sx={{ borderColor: componentColor, fontWeight: "bold" }}>
-                    {(component.props?.header3 as string) || "Header 3"}
+                  <TableCell
+                    sx={{ borderColor: componentColor, fontWeight: "bold" }}
+                    data-field="header3"
+                    onDoubleClick={(e) => {
+                      e.stopPropagation();
+                      const currentText = (component.props?.header3 as string) || "Header 3";
+                      setEditingField("header3");
+                      setEditValue(currentText);
+                      setIsEditing(true);
+                    }}
+                  >
+                    {(isEditing && editingField === "header3") ? "" : (component.props?.header3 as string) || "Header 3"}
                   </TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 <TableRow>
-                  <TableCell sx={{ borderColor: componentColor }}>
-                    {(component.props?.cell1_1 as string) || "Cell 1-1"}
+                  <TableCell
+                    sx={{ borderColor: componentColor }}
+                    data-field="cell1_1"
+                    onDoubleClick={(e) => {
+                      e.stopPropagation();
+                      const currentText = (component.props?.cell1_1 as string) || "Cell 1-1";
+                      setEditingField("cell1_1");
+                      setEditValue(currentText);
+                      setIsEditing(true);
+                    }}
+                  >
+                    {(isEditing && editingField === "cell1_1") ? "" : (component.props?.cell1_1 as string) || "Cell 1-1"}
                   </TableCell>
-                  <TableCell sx={{ borderColor: componentColor }}>
-                    {(component.props?.cell1_2 as string) || "Cell 1-2"}
+                  <TableCell
+                    sx={{ borderColor: componentColor }}
+                    data-field="cell1_2"
+                    onDoubleClick={(e) => {
+                      e.stopPropagation();
+                      const currentText = (component.props?.cell1_2 as string) || "Cell 1-2";
+                      setEditingField("cell1_2");
+                      setEditValue(currentText);
+                      setIsEditing(true);
+                    }}
+                  >
+                    {(isEditing && editingField === "cell1_2") ? "" : (component.props?.cell1_2 as string) || "Cell 1-2"}
                   </TableCell>
-                  <TableCell sx={{ borderColor: componentColor }}>
-                    {(component.props?.cell1_3 as string) || "Cell 1-3"}
+                  <TableCell
+                    sx={{ borderColor: componentColor }}
+                    data-field="cell1_3"
+                    onDoubleClick={(e) => {
+                      e.stopPropagation();
+                      const currentText = (component.props?.cell1_3 as string) || "Cell 1-3";
+                      setEditingField("cell1_3");
+                      setEditValue(currentText);
+                      setIsEditing(true);
+                    }}
+                  >
+                    {(isEditing && editingField === "cell1_3") ? "" : (component.props?.cell1_3 as string) || "Cell 1-3"}
                   </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell sx={{ borderColor: componentColor }}>
-                    {(component.props?.cell2_1 as string) || "Cell 2-1"}
+                  <TableCell
+                    sx={{ borderColor: componentColor }}
+                    data-field="cell2_1"
+                    onDoubleClick={(e) => {
+                      e.stopPropagation();
+                      const currentText = (component.props?.cell2_1 as string) || "Cell 2-1";
+                      setEditingField("cell2_1");
+                      setEditValue(currentText);
+                      setIsEditing(true);
+                    }}
+                  >
+                    {(isEditing && editingField === "cell2_1") ? "" : (component.props?.cell2_1 as string) || "Cell 2-1"}
                   </TableCell>
-                  <TableCell sx={{ borderColor: componentColor }}>
-                    {(component.props?.cell2_2 as string) || "Cell 2-2"}
+                  <TableCell
+                    sx={{ borderColor: componentColor }}
+                    data-field="cell2_2"
+                    onDoubleClick={(e) => {
+                      e.stopPropagation();
+                      const currentText = (component.props?.cell2_2 as string) || "Cell 2-2";
+                      setEditingField("cell2_2");
+                      setEditValue(currentText);
+                      setIsEditing(true);
+                    }}
+                  >
+                    {(isEditing && editingField === "cell2_2") ? "" : (component.props?.cell2_2 as string) || "Cell 2-2"}
                   </TableCell>
-                  <TableCell sx={{ borderColor: componentColor }}>
-                    {(component.props?.cell2_3 as string) || "Cell 2-3"}
+                  <TableCell
+                    sx={{ borderColor: componentColor }}
+                    data-field="cell2_3"
+                    onDoubleClick={(e) => {
+                      e.stopPropagation();
+                      const currentText = (component.props?.cell2_3 as string) || "Cell 2-3";
+                      setEditingField("cell2_3");
+                      setEditValue(currentText);
+                      setIsEditing(true);
+                    }}
+                  >
+                    {(isEditing && editingField === "cell2_3") ? "" : (component.props?.cell2_3 as string) || "Cell 2-3"}
                   </TableCell>
                 </TableRow>
               </TableBody>
@@ -915,48 +1087,100 @@ export default function ComponentRenderer({
   };
 
   const renderEditableInput = () => {
-    if (!isEditing) return null;
+    if (!isEditing || !editingField) return null;
     
     const componentColor = component.color || "#1976d2";
     const isFilled = ["Button", "Paper", "Avatar", "Chip"].includes(component.type);
     const textColor = isFilled ? getTextColorForFilled(componentColor) : componentColor;
     
+    // Position and style based on component type and field
+    let inputStyle: React.CSSProperties = {
+      background: "transparent",
+      border: "2px solid #1976d2",
+      borderRadius: "4px",
+      padding: "4px 8px",
+      color: textColor,
+      fontSize: "14px",
+      textAlign: "center",
+      outline: "none",
+      position: "absolute",
+      zIndex: 20,
+    };
+
+    // Position input where text is rendered for each component type and field
+    if (component.type === "Radio") {
+      if (editingField === "radio1") {
+        // Position input where first option label is (left side)
+        inputStyle = {
+          ...inputStyle,
+          left: "25%",
+          top: "50%",
+          transform: "translate(-50%, -50%)",
+          width: "auto",
+          minWidth: "80px",
+        };
+      } else if (editingField === "radio2") {
+        // Position input where second option label is (right side)
+        inputStyle = {
+          ...inputStyle,
+          left: "75%",
+          top: "50%",
+          transform: "translate(-50%, -50%)",
+          width: "auto",
+          minWidth: "80px",
+        };
+      }
+    } else if (component.type === "Table") {
+      // Calculate position based on which cell is being edited
+      const cellPositions: Record<string, { left: string; top: string; width: string }> = {
+        header1: { left: "8px", top: "8px", width: "calc(33.33% - 16px)" },
+        header2: { left: "calc(33.33% + 8px)", top: "8px", width: "calc(33.33% - 16px)" },
+        header3: { left: "calc(66.66% + 8px)", top: "8px", width: "calc(33.33% - 16px)" },
+        cell1_1: { left: "8px", top: "calc(33.33% + 8px)", width: "calc(33.33% - 16px)" },
+        cell1_2: { left: "calc(33.33% + 8px)", top: "calc(33.33% + 8px)", width: "calc(33.33% - 16px)" },
+        cell1_3: { left: "calc(66.66% + 8px)", top: "calc(33.33% + 8px)", width: "calc(33.33% - 16px)" },
+        cell2_1: { left: "8px", top: "calc(66.66% + 8px)", width: "calc(33.33% - 16px)" },
+        cell2_2: { left: "calc(33.33% + 8px)", top: "calc(66.66% + 8px)", width: "calc(33.33% - 16px)" },
+        cell2_3: { left: "calc(66.66% + 8px)", top: "calc(66.66% + 8px)", width: "calc(33.33% - 16px)" },
+      };
+      
+      const position = cellPositions[editingField] || cellPositions.header1;
+      inputStyle = {
+        ...inputStyle,
+        ...position,
+      };
+    } else if (component.type === "TextField") {
+      // For TextField, position in center
+      inputStyle = {
+        ...inputStyle,
+        left: "50%",
+        top: "50%",
+        transform: "translate(-50%, -50%)",
+        width: "80%",
+      };
+    } else {
+      // For other components (Button, Typography, Card, Paper, Box, Chip, Avatar)
+      // Center the input
+      inputStyle = {
+        ...inputStyle,
+        left: "50%",
+        top: "50%",
+        transform: "translate(-50%, -50%)",
+        width: "80%",
+      };
+    }
+    
     return (
-      <Box
-        sx={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          width: "100%",
-          height: "100%",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          zIndex: 20,
-          backgroundColor: isFilled ? componentColor : "transparent",
-        }}
-      >
-        <input
-          ref={inputRef}
-          type="text"
-          value={editValue}
-          onChange={(e) => setEditValue(e.target.value)}
-          onBlur={handleBlur}
-          onKeyDown={handleKeyDown}
-          style={{
-            background: "transparent",
-            border: "2px solid #1976d2",
-            borderRadius: "4px",
-            padding: "4px 8px",
-            color: textColor,
-            fontSize: "14px",
-            width: "80%",
-            textAlign: "center",
-            outline: "none",
-          }}
-          onClick={(e) => e.stopPropagation()}
-        />
-      </Box>
+      <input
+        ref={inputRef}
+        type="text"
+        value={editValue}
+        onChange={(e) => setEditValue(e.target.value)}
+        onBlur={handleBlur}
+        onKeyDown={handleKeyDown}
+        style={inputStyle}
+        onClick={(e) => e.stopPropagation()}
+      />
     );
   };
 
