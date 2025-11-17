@@ -16,7 +16,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { Palette as PaletteIcon } from "@mui/icons-material";
+import { Delete as DeleteIcon, Edit as EditIcon, EditNote as EditNoteIcon, Palette as PaletteIcon } from "@mui/icons-material";
 import { useState, useRef, useEffect } from "react";
 import type { CanvasComponent } from "../types/component";
 import ColorPicker from "./ColorPicker";
@@ -26,6 +26,7 @@ interface ComponentRendererProps {
   onMouseDown: (e: React.MouseEvent, componentId: string, resizeDirection?: string) => void;
   onComponentUpdate?: (componentId: string, props: Partial<CanvasComponent["props"]>) => void;
   onComponentColorChange?: (componentId: string, color: string) => void;
+  onComponentDelete?: (componentId: string) => void;
   isDragging?: boolean;
   isSelected?: boolean;
 }
@@ -35,6 +36,7 @@ export default function ComponentRenderer({
   onMouseDown,
   onComponentUpdate,
   onComponentColorChange,
+  onComponentDelete,
   isDragging = false,
   isSelected = false,
 }: ComponentRendererProps) {
@@ -149,6 +151,30 @@ export default function ComponentRenderer({
     setSpeedDialAnchor(null);
     setColorPickerAnchor(e.currentTarget as HTMLElement);
   };
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onComponentDelete) {
+      onComponentDelete(component.id);
+    }
+    setSpeedDialOpen(false);
+    setSpeedDialAnchor(null);
+  };
+
+  const handleEditText = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSpeedDialOpen(false);
+    setSpeedDialAnchor(null);
+    // Trigger text editing mode (same as double-click)
+    const hasText = ["Button", "Card", "Typography", "Avatar", "Paper", "Box"].includes(component.type);
+    if (hasText && onComponentUpdate) {
+      const currentText = (component.props?.text as string) || "";
+      setEditValue(currentText);
+      setIsEditing(true);
+    }
+  };
+
+  const canEditText = ["Button", "Card", "Typography", "Avatar", "Paper", "Box"].includes(component.type);
 
   const handleColorPickerClose = () => {
     setColorPickerAnchor(null);
@@ -878,13 +904,49 @@ export default function ComponentRenderer({
               },
             }}
           >
+            {canEditText && (
+              <SpeedDialAction
+                key="edit-text"
+                icon={<EditNoteIcon />}
+                tooltipTitle="Text"
+                tooltipOpen
+                tooltipPlacement="right"
+                onClick={handleEditText}
+                onMouseEnter={(e) => {
+                  // Keep menu open when hovering over button
+                  e.stopPropagation();
+                }}
+                onMouseLeave={(e) => {
+                  // Keep menu open when unhovering from button
+                  // Don't close, just stop propagation
+                  e.stopPropagation();
+                }}
+              />
+            )}
             <SpeedDialAction
               key="edit-color"
               icon={<PaletteIcon />}
-              tooltipTitle="Edit Color"
+              tooltipTitle="Color"
               tooltipOpen
               tooltipPlacement="right"
               onClick={handleEditColor}
+              onMouseEnter={(e) => {
+                // Keep menu open when hovering over button
+                e.stopPropagation();
+              }}
+              onMouseLeave={(e) => {
+                // Keep menu open when unhovering from button
+                // Don't close, just stop propagation
+                e.stopPropagation();
+              }}
+            />
+            <SpeedDialAction
+              key="delete"
+              icon={<DeleteIcon />}
+              tooltipTitle="Delete"
+              tooltipOpen
+              tooltipPlacement="right"
+              onClick={handleDelete}
               onMouseEnter={(e) => {
                 // Keep menu open when hovering over button
                 e.stopPropagation();

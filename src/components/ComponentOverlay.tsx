@@ -30,6 +30,7 @@ interface ComponentOverlayProps {
   onComponentMouseDown: (e: React.MouseEvent, componentId: string, resizeDirection?: string) => void;
   onComponentUpdate?: (componentId: string, props: Partial<CanvasComponent["props"]>) => void;
   onComponentColorChange?: (componentId: string, color: string) => void;
+  onComponentDelete?: (componentId: string) => void;
   onOverlayClick: (e: React.MouseEvent<HTMLDivElement>) => void;
 }
 
@@ -60,6 +61,7 @@ export default function ComponentOverlay({
   onComponentMouseDown,
   onComponentUpdate,
   onComponentColorChange,
+  onComponentDelete,
   onOverlayClick,
 }: ComponentOverlayProps) {
   return (
@@ -137,6 +139,7 @@ export default function ComponentOverlay({
           onMouseDown={onComponentMouseDown}
           onComponentUpdate={onComponentUpdate}
           onComponentColorChange={onComponentColorChange}
+          onComponentDelete={onComponentDelete}
           isDragging={draggedComponentId === component.id}
           isSelected={selectedComponentIds.includes(component.id)}
         />

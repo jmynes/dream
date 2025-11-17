@@ -813,6 +813,11 @@ export default function Canvas({
             )
           );
         }}
+        onComponentDelete={(componentId) => {
+          onComponentsChange(
+            components.filter((c) => c.id !== componentId)
+          );
+        }}
         onOverlayClick={handleOverlayClick}
       />
 
