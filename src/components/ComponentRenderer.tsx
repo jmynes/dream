@@ -192,15 +192,24 @@ export default function ComponentRenderer({
     setSpeedDialOpen(false);
     setSpeedDialAnchor(null);
     // Trigger text editing mode (same as double-click)
-    const hasText = ["Button", "Card", "Typography", "Avatar", "Paper", "Box"].includes(component.type);
+    const hasText = ["Button", "Card", "Typography", "Avatar", "Paper", "Box", "Radio", "Table"].includes(component.type);
     if (hasText && onComponentUpdate) {
-      const currentText = (component.props?.text as string) || "";
+      let currentText = "";
+      if (component.type === "Radio") {
+        // Edit the first option label
+        currentText = (component.props?.label as string) || "Option 1";
+      } else if (component.type === "Table") {
+        // Edit the first header
+        currentText = (component.props?.header1 as string) || "Header 1";
+      } else {
+        currentText = (component.props?.text as string) || "";
+      }
       setEditValue(currentText);
       setIsEditing(true);
     }
   };
 
-  const canEditText = ["Button", "Card", "Typography", "Avatar", "Paper", "Box", "TextField", "Chip"].includes(component.type);
+  const canEditText = ["Button", "Card", "Typography", "Avatar", "Paper", "Box", "TextField", "Chip", "Radio", "Table"].includes(component.type);
 
   const handleColorPickerClose = () => {
     setColorPickerAnchor(null);
@@ -260,9 +269,18 @@ export default function ComponentRenderer({
   const handleDoubleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     // Only allow editing for components that have text
-    const hasText = ["Button", "Card", "Typography", "Avatar", "Paper", "Box"].includes(component.type);
+    const hasText = ["Button", "Card", "Typography", "Avatar", "Paper", "Box", "Radio", "Table"].includes(component.type);
     if (hasText && onComponentUpdate) {
-      const currentText = (component.props?.text as string) || "";
+      let currentText = "";
+      if (component.type === "Radio") {
+        // Edit the first option label
+        currentText = (component.props?.label as string) || "Option 1";
+      } else if (component.type === "Table") {
+        // Edit the first header
+        currentText = (component.props?.header1 as string) || "Header 1";
+      } else {
+        currentText = (component.props?.text as string) || "";
+      }
       setEditValue(currentText);
       setIsEditing(true);
     }
@@ -270,7 +288,15 @@ export default function ComponentRenderer({
 
   const handleBlur = () => {
     if (onComponentUpdate && isEditing) {
-      onComponentUpdate(component.id, { text: editValue });
+      if (component.type === "Radio") {
+        // Update the first option label
+        onComponentUpdate(component.id, { label: editValue });
+      } else if (component.type === "Table") {
+        // Update the first header
+        onComponentUpdate(component.id, { header1: editValue });
+      } else {
+        onComponentUpdate(component.id, { text: editValue });
+      }
       setIsEditing(false);
     }
   };
