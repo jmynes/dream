@@ -55,9 +55,9 @@ const materialColorGroups = [
       { hex: green[500], name: "Green" },
       { hex: lightGreen[500], name: "Light Green" },
       { hex: lime[500], name: "Lime" },
-      { hex: amber[500], name: "Amber" },
+      { hex: "#D4AF37", name: "Gold" },
       { hex: yellow[500], name: "Yellow" },
-      { hex: "#9ACD32", name: "Yellow Green" },
+      { hex: "#FFE135", name: "Banana" },
     ],
   },
   {
