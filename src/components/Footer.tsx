@@ -9,6 +9,8 @@ import {
   TableBody,
   TableCell,
   TableRow,
+  Link,
+  Tooltip,
 } from "@mui/material";
 import { Help as HelpIcon } from "@mui/icons-material";
 import { useState, useEffect } from "react";
@@ -16,6 +18,7 @@ import { useState, useEffect } from "react";
 export default function Footer() {
   const [open, setOpen] = useState(false);
   const currentYear = new Date().getFullYear();
+  const tooltipSlotProps = { tooltip: { sx: { fontSize: "0.85rem" } } };
 
   const shortcuts = [
     { keys: "?", description: "Open keyboard shortcuts help" },
@@ -76,13 +79,38 @@ export default function Footer() {
           © {currentYear} - Dream v0.3
         </Typography>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <IconButton
-            size="small"
-            onClick={() => setOpen(true)}
-            sx={{ padding: 0.5 }}
-          >
-            <HelpIcon fontSize="small" />
-          </IconButton>
+          <Tooltip title="View on GitHub" slotProps={tooltipSlotProps}>
+            <Link
+              href="https://github.com/jmynes/dream"
+              target="_blank"
+              rel="noopener noreferrer"
+              sx={{
+                color: "text.secondary",
+                "&:hover": {
+                  color: "text.primary",
+                },
+                display: "flex",
+                alignItems: "center",
+              }}
+            >
+              <IconButton
+                size="small"
+                sx={{ padding: 0.5 }}
+                component="span"
+              >
+                <i className="fab fa-github" style={{ fontSize: "1.2rem" }} />
+              </IconButton>
+            </Link>
+          </Tooltip>
+          <Tooltip title="Keyboard Shortcuts" slotProps={tooltipSlotProps}>
+            <IconButton
+              size="small"
+              onClick={() => setOpen(true)}
+              sx={{ padding: 0.5 }}
+            >
+              <HelpIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
         </Box>
       </Box>
 
