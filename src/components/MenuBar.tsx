@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 import { useState } from "react";
 
-interface ToolbarProps {
+interface MenuBarProps {
   onDeleteEverything: () => void;
   onUndo: () => void;
   onRedo: () => void;
@@ -21,13 +21,13 @@ interface ToolbarProps {
   canRedo: boolean;
 }
 
-export default function Toolbar({
+export default function MenuBar({
   onDeleteEverything,
   onUndo,
   onRedo,
   canUndo,
   canRedo,
-}: ToolbarProps) {
+}: MenuBarProps) {
   const [fileMenuAnchor, setFileMenuAnchor] = useState<null | HTMLElement>(
     null,
   );

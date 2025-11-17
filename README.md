@@ -13,7 +13,7 @@ A React + TypeScript web application that provides a canvas-based interface for 
 
 - ✅ Interactive canvas for drawing
 - ✅ Pen tool with adjustable size and color
-- ✅ Toolbar with drawing controls
+- ✅ Menu bar with file/options/help menus
 - ✅ Responsive layout with Material-UI
 
 ## Getting Started
@@ -67,7 +67,7 @@ npm run format
 src/
 ├── components/
 │   ├── Canvas.tsx      # Main canvas component with drawing functionality
-│   └── Toolbar.tsx     # Toolbar with pen controls
+│   └── MenuBar.tsx     # Menu bar with file/options/help menus
 ├── App.tsx             # Main application component
 └── main.tsx            # Application entry point
 ```
@@ -82,12 +82,14 @@ The `Canvas` component uses HTML5 Canvas API to provide drawing functionality:
 - Smooth line drawing with `lineCap` and `lineJoin`
 - Drawing state management (enabled/disabled)
 
-### Toolbar Component
+### MenuBar Component
 
-The `Toolbar` provides:
-- Pen tool toggle
-- Pen size slider (1-20px)
-- Color picker for pen color
+The `MenuBar` provides:
+- File menu (New, Open, Save, Save As, Exit)
+- Options menu (Preferences, Settings)
+- Help menu (About, Documentation)
+- Undo/Redo controls
+- Delete everything action
 
 ### Future Enhancements
 

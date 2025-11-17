@@ -19,7 +19,7 @@ import {
 } from "@mui/material";
 import type { ComponentType } from "../types/component";
 
-interface RightSidebarProps {
+interface ComponentsBarProps {
   onComponentSelect: (type: ComponentType) => void;
   selectedComponentType: ComponentType | null;
   componentColor: string;
@@ -212,11 +212,11 @@ const getComponentItems = (componentColor: string): ComponentItem[] => [
   },
 ];
 
-export default function RightSidebar({
+export default function ComponentsBar({
   onComponentSelect,
   selectedComponentType,
   componentColor,
-}: RightSidebarProps) {
+}: ComponentsBarProps) {
   const componentItems = getComponentItems(componentColor);
 
   return (

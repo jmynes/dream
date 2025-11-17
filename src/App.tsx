@@ -4,9 +4,9 @@ import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Canvas from "./components/Canvas";
 import Footer from "./components/Footer";
-import RightSidebar from "./components/RightSidebar";
-import Sidebar from "./components/Sidebar";
-import Toolbar from "./components/Toolbar";
+import ComponentsBar from "./components/ComponentsBar";
+import ToolsBar from "./components/ToolsBar";
+import MenuBar from "./components/MenuBar";
 import type { CanvasComponent, ComponentType } from "./types/component";
 
 const theme = createTheme({
@@ -222,7 +222,7 @@ function App() {
           overflow: "hidden",
         }}
       >
-        <Toolbar
+        <MenuBar
           onDeleteEverything={handleDeleteEverything}
           onUndo={handleUndo}
           onRedo={handleRedo}
@@ -239,7 +239,7 @@ function App() {
             overflow: "hidden",
           }}
         >
-          <Sidebar
+          <ToolsBar
             penColor={penColor}
             onPenColorChange={setPenColor}
             componentColor={componentColor}
@@ -328,7 +328,7 @@ function App() {
               resizeMode={resizeMode}
             />
           </Box>
-          <RightSidebar
+          <ComponentsBar
             onComponentSelect={handleComponentSelect}
             selectedComponentType={selectedComponentType}
             componentColor={componentColor}

@@ -24,7 +24,7 @@ import { useState, useEffect, useRef } from "react";
 import { SketchPicker } from "react-color";
 import type { ColorResult } from "react-color";
 
-interface SidebarProps {
+interface ToolsBarProps {
   penColor: string;
   onPenColorChange: (color: string) => void;
   componentColor: string;
@@ -57,7 +57,7 @@ interface SidebarProps {
   onMacOSStyleToggle: (isMacOS: boolean) => void;
 }
 
-export default function Sidebar({
+export default function ToolsBar({
   penColor,
   onPenColorChange,
   componentColor,
@@ -88,7 +88,7 @@ export default function Sidebar({
   onBrowserUIEnabledToggle,
   isMacOSStyle,
   onMacOSStyleToggle,
-}: SidebarProps) {
+}: ToolsBarProps) {
   // State for color picker popovers
   const [componentColorAnchor, setComponentColorAnchor] = useState<HTMLElement | null>(null);
   const [penColorAnchor, setPenColorAnchor] = useState<HTMLElement | null>(null);
