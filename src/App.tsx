@@ -26,6 +26,7 @@ function App() {
 	const [components, setComponents] = useState<CanvasComponent[]>([]);
 	const [selectedComponentType, setSelectedComponentType] =
 		useState<ComponentType | null>(null);
+	const [clearCanvasKey, setClearCanvasKey] = useState(0);
 
 	const handleComponentSelect = (type: ComponentType) => {
 		setSelectedComponentType(type);
@@ -34,6 +35,11 @@ function App() {
 
 	const handleComponentPlaced = () => {
 		setSelectedComponentType(null);
+	};
+
+	const handleDeleteEverything = () => {
+		setComponents([]);
+		setClearCanvasKey((prev) => prev + 1);
 	};
 
 	return (
@@ -81,6 +87,7 @@ function App() {
 							setSelectedComponentType(null);
 						}
 					}}
+					onDeleteEverything={handleDeleteEverything}
 				/>
 
 				<Box
@@ -98,6 +105,7 @@ function App() {
 					/>
 					<Box sx={{ flex: 1, overflow: "hidden", display: "flex" }}>
 					<Canvas
+						key={clearCanvasKey}
 						penColor={penColor}
 						penSize={isEraser ? eraserSize : penSize}
 						isDrawing={isDrawing}

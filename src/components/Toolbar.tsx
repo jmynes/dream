@@ -1,4 +1,5 @@
 import {
+	Delete as DeleteIcon,
 	GridOn as GridIcon,
 	Palette as ColorIcon,
 	Edit as PenIcon,
@@ -19,6 +20,7 @@ interface ToolbarProps {
 	onEraserToggle: (eraser: boolean) => void;
 	isThinkingPen: boolean;
 	onThinkingPenToggle: (thinkingPen: boolean) => void;
+	onDeleteEverything: () => void;
 }
 
 export default function Toolbar({
@@ -34,6 +36,7 @@ export default function Toolbar({
 	onEraserToggle,
 	isThinkingPen,
 	onThinkingPenToggle,
+	onDeleteEverything,
 }: ToolbarProps) {
 	return (
 		<Box
@@ -97,6 +100,25 @@ export default function Toolbar({
 					onClick={() => onSnapToGridToggle(!snapToGrid)}
 				>
 					<GridIcon />
+				</IconButton>
+			</Tooltip>
+
+			<Box sx={{ flex: 1 }} />
+
+			<Tooltip title="Delete Everything">
+				<IconButton
+					color="error"
+					onClick={() => {
+						if (
+							window.confirm(
+								"Are you sure you want to delete everything? This cannot be undone.",
+							)
+						) {
+							onDeleteEverything();
+						}
+					}}
+				>
+					<DeleteIcon />
 				</IconButton>
 			</Tooltip>
 
