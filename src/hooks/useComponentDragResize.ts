@@ -1,4 +1,4 @@
-import { useCallback, useState, useRef } from "react";
+import { useCallback, useState, useRef, useEffect } from "react";
 import type { Point } from "../utils/canvasUtils";
 import type { CanvasComponent } from "../types/component";
 
@@ -46,6 +46,44 @@ export function useComponentDragResize({
       Map<string, { width: number; height: number; x: number; y: number }>
     >(new Map());
   const justFinishedResizeRef = useRef(false);
+  const pendingComponentsRef = useRef<CanvasComponent[] | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
+
+  const flushPendingUpdates = useCallback(() => {
+    if (animationFrameRef.current !== null) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
+    if (pendingComponentsRef.current) {
+      onComponentsChange(pendingComponentsRef.current);
+      pendingComponentsRef.current = null;
+    }
+  }, [onComponentsChange]);
+
+  const scheduleComponentsUpdate = useCallback(
+    (updatedComponents: CanvasComponent[]) => {
+      pendingComponentsRef.current = updatedComponents;
+      if (animationFrameRef.current === null) {
+        animationFrameRef.current = requestAnimationFrame(() => {
+          if (pendingComponentsRef.current) {
+            onComponentsChange(pendingComponentsRef.current);
+            pendingComponentsRef.current = null;
+          }
+          animationFrameRef.current = null;
+        });
+      }
+    },
+    [onComponentsChange],
+  );
+
+  useEffect(() => {
+    return () => {
+      if (animationFrameRef.current !== null) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
+      }
+    };
+  }, []);
 
   const handleComponentMouseDown = useCallback(
     (
@@ -326,7 +364,7 @@ export function useComponentDragResize({
           }
           return comp;
         });
-        onComponentsChange(updatedComponents);
+        scheduleComponentsUpdate(updatedComponents);
         return;
       }
 
@@ -370,7 +408,7 @@ export function useComponentDragResize({
         }
         return comp;
       });
-      onComponentsChange(updatedComponents);
+      scheduleComponentsUpdate(updatedComponents);
     },
     [
       resizingComponentId,
@@ -391,11 +429,12 @@ export function useComponentDragResize({
       dragOffset,
       components,
       snapToGridPoint,
-      onComponentsChange,
+      scheduleComponentsUpdate,
     ],
   );
 
   const handleContainerMouseUp = useCallback(() => {
+    flushPendingUpdates();
     const wasResizing = resizingComponentId !== null;
     setDraggedComponentId(null);
     setDragOffset(null);
@@ -416,7 +455,7 @@ export function useComponentDragResize({
         justFinishedResizeRef.current = false;
       }, 100);
     }
-  }, [resizingComponentId]);
+  }, [flushPendingUpdates, resizingComponentId]);
 
   const checkJustFinishedResize = useCallback(() => {
     return justFinishedResizeRef.current;
