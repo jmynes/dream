@@ -237,10 +237,17 @@ export function useComponentDragResize({
         let snappedY = newY;
         
         if (snapToGrid) {
-          const numColumns = Math.round(newWidth / gridCellWidth);
+          // Ensure minimum size is at least one grid cell
+          const minWidth = Math.max(gridCellWidth, newWidth);
+          const minHeight = Math.max(gridCellHeight, newHeight);
+          
+          // Calculate number of grid cells, ensuring at least 1
+          const numColumns = Math.max(1, Math.round(minWidth / gridCellWidth));
           snappedWidth = numColumns * gridCellWidth;
-          const numRows = Math.round(newHeight / gridCellHeight);
+          const numRows = Math.max(1, Math.round(minHeight / gridCellHeight));
           snappedHeight = numRows * gridCellHeight;
+          
+          // Snap position to grid
           snappedX = Math.round(newX / gridCellWidth) * gridCellWidth;
           snappedY = Math.round(newY / gridCellHeight) * gridCellHeight;
         }
@@ -269,8 +276,20 @@ export function useComponentDragResize({
               const newCompWidth = Math.max(50, initialState.width * widthScaleFactor);
               const newCompHeight = Math.max(30, initialState.height * heightScaleFactor);
               
-              const snappedCompWidth = snapToGrid ? Math.round(newCompWidth / gridCellWidth) * gridCellWidth : newCompWidth;
-              const snappedCompHeight = snapToGrid ? Math.round(newCompHeight / gridCellHeight) * gridCellHeight : newCompHeight;
+              let snappedCompWidth = newCompWidth;
+              let snappedCompHeight = newCompHeight;
+              
+              if (snapToGrid) {
+                // Ensure minimum size is at least one grid cell
+                const minCompWidth = Math.max(gridCellWidth, newCompWidth);
+                const minCompHeight = Math.max(gridCellHeight, newCompHeight);
+                
+                // Calculate number of grid cells, ensuring at least 1
+                const numColumns = Math.max(1, Math.round(minCompWidth / gridCellWidth));
+                snappedCompWidth = numColumns * gridCellWidth;
+                const numRows = Math.max(1, Math.round(minCompHeight / gridCellHeight));
+                snappedCompHeight = numRows * gridCellHeight;
+              }
               
               // Calculate position adjustments
               let newCompX = initialState.x;
