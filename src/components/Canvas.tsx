@@ -76,6 +76,23 @@ export default function Canvas({
     [],
   );
 
+  // Update selected components' colors when componentColor changes
+  useEffect(() => {
+    if (selectedComponentIds.length > 0) {
+      const updatedComponents = components.map((comp) => {
+        if (selectedComponentIds.includes(comp.id)) {
+          return {
+            ...comp,
+            color: componentColor,
+          };
+        }
+        return comp;
+      });
+      onComponentsChange(updatedComponents);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [componentColor]); // Only run when componentColor changes
+
   // Canvas lifecycle management
   const { actualWidth, actualHeight } = useCanvasLifecycle({
     canvasRef,
