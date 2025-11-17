@@ -16,7 +16,13 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { Delete as DeleteIcon, Edit as EditIcon, EditNote as EditNoteIcon, Palette as PaletteIcon } from "@mui/icons-material";
+import {
+  ContentCopy as CopyIcon,
+  Delete as DeleteIcon,
+  Edit as EditIcon,
+  EditNote as EditNoteIcon,
+  Palette as PaletteIcon,
+} from "@mui/icons-material";
 import { useState, useRef, useEffect } from "react";
 import type { CanvasComponent } from "../types/component";
 import ColorPicker from "./ColorPicker";
@@ -27,6 +33,7 @@ interface ComponentRendererProps {
   onComponentUpdate?: (componentId: string, props: Partial<CanvasComponent["props"]>) => void;
   onComponentColorChange?: (componentId: string, color: string) => void;
   onComponentDelete?: (componentId: string) => void;
+  onComponentCopy?: (component: CanvasComponent) => void;
   isDragging?: boolean;
   isSelected?: boolean;
 }
@@ -37,6 +44,7 @@ export default function ComponentRenderer({
   onComponentUpdate,
   onComponentColorChange,
   onComponentDelete,
+  onComponentCopy,
   isDragging = false,
   isSelected = false,
 }: ComponentRendererProps) {
@@ -156,6 +164,15 @@ export default function ComponentRenderer({
     e.stopPropagation();
     if (onComponentDelete) {
       onComponentDelete(component.id);
+    }
+    setSpeedDialOpen(false);
+    setSpeedDialAnchor(null);
+  };
+
+  const handleCopy = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onComponentCopy) {
+      onComponentCopy(component);
     }
     setSpeedDialOpen(false);
     setSpeedDialAnchor(null);
@@ -923,6 +940,23 @@ export default function ComponentRenderer({
                 }}
               />
             )}
+            <SpeedDialAction
+              key="copy"
+              icon={<CopyIcon />}
+              tooltipTitle="Copy"
+              tooltipOpen
+              tooltipPlacement="right"
+              onClick={handleCopy}
+              onMouseEnter={(e) => {
+                // Keep menu open when hovering over button
+                e.stopPropagation();
+              }}
+              onMouseLeave={(e) => {
+                // Keep menu open when unhovering from button
+                // Don't close, just stop propagation
+                e.stopPropagation();
+              }}
+            />
             <SpeedDialAction
               key="edit-color"
               icon={<PaletteIcon />}

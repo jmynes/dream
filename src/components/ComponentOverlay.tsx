@@ -31,6 +31,7 @@ interface ComponentOverlayProps {
   onComponentUpdate?: (componentId: string, props: Partial<CanvasComponent["props"]>) => void;
   onComponentColorChange?: (componentId: string, color: string) => void;
   onComponentDelete?: (componentId: string) => void;
+  onComponentCopy?: (component: CanvasComponent) => void;
   onOverlayClick: (e: React.MouseEvent<HTMLDivElement>) => void;
 }
 
@@ -62,6 +63,7 @@ export default function ComponentOverlay({
   onComponentUpdate,
   onComponentColorChange,
   onComponentDelete,
+  onComponentCopy,
   onOverlayClick,
 }: ComponentOverlayProps) {
   return (
@@ -140,6 +142,7 @@ export default function ComponentOverlay({
           onComponentUpdate={onComponentUpdate}
           onComponentColorChange={onComponentColorChange}
           onComponentDelete={onComponentDelete}
+          onComponentCopy={onComponentCopy}
           isDragging={draggedComponentId === component.id}
           isSelected={selectedComponentIds.includes(component.id)}
         />

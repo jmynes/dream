@@ -818,6 +818,27 @@ export default function Canvas({
             components.filter((c) => c.id !== componentId)
           );
         }}
+        onComponentCopy={(component) => {
+          const offsetX = snapToGrid ? gridCellWidth : 10;
+          const offsetY = snapToGrid ? gridCellHeight : 10;
+
+          let newX = component.x + offsetX;
+          let newY = component.y + offsetY;
+
+          if (snapToGrid) {
+            newX = Math.round(newX / gridCellWidth) * gridCellWidth;
+            newY = Math.round(newY / gridCellHeight) * gridCellHeight;
+          }
+
+          const newComponent: CanvasComponent = {
+            ...component,
+            id: `component-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+            x: newX,
+            y: newY,
+          };
+
+          onComponentsChange([...components, newComponent]);
+        }}
         onOverlayClick={handleOverlayClick}
       />
 
