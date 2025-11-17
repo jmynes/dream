@@ -89,6 +89,41 @@ export function useComponentDragResize({
     };
   }, []);
 
+  // Global mouse up listener to handle mouse release outside canvas
+  useEffect(() => {
+    const handleGlobalMouseUp = () => {
+      if (draggedComponentId !== null || resizingComponentId !== null) {
+        flushPendingUpdates();
+        const wasResizing = resizingComponentId !== null;
+        setDraggedComponentId(null);
+        setDragOffset(null);
+        setResizingComponentId(null);
+        setResizeStartX(null);
+        setResizeStartY(null);
+        setResizeStartWidth(null);
+        setResizeStartHeight(null);
+        setResizeStartComponentX(null);
+        setResizeStartComponentY(null);
+        setResizeDirection(null);
+        setInitialSelectedComponentStates(new Map());
+        // Track that we just finished resizing to prevent deselection
+        if (wasResizing) {
+          justFinishedResizeRef.current = true;
+          // Clear the flag after a short delay
+          setTimeout(() => {
+            justFinishedResizeRef.current = false;
+          }, 100);
+        }
+      }
+    };
+
+    document.addEventListener("mouseup", handleGlobalMouseUp);
+
+    return () => {
+      document.removeEventListener("mouseup", handleGlobalMouseUp);
+    };
+  }, [draggedComponentId, resizingComponentId, flushPendingUpdates]);
+
   const handleComponentMouseDown = useCallback(
     (
       e: React.MouseEvent,
