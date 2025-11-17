@@ -299,7 +299,18 @@ export default function ComponentRenderer({
             <Checkbox
               {...(component.props as object)}
               defaultChecked={component.props?.checked as boolean}
-              sx={{ color: componentColor, "&.Mui-checked": { color: componentColor } }}
+              sx={{ 
+                color: isDarkColor(componentColor) ? componentColor : "#000000",
+                "&.Mui-checked": { 
+                  color: isDarkColor(componentColor) ? componentColor : "#000000",
+                },
+                "& .MuiSvgIcon-root": {
+                  color: isDarkColor(componentColor) ? componentColor : "#000000",
+                },
+                "&.Mui-checked .MuiSvgIcon-root": {
+                  color: isDarkColor(componentColor) ? componentColor : "#000000",
+                },
+              }}
             />
           </Box>
         );
