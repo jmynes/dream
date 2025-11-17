@@ -26,7 +26,7 @@ import { useState, useEffect, useRef } from "react";
 import ColorPicker from "./ColorPicker";
 
 
-interface ToolsBarProps {
+interface ToolsDrawerProps {
   penColor: string;
   onPenColorChange: (color: string) => void;
   componentColor: string;
@@ -63,7 +63,7 @@ interface ToolsBarProps {
   onMacOSStyleToggle: (isMacOS: boolean) => void;
 }
 
-export default function ToolsBar({
+export default function ToolsDrawer({
   penColor,
   onPenColorChange,
   componentColor,
@@ -98,7 +98,7 @@ export default function ToolsBar({
   onBrowserUIEnabledToggle,
   isMacOSStyle,
   onMacOSStyleToggle,
-}: ToolsBarProps) {
+}: ToolsDrawerProps) {
   const tooltipSlotProps = { tooltip: { sx: { fontSize: "0.85rem" } } };
   // State for color picker popovers
   const [componentColorAnchor, setComponentColorAnchor] =

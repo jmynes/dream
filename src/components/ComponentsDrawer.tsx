@@ -31,7 +31,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import type { ComponentType } from "../types/component";
 import { useMemo, useState } from "react";
 
-interface ComponentsBarProps {
+interface ComponentsDrawerProps {
   onComponentSelect: (type: ComponentType) => void;
   selectedComponentType: ComponentType | null;
   componentColor: string;
@@ -321,11 +321,11 @@ const getComponentItems = (componentColor: string): ComponentItem[] => {
   return items.sort((a, b) => a.label.localeCompare(b.label));
 };
 
-export default function ComponentsBar({
+export default function ComponentsDrawer({
   onComponentSelect,
   selectedComponentType,
   componentColor,
-}: ComponentsBarProps) {
+}: ComponentsDrawerProps) {
   const componentItems = getComponentItems(componentColor);
   const [searchQuery, setSearchQuery] = useState("");
 

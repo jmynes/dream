@@ -4,8 +4,8 @@ import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Canvas from "./components/Canvas";
 import Footer from "./components/Footer";
-import ComponentsBar from "./components/ComponentsBar";
-import ToolsBar from "./components/ToolsBar";
+import ComponentsDrawer from "./components/ComponentsDrawer";
+import ToolsDrawer from "./components/ToolsDrawer";
 import MenuBar from "./components/MenuBar";
 import type { CanvasComponent, ComponentType } from "./types/component";
 
@@ -242,7 +242,7 @@ function App() {
             overflow: "hidden",
           }}
         >
-          <ToolsBar
+          <ToolsDrawer
             penColor={penColor}
             onPenColorChange={setPenColor}
             componentColor={componentColor}
@@ -378,7 +378,7 @@ function App() {
               }}
             />
           </Box>
-          <ComponentsBar
+          <ComponentsDrawer
             onComponentSelect={handleComponentSelect}
             selectedComponentType={selectedComponentType}
             componentColor={componentColor}
