@@ -20,7 +20,7 @@ import {
   Switch,
   FormControlLabel,
 } from "@mui/material";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { SketchPicker } from "react-color";
 import type { ColorResult } from "react-color";
 
@@ -112,6 +112,39 @@ export default function Sidebar({
     setLocalCanvasColor(canvasColor);
   }, [canvasColor]);
   
+  // Brush size slider refs/state for performant updates
+  const [displayPenSize, setDisplayPenSize] = useState(penSize);
+  const penSizeRefLocal = useRef(penSize);
+  const penSizeRafRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    penSizeRefLocal.current = penSize;
+    setDisplayPenSize(penSize);
+  }, [penSize]);
+
+  useEffect(() => {
+    return () => {
+      if (penSizeRafRef.current !== null) {
+        cancelAnimationFrame(penSizeRafRef.current);
+      }
+    };
+  }, []);
+
+  const handlePenSizeChange = (_: Event, value: number | number[]) => {
+    const nextValue = Array.isArray(value) ? value[0] : value;
+    penSizeRefLocal.current = nextValue;
+    if (penSizeRafRef.current === null) {
+      penSizeRafRef.current = requestAnimationFrame(() => {
+        setDisplayPenSize(penSizeRefLocal.current);
+        penSizeRafRef.current = null;
+      });
+    }
+  };
+
+  const handlePenSizeChangeCommitted = () => {
+    onPenSizeChange(penSizeRefLocal.current);
+  };
+
   const handleComponentColorOpen = (event: React.MouseEvent<HTMLElement>) => {
     setComponentColorAnchor(event.currentTarget);
     setLocalComponentColor(componentColor);
@@ -276,11 +309,12 @@ export default function Sidebar({
 
         <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
           <Typography variant="body2" color="text.secondary">
-            Brush Size: {penSize}px
+            Brush Size: {displayPenSize}px
           </Typography>
           <Slider
-            value={penSize}
-            onChange={(_, value) => onPenSizeChange(value as number)}
+            value={displayPenSize}
+            onChange={handlePenSizeChange}
+            onChangeCommitted={handlePenSizeChangeCommitted}
             min={1}
             max={20}
             step={1}

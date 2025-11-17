@@ -35,6 +35,36 @@ export default function ComponentRenderer({
   const [editValue, setEditValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const isInteractingWithSliderRef = useRef(false);
+  const sliderValueRef = useRef<number>(
+    (component.props?.value as number) ?? 50,
+  );
+  const sliderAnimationFrameRef = useRef<number | null>(null);
+  const [sliderDisplayValue, setSliderDisplayValue] = useState(
+    sliderValueRef.current,
+  );
+
+  useEffect(() => {
+    const propValue = (component.props?.value as number) ?? 50;
+    sliderValueRef.current = propValue;
+    setSliderDisplayValue(propValue);
+  }, [component.props?.value]);
+
+  useEffect(() => {
+    return () => {
+      if (sliderAnimationFrameRef.current !== null) {
+        cancelAnimationFrame(sliderAnimationFrameRef.current);
+      }
+    };
+  }, []);
+
+  const scheduleSliderRenderUpdate = () => {
+    if (sliderAnimationFrameRef.current === null) {
+      sliderAnimationFrameRef.current = requestAnimationFrame(() => {
+        setSliderDisplayValue(sliderValueRef.current);
+        sliderAnimationFrameRef.current = null;
+      });
+    }
+  };
 
   const handleMouseDown = (e: React.MouseEvent) => {
     // Don't start dragging if clicking on interactive elements like Slider
@@ -89,10 +119,26 @@ export default function ComponentRenderer({
     }, 100);
   };
   
-  const handleSliderChange = () => {
-    // Track that slider is being interacted with
+  const handleSliderChange = (
+    _event: Event,
+    value: number | number[],
+  ) => {
+    const numericValue = Array.isArray(value) ? value[0] : value;
+    sliderValueRef.current = numericValue;
     isInteractingWithSliderRef.current = true;
-    // Reset after interaction
+    scheduleSliderRenderUpdate();
+  };
+
+  const handleSliderChangeCommitted = (
+    _event: Event,
+    value: number | number[],
+  ) => {
+    const numericValue = Array.isArray(value) ? value[0] : value;
+    sliderValueRef.current = numericValue;
+    scheduleSliderRenderUpdate();
+    if (onComponentUpdate) {
+      onComponentUpdate(component.id, { value: sliderValueRef.current });
+    }
     setTimeout(() => {
       isInteractingWithSliderRef.current = false;
     }, 100);
@@ -408,11 +454,12 @@ export default function ComponentRenderer({
           >
             <Slider
               {...(component.props as object)}
-              defaultValue={(component.props?.value as number) || 50}
+              value={sliderDisplayValue}
               onMouseDown={handleSliderMouseDown}
               onMouseMove={handleSliderMouseMove}
               onMouseUp={handleSliderMouseUp}
               onChange={handleSliderChange}
+              onChangeCommitted={handleSliderChangeCommitted}
               sx={{ 
                 width: "100%", 
                 color: componentColor,
