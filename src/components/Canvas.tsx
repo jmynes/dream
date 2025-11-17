@@ -1,4 +1,5 @@
-import { Box, Button, Paper, Snackbar } from "@mui/material";
+import { Box, Button, Menu, MenuItem, Paper, Snackbar } from "@mui/material";
+import { ContentPaste as PasteIcon, SelectAll as SelectAllIcon } from "@mui/icons-material";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { CanvasComponent, ComponentType } from "../types/component";
 import RecognitionUI from "./RecognitionUI";
@@ -108,6 +109,7 @@ export default function Canvas({
   const lassoPathRef = useRef<Point[]>([]);
   const [isLassoDrawing, setIsLassoDrawing] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [contextMenuAnchor, setContextMenuAnchor] = useState<{ mouseX: number; mouseY: number } | null>(null);
 
   const resetLasso = useCallback(() => {
     setIsLassoDrawing(false);
@@ -717,6 +719,17 @@ export default function Canvas({
         handleContainerClick(e);
         handleCanvasBackgroundClick(e);
       }}
+      onContextMenu={(e) => {
+        // Only show context menu if right-clicking on empty space (not on components)
+        // Browser UI will naturally intercept clicks due to higher z-index and pointerEvents
+        if (e.target === e.currentTarget || (e.target as HTMLElement).tagName === "CANVAS") {
+          e.preventDefault();
+          setContextMenuAnchor({
+            mouseX: e.clientX,
+            mouseY: e.clientY,
+          });
+        }
+      }}
       onMouseMove={handleContainerMouseMove}
       onMouseUp={handleContainerMouseUp}
       onDragOver={handleDragOver}
@@ -827,6 +840,15 @@ export default function Canvas({
           setToastMessage("Component copied to clipboard");
         }}
         onOverlayClick={handleOverlayClick}
+        onContextMenu={(e) => {
+          // Only show context menu if right-clicking on empty space (not on components)
+          // Browser UI will naturally intercept clicks due to higher z-index and pointerEvents
+          e.preventDefault();
+          setContextMenuAnchor({
+            mouseX: e.clientX,
+            mouseY: e.clientY,
+          });
+        }}
       />
 
       {/* Submit button for magic wand - shown when drawing */}
@@ -874,6 +896,66 @@ export default function Canvas({
         message={toastMessage}
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       />
+
+      {/* Context menu for empty space */}
+      <Menu
+        open={contextMenuAnchor !== null}
+        onClose={() => setContextMenuAnchor(null)}
+        anchorReference="anchorPosition"
+        anchorPosition={
+          contextMenuAnchor !== null
+            ? { top: contextMenuAnchor.mouseY, left: contextMenuAnchor.mouseX }
+            : undefined
+        }
+      >
+        <MenuItem
+          disabled={copiedComponents.length === 0}
+          onClick={() => {
+            if (copiedComponents.length === 0) return;
+            
+            // Create new components with offset positions and new IDs
+            const offsetX = snapToGrid ? gridCellWidth : 10;
+            const offsetY = snapToGrid ? gridCellHeight : 10;
+            
+            const newComponents = copiedComponents.map((comp, index) => {
+              let newX = comp.x + offsetX;
+              let newY = comp.y + offsetY;
+              
+              if (snapToGrid) {
+                newX = Math.round(newX / gridCellWidth) * gridCellWidth;
+                newY = Math.round(newY / gridCellHeight) * gridCellHeight;
+              }
+              
+              return {
+                ...comp,
+                id: `component-${Date.now()}-${index}-${Math.random().toString(36).substring(2, 9)}`,
+                x: newX,
+                y: newY,
+              };
+            });
+            
+            const newComponentIds = newComponents.map((c) => c.id);
+            onComponentsChange([...components, ...newComponents]);
+            setSelectedComponentIds(newComponentIds);
+            setToastMessage(`${newComponents.length} component${newComponents.length === 1 ? '' : 's'} pasted`);
+            setContextMenuAnchor(null);
+          }}
+        >
+          <PasteIcon sx={{ mr: 1, fontSize: "1.2rem" }} />
+          Paste
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            if (components.length > 0) {
+              setSelectedComponentIds(components.map((c) => c.id));
+            }
+            setContextMenuAnchor(null);
+          }}
+        >
+          <SelectAllIcon sx={{ mr: 1, fontSize: "1.2rem" }} />
+          Select All
+        </MenuItem>
+      </Menu>
     </Box>
   );
 }

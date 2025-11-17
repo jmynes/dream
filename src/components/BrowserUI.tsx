@@ -33,13 +33,14 @@ export default function BrowserUI({
 
   return (
     <Box
+      data-browser-ui
       sx={{
         position: "absolute",
         top: 0,
         left: 0,
         width: "100%",
-        pointerEvents: "none",
-        zIndex: 1000,
+        pointerEvents: "auto",
+        zIndex: 2000, // Highest z-index to ensure it's on top
       }}
     >
       {/* Title Bar */}
@@ -58,7 +59,7 @@ export default function BrowserUI({
             justifyContent: "space-between",
             paddingLeft: "8px",
             paddingRight: "8px",
-            pointerEvents: "none",
+            pointerEvents: "auto",
             userSelect: "none",
           }}
         >
@@ -175,7 +176,7 @@ export default function BrowserUI({
             paddingLeft: "12px",
             paddingRight: "12px",
             gap: "8px",
-            pointerEvents: "none",
+            pointerEvents: "auto",
             userSelect: "none",
           }}
         >
@@ -259,7 +260,7 @@ export default function BrowserUI({
             paddingLeft: "8px",
             paddingRight: "8px",
             gap: "8px",
-            pointerEvents: "none",
+            pointerEvents: "auto",
             userSelect: "none",
           }}
         >

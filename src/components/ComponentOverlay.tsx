@@ -33,6 +33,7 @@ interface ComponentOverlayProps {
   onComponentDelete?: (componentId: string) => void;
   onComponentCopy?: (component: CanvasComponent) => void;
   onOverlayClick: (e: React.MouseEvent<HTMLDivElement>) => void;
+  onContextMenu?: (e: React.MouseEvent<HTMLDivElement>) => void;
 }
 
 export default function ComponentOverlay({
@@ -65,6 +66,7 @@ export default function ComponentOverlay({
   onComponentDelete,
   onComponentCopy,
   onOverlayClick,
+  onContextMenu,
 }: ComponentOverlayProps) {
   return (
     <Box
@@ -126,6 +128,14 @@ export default function ComponentOverlay({
         }
       }}
       onClick={onOverlayClick}
+      onContextMenu={(e) => {
+        // If right-clicking on empty space (overlay itself, not on components),
+        // trigger the context menu handler
+        if (e.target === e.currentTarget && onContextMenu) {
+          onContextMenu(e);
+        }
+        // Components will stop propagation in their handleContextMenu
+      }}
       onMouseLeave={() => {
         onBrushMouseLeave();
         onSelectionBoxClear();
