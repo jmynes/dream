@@ -58,6 +58,17 @@ export function useComponentDragResize({
     ) => {
       e.stopPropagation();
 
+      // Don't start dragging if clicking on interactive elements like Slider
+      const target = e.target as HTMLElement;
+      if (
+        target.closest(".MuiSlider-root") ||
+        target.closest(".MuiSlider-thumb") ||
+        target.closest(".MuiSlider-track") ||
+        target.closest(".MuiSlider-rail")
+      ) {
+        return;
+      }
+
       // If eraser is active, remove the component
       if (isEraser) {
         onComponentsChange(components.filter((c) => c.id !== componentId));

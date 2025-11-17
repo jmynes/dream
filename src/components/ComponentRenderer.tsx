@@ -34,8 +34,28 @@ export default function ComponentRenderer({
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const isInteractingWithSliderRef = useRef(false);
 
   const handleMouseDown = (e: React.MouseEvent) => {
+    // Don't start dragging if clicking on interactive elements like Slider
+    const target = e.target as HTMLElement;
+    if (
+      target.closest(".MuiSlider-root") ||
+      target.closest(".MuiSlider-thumb") ||
+      target.closest(".MuiSlider-track") ||
+      target.closest(".MuiSlider-rail")
+    ) {
+      e.stopPropagation();
+      isInteractingWithSliderRef.current = true;
+      return;
+    }
+    
+    // Don't start dragging if we're currently interacting with slider
+    if (isInteractingWithSliderRef.current) {
+      e.stopPropagation();
+      return;
+    }
+    
     e.stopPropagation();
     const resizeDirection = (e.target as HTMLElement)?.dataset?.resize;
     onMouseDown(e, component.id, resizeDirection);
@@ -47,6 +67,35 @@ export default function ComponentRenderer({
     if (resizeDirection) {
       e.stopPropagation();
     }
+  };
+  
+  const handleSliderMouseDown = (e: React.MouseEvent) => {
+    // Stop all propagation for slider interactions
+    e.stopPropagation();
+    isInteractingWithSliderRef.current = true;
+  };
+  
+  const handleSliderMouseMove = (e: React.MouseEvent) => {
+    // Stop propagation during slider dragging
+    e.stopPropagation();
+  };
+  
+  const handleSliderMouseUp = (e: React.MouseEvent) => {
+    // Stop propagation when releasing slider
+    e.stopPropagation();
+    // Reset after a short delay to allow slider to finish its interaction
+    setTimeout(() => {
+      isInteractingWithSliderRef.current = false;
+    }, 100);
+  };
+  
+  const handleSliderChange = () => {
+    // Track that slider is being interacted with
+    isInteractingWithSliderRef.current = true;
+    // Reset after interaction
+    setTimeout(() => {
+      isInteractingWithSliderRef.current = false;
+    }, 100);
   };
 
   const handleDoubleClick = (e: React.MouseEvent) => {
@@ -360,6 +409,10 @@ export default function ComponentRenderer({
             <Slider
               {...(component.props as object)}
               defaultValue={(component.props?.value as number) || 50}
+              onMouseDown={handleSliderMouseDown}
+              onMouseMove={handleSliderMouseMove}
+              onMouseUp={handleSliderMouseUp}
+              onChange={handleSliderChange}
               sx={{ 
                 width: "100%", 
                 color: componentColor,
