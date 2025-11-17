@@ -687,7 +687,6 @@ const getTextColorForFilled = (bgColor: string): string => {
             sx={{
               ...(widthProps.sx || {}),
               "& input": { textAlign: "center", color: componentColor },
-              "& label": { color: componentColor },
               "& .MuiOutlinedInput-root": {
                 "& fieldset": { borderColor: componentColor },
                 "&:hover fieldset": { borderColor: componentColor },
