@@ -22,7 +22,7 @@ interface ComponentOverlayProps {
   onSelectionBoxClear: () => void;
   onBrushMouseMove: (e: React.MouseEvent<HTMLDivElement>) => void;
   onBrushMouseLeave: () => void;
-  onComponentMouseDown: (e: React.MouseEvent, componentId: string) => void;
+  onComponentMouseDown: (e: React.MouseEvent, componentId: string, resizeDirection?: string) => void;
   onComponentUpdate?: (componentId: string, props: Partial<CanvasComponent["props"]>) => void;
   onOverlayClick: (e: React.MouseEvent<HTMLDivElement>) => void;
 }
@@ -89,7 +89,10 @@ export default function ComponentOverlay({
         }
       }}
       onMouseUp={() => {
-        onSelectionBoxFinish();
+        // Don't finish selection box if we're resizing
+        if (!resizingComponentId) {
+          onSelectionBoxFinish();
+        }
       }}
       onClick={onOverlayClick}
       onMouseLeave={() => {

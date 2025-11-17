@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, useRef } from "react";
 import type { Point } from "../utils/canvasUtils";
 import type { CanvasComponent } from "../types/component";
 
@@ -31,18 +31,21 @@ export function useComponentDragResize({
     null,
   );
   const [resizeStartX, setResizeStartX] = useState<number | null>(null);
-  const [resizeStartWidth, setResizeStartWidth] = useState<number | null>(null);
   const [resizeStartY, setResizeStartY] = useState<number | null>(null);
+  const [resizeStartWidth, setResizeStartWidth] = useState<number | null>(null);
   const [resizeStartHeight, setResizeStartHeight] = useState<number | null>(
     null,
   );
+  const [resizeStartComponentX, setResizeStartComponentX] = useState<number | null>(null);
+  const [resizeStartComponentY, setResizeStartComponentY] = useState<number | null>(null);
   const [resizeDirection, setResizeDirection] = useState<
-    "width" | "height" | null
+    "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw" | null
   >(null);
   const [initialSelectedComponentStates, setInitialSelectedComponentStates] =
     useState<
       Map<string, { width: number; height: number; x: number; y: number }>
     >(new Map());
+  const justFinishedResizeRef = useRef(false);
 
   const handleComponentMouseDown = useCallback(
     (
@@ -51,6 +54,7 @@ export function useComponentDragResize({
       point: Point,
       isEraser: boolean,
       onSelectionChange: (ids: string[]) => void,
+      resizeDirection?: string,
     ) => {
       e.stopPropagation();
 
@@ -63,50 +67,19 @@ export function useComponentDragResize({
       const component = components.find((c) => c.id === componentId);
       if (!component) return;
 
-      // Check if clicking on resize handle (right edge or bottom edge)
       const componentWidth = component.width || 100; // Default width
       const componentHeight = component.height || 40; // Default height
-      const handleRightEdge = component.x + componentWidth;
-      const handleBottomEdge = component.y + componentHeight;
-      // Resize handle is 16px wide/tall, positioned at edge-8, so extends from edge-8 to edge+8
-      const isWidthResizeHandle =
-        point.x >= handleRightEdge - 8 &&
-        point.x <= handleRightEdge + 8 &&
-        point.y >= component.y &&
-        point.y <= component.y + componentHeight;
-      const isHeightResizeHandle =
-        point.y >= handleBottomEdge - 8 &&
-        point.y <= handleBottomEdge + 8 &&
-        point.x >= component.x &&
-        point.x <= component.x + componentWidth;
 
-      if (isWidthResizeHandle) {
+      // Check if clicking on a resize handle
+      if (resizeDirection && ["n", "s", "e", "w", "ne", "nw", "se", "sw"].includes(resizeDirection)) {
         setResizingComponentId(componentId);
         setResizeStartX(point.x);
-        setResizeStartWidth(componentWidth);
-        setResizeDirection("width");
-        // Store initial states of all selected components for multi-resize
-        const initialStates = new Map<
-          string,
-          { width: number; height: number; x: number; y: number }
-        >();
-        selectedComponentIds.forEach((id) => {
-          const comp = components.find((c) => c.id === id);
-          if (comp) {
-            initialStates.set(id, {
-              width: comp.width || 100,
-              height: comp.height || 40,
-              x: comp.x,
-              y: comp.y,
-            });
-          }
-        });
-        setInitialSelectedComponentStates(initialStates);
-      } else if (isHeightResizeHandle) {
-        setResizingComponentId(componentId);
         setResizeStartY(point.y);
+        setResizeStartWidth(componentWidth);
         setResizeStartHeight(componentHeight);
-        setResizeDirection("height");
+        setResizeStartComponentX(component.x);
+        setResizeStartComponentY(component.y);
+        setResizeDirection(resizeDirection as "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw");
         // Store initial states of all selected components for multi-resize
         const initialStates = new Map<
           string,
@@ -225,105 +198,106 @@ export function useComponentDragResize({
   const handleContainerMouseMove = useCallback(
     (point: Point) => {
       // Handle resizing
-      if (resizingComponentId && resizeDirection) {
-        if (
-          resizeDirection === "width" &&
-          resizeStartX !== null &&
-          resizeStartWidth !== null
-        ) {
-          const deltaX = point.x - resizeStartX;
-          const newWidth = Math.max(50, resizeStartWidth + deltaX); // Minimum width
+      if (resizingComponentId && resizeDirection && resizeStartX !== null && resizeStartY !== null && resizeStartWidth !== null && resizeStartHeight !== null && resizeStartComponentX !== null && resizeStartComponentY !== null) {
+        const resizingComponent = components.find((c) => c.id === resizingComponentId);
+        if (!resizingComponent) return;
 
-          // Snap to grid columns
-          let snappedWidth = newWidth;
-          if (snapToGrid) {
-            const numColumns = Math.round(newWidth / gridCellWidth);
-            snappedWidth = numColumns * gridCellWidth;
-          }
+        const deltaX = point.x - resizeStartX;
+        const deltaY = point.y - resizeStartY;
+        
+        let newWidth = resizeStartWidth;
+        let newHeight = resizeStartHeight;
+        let newX = resizeStartComponentX;
+        let newY = resizeStartComponentY;
 
-          // Apply resize to all selected components
-          const updatedComponents = components.map((comp) => {
-            if (selectedComponentIds.includes(comp.id)) {
-              if (resizeMode === "clone") {
-                // In clone mode, all selected components match the resized component's width
-                return {
-                  ...comp,
-                  width: snappedWidth,
-                };
-              } else {
-                // Relative mode: calculate scale factor based on the resized component
-                const scaleFactor = snappedWidth / resizeStartWidth;
-                const initialState = initialSelectedComponentStates.get(
-                  comp.id,
-                );
-                if (initialState) {
-                  const newCompWidth = Math.max(
-                    50,
-                    initialState.width * scaleFactor,
-                  );
-                  return {
-                    ...comp,
-                    width: snapToGrid
-                      ? Math.round(newCompWidth / gridCellWidth) * gridCellWidth
-                      : newCompWidth,
-                  };
-                }
-              }
-            }
-            return comp;
-          });
-          onComponentsChange(updatedComponents);
-          return;
-        } else if (
-          resizeDirection === "height" &&
-          resizeStartY !== null &&
-          resizeStartHeight !== null
-        ) {
-          const deltaY = point.y - resizeStartY;
-          const newHeight = Math.max(30, resizeStartHeight + deltaY); // Minimum height
-
-          // Snap to grid rows
-          let snappedHeight = newHeight;
-          if (snapToGrid) {
-            const numRows = Math.round(newHeight / gridCellHeight);
-            snappedHeight = numRows * gridCellHeight;
-          }
-
-          // Apply resize to all selected components
-          const updatedComponents = components.map((comp) => {
-            if (selectedComponentIds.includes(comp.id)) {
-              if (resizeMode === "clone") {
-                // In clone mode, all selected components match the resized component's height
-                return {
-                  ...comp,
-                  height: snappedHeight,
-                };
-              } else {
-                // Relative mode: calculate scale factor based on the resized component
-                const scaleFactor = snappedHeight / resizeStartHeight;
-                const initialState = initialSelectedComponentStates.get(
-                  comp.id,
-                );
-                if (initialState) {
-                  const newCompHeight = Math.max(
-                    30,
-                    initialState.height * scaleFactor,
-                  );
-                  return {
-                    ...comp,
-                    height: snapToGrid
-                      ? Math.round(newCompHeight / gridCellHeight) *
-                        gridCellHeight
-                      : newCompHeight,
-                  };
-                }
-              }
-            }
-            return comp;
-          });
-          onComponentsChange(updatedComponents);
-          return;
+        // Calculate new dimensions and position based on resize direction
+        if (resizeDirection.includes("e")) {
+          // Resize from right (east)
+          newWidth = Math.max(50, resizeStartWidth + deltaX);
         }
+        if (resizeDirection.includes("w")) {
+          // Resize from left (west)
+          newWidth = Math.max(50, resizeStartWidth - deltaX);
+          newX = resizeStartComponentX + (resizeStartWidth - newWidth);
+        }
+        if (resizeDirection.includes("s")) {
+          // Resize from bottom (south)
+          newHeight = Math.max(30, resizeStartHeight + deltaY);
+        }
+        if (resizeDirection.includes("n")) {
+          // Resize from top (north)
+          newHeight = Math.max(30, resizeStartHeight - deltaY);
+          newY = resizeStartComponentY + (resizeStartHeight - newHeight);
+        }
+
+        // Snap to grid
+        let snappedWidth = newWidth;
+        let snappedHeight = newHeight;
+        let snappedX = newX;
+        let snappedY = newY;
+        
+        if (snapToGrid) {
+          const numColumns = Math.round(newWidth / gridCellWidth);
+          snappedWidth = numColumns * gridCellWidth;
+          const numRows = Math.round(newHeight / gridCellHeight);
+          snappedHeight = numRows * gridCellHeight;
+          snappedX = Math.round(newX / gridCellWidth) * gridCellWidth;
+          snappedY = Math.round(newY / gridCellHeight) * gridCellHeight;
+        }
+
+        // Calculate scale factors for relative mode
+        const widthScaleFactor = snappedWidth / resizeStartWidth;
+        const heightScaleFactor = snappedHeight / resizeStartHeight;
+
+        // Apply resize to all selected components
+        const updatedComponents = components.map((comp) => {
+          if (selectedComponentIds.includes(comp.id)) {
+            const initialState = initialSelectedComponentStates.get(comp.id);
+            if (!initialState) return comp;
+
+            if (resizeMode === "clone") {
+              // In clone mode, all selected components match the resized component's dimensions
+              return {
+                ...comp,
+                width: snappedWidth,
+                height: snappedHeight,
+                x: comp.id === resizingComponentId ? snappedX : comp.x,
+                y: comp.id === resizingComponentId ? snappedY : comp.y,
+              };
+            } else {
+              // Relative mode: calculate scale factor based on the resized component
+              const newCompWidth = Math.max(50, initialState.width * widthScaleFactor);
+              const newCompHeight = Math.max(30, initialState.height * heightScaleFactor);
+              
+              const snappedCompWidth = snapToGrid ? Math.round(newCompWidth / gridCellWidth) * gridCellWidth : newCompWidth;
+              const snappedCompHeight = snapToGrid ? Math.round(newCompHeight / gridCellHeight) * gridCellHeight : newCompHeight;
+              
+              // Calculate position adjustments
+              let newCompX = initialState.x;
+              let newCompY = initialState.y;
+              
+              if (resizeDirection.includes("w")) {
+                // When resizing from left, adjust x position
+                newCompX = initialState.x + (initialState.width - snappedCompWidth);
+              }
+              if (resizeDirection.includes("n")) {
+                // When resizing from top, adjust y position
+                newCompY = initialState.y + (initialState.height - snappedCompHeight);
+              }
+
+              return {
+                ...comp,
+                width: snappedCompWidth,
+                height: snappedCompHeight,
+                x: snapToGrid ? Math.round(newCompX / gridCellWidth) * gridCellWidth : newCompX,
+                y: snapToGrid ? Math.round(newCompY / gridCellHeight) * gridCellHeight : newCompY,
+              };
+            }
+          }
+          return comp;
+        });
+        onComponentsChange(updatedComponents);
+        return;
       }
 
       // Handle dragging
@@ -372,9 +346,11 @@ export function useComponentDragResize({
       resizingComponentId,
       resizeDirection,
       resizeStartX,
-      resizeStartWidth,
       resizeStartY,
+      resizeStartWidth,
       resizeStartHeight,
+      resizeStartComponentX,
+      resizeStartComponentY,
       selectedComponentIds,
       initialSelectedComponentStates,
       resizeMode,
@@ -390,15 +366,30 @@ export function useComponentDragResize({
   );
 
   const handleContainerMouseUp = useCallback(() => {
+    const wasResizing = resizingComponentId !== null;
     setDraggedComponentId(null);
     setDragOffset(null);
     setResizingComponentId(null);
     setResizeStartX(null);
-    setResizeStartWidth(null);
     setResizeStartY(null);
+    setResizeStartWidth(null);
     setResizeStartHeight(null);
+    setResizeStartComponentX(null);
+    setResizeStartComponentY(null);
     setResizeDirection(null);
     setInitialSelectedComponentStates(new Map());
+    // Track that we just finished resizing to prevent deselection
+    if (wasResizing) {
+      justFinishedResizeRef.current = true;
+      // Clear the flag after a short delay
+      setTimeout(() => {
+        justFinishedResizeRef.current = false;
+      }, 100);
+    }
+  }, [resizingComponentId]);
+
+  const checkJustFinishedResize = useCallback(() => {
+    return justFinishedResizeRef.current;
   }, []);
 
   return {
@@ -407,5 +398,6 @@ export function useComponentDragResize({
     handleComponentMouseDown,
     handleContainerMouseMove,
     handleContainerMouseUp,
+    checkJustFinishedResize,
   };
 }

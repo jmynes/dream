@@ -157,6 +157,7 @@ export default function Canvas({
     handleComponentMouseDown: handleComponentMouseDownBase,
     handleContainerMouseMove: handleContainerMouseMoveBase,
     handleContainerMouseUp: handleContainerMouseUpBase,
+    checkJustFinishedResize,
   } = useComponentDragResize({
     components,
     onComponentsChange,
@@ -273,6 +274,10 @@ export default function Canvas({
         if (checkJustFinishedSelectionBox()) {
           return;
         }
+        // Don't deselect if we just finished resizing
+        if (checkJustFinishedResize()) {
+          return;
+        }
         if (isCursorMode) {
           setSelectedComponentIds([]);
           return;
@@ -285,6 +290,7 @@ export default function Canvas({
     },
     [
       checkJustFinishedSelectionBox,
+      checkJustFinishedResize,
       isCursorMode,
       selectedComponentType,
       getPointFromEventFn,
@@ -294,7 +300,7 @@ export default function Canvas({
 
   // Component mouse down handler
   const handleComponentMouseDown = useCallback(
-    (e: React.MouseEvent, componentId: string) => {
+    (e: React.MouseEvent, componentId: string, resizeDirection?: string) => {
       const point = getPointFromEventFn(e);
       handleComponentMouseDownBase(
         e,
@@ -302,6 +308,7 @@ export default function Canvas({
         point,
         isEraser,
         setSelectedComponentIds,
+        resizeDirection,
       );
     },
     [getPointFromEventFn, handleComponentMouseDownBase, isEraser],

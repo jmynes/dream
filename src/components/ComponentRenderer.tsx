@@ -18,7 +18,7 @@ import type { CanvasComponent } from "../types/component";
 
 interface ComponentRendererProps {
   component: CanvasComponent;
-  onMouseDown: (e: React.MouseEvent, componentId: string) => void;
+  onMouseDown: (e: React.MouseEvent, componentId: string, resizeDirection?: string) => void;
   onComponentUpdate?: (componentId: string, props: Partial<CanvasComponent["props"]>) => void;
   isDragging?: boolean;
   isSelected?: boolean;
@@ -37,7 +37,16 @@ export default function ComponentRenderer({
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onMouseDown(e, component.id);
+    const resizeDirection = (e.target as HTMLElement)?.dataset?.resize;
+    onMouseDown(e, component.id, resizeDirection);
+  };
+
+  const handleMouseUp = (e: React.MouseEvent) => {
+    // Prevent mouse up from resize handles from propagating to overlay
+    const resizeDirection = (e.target as HTMLElement)?.dataset?.resize;
+    if (resizeDirection) {
+      e.stopPropagation();
+    }
   };
 
   const handleDoubleClick = (e: React.MouseEvent) => {
@@ -95,29 +104,75 @@ export default function ComponentRenderer({
 
   const resizeHandleBaseStyle: React.CSSProperties = {
     position: "absolute",
-    width: 16,
-    height: 16,
-    backgroundColor: isSelected ? "#1976d2" : "rgba(25, 118, 210, 0.5)",
-    border: "2px solid #fff",
-    borderRadius: "2px",
+    width: 8,
+    height: 8,
+    backgroundColor: "#1976d2",
+    border: "1px solid #fff",
+    borderRadius: "50%",
     zIndex: 11,
-    boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+    boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
   };
 
-  const widthResizeHandleStyle: React.CSSProperties = {
+  // Corner handles (diagonal resize)
+  const topLeftHandleStyle: React.CSSProperties = {
     ...resizeHandleBaseStyle,
-    right: -8,
-    top: "50%",
-    transform: "translateY(-50%)",
-    cursor: "ew-resize",
+    top: -4,
+    left: -4,
+    cursor: "nw-resize",
   };
 
-  const heightResizeHandleStyle: React.CSSProperties = {
+  const topRightHandleStyle: React.CSSProperties = {
     ...resizeHandleBaseStyle,
-    bottom: -8,
+    top: -4,
+    right: -4,
+    cursor: "ne-resize",
+  };
+
+  const bottomLeftHandleStyle: React.CSSProperties = {
+    ...resizeHandleBaseStyle,
+    bottom: -4,
+    left: -4,
+    cursor: "sw-resize",
+  };
+
+  const bottomRightHandleStyle: React.CSSProperties = {
+    ...resizeHandleBaseStyle,
+    bottom: -4,
+    right: -4,
+    cursor: "se-resize",
+  };
+
+  // Edge handles (single direction resize)
+  const topHandleStyle: React.CSSProperties = {
+    ...resizeHandleBaseStyle,
+    top: -4,
     left: "50%",
     transform: "translateX(-50%)",
-    cursor: "ns-resize",
+    cursor: "n-resize",
+  };
+
+  const rightHandleStyle: React.CSSProperties = {
+    ...resizeHandleBaseStyle,
+    right: -4,
+    top: "50%",
+    transform: "translateY(-50%)",
+    cursor: "e-resize",
+  };
+
+  const bottomHandleStyle: React.CSSProperties = {
+    ...resizeHandleBaseStyle,
+    bottom: -4,
+    left: "50%",
+    transform: "translateX(-50%)",
+    cursor: "s-resize",
+  };
+
+  const leftHandleStyle: React.CSSProperties = {
+    ...resizeHandleBaseStyle,
+    left: -4,
+    top: "50%",
+    transform: "translateY(-50%)",
+    cursor: "w-resize",
   };
 
   // Helper function to determine if a color is dark (for text contrast)
@@ -456,18 +511,31 @@ export default function ComponentRenderer({
     <div
       style={containerStyle}
       onMouseDown={handleMouseDown}
+      onMouseUp={handleMouseUp}
       onDoubleClick={handleDoubleClick}
     >
       {renderComponent()}
       {renderEditableInput()}
       {isSelected && (
         <>
-          {/* Width resize handle (right edge) */}
+          {/* Corner handles */}
           {/* biome-ignore lint/a11y/noStaticElementInteractions: Resize handle */}
-          <div style={widthResizeHandleStyle} onMouseDown={handleMouseDown} />
-          {/* Height resize handle (bottom edge) */}
+          <div style={topLeftHandleStyle} onMouseDown={handleMouseDown} data-resize="nw" />
           {/* biome-ignore lint/a11y/noStaticElementInteractions: Resize handle */}
-          <div style={heightResizeHandleStyle} onMouseDown={handleMouseDown} />
+          <div style={topRightHandleStyle} onMouseDown={handleMouseDown} data-resize="ne" />
+          {/* biome-ignore lint/a11y/noStaticElementInteractions: Resize handle */}
+          <div style={bottomLeftHandleStyle} onMouseDown={handleMouseDown} data-resize="sw" />
+          {/* biome-ignore lint/a11y/noStaticElementInteractions: Resize handle */}
+          <div style={bottomRightHandleStyle} onMouseDown={handleMouseDown} data-resize="se" />
+          {/* Edge handles */}
+          {/* biome-ignore lint/a11y/noStaticElementInteractions: Resize handle */}
+          <div style={topHandleStyle} onMouseDown={handleMouseDown} data-resize="n" />
+          {/* biome-ignore lint/a11y/noStaticElementInteractions: Resize handle */}
+          <div style={rightHandleStyle} onMouseDown={handleMouseDown} data-resize="e" />
+          {/* biome-ignore lint/a11y/noStaticElementInteractions: Resize handle */}
+          <div style={bottomHandleStyle} onMouseDown={handleMouseDown} data-resize="s" />
+          {/* biome-ignore lint/a11y/noStaticElementInteractions: Resize handle */}
+          <div style={leftHandleStyle} onMouseDown={handleMouseDown} data-resize="w" />
         </>
       )}
     </div>
