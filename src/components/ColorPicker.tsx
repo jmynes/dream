@@ -33,8 +33,8 @@ const materialColorGroups = [
       { hex: "#1976D2", name: "Primary Blue" },
       { hex: blue[500], name: "Blue" },
       { hex: lightBlue[500], name: "Light Blue" },
-      { hex: cyan[500], name: "Cyan" },
       { hex: teal[500], name: "Teal" },
+      { hex: cyan[500], name: "Cyan" },
       { hex: "#40E0D0", name: "Turquoise" },
     ],
   },
@@ -57,7 +57,7 @@ const materialColorGroups = [
       { hex: lime[500], name: "Lime" },
       { hex: amber[500], name: "Amber" },
       { hex: yellow[500], name: "Yellow" },
-      { hex: blueGrey[500], name: "Blue Grey" },
+      { hex: "#9ACD32", name: "Yellow Green" },
     ],
   },
   {
