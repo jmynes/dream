@@ -168,7 +168,7 @@ export default function Toolbar({
 
 			<Box sx={{ flex: 1 }} />
 
-			<Tooltip title="Undo (Ctrl+Z)">
+			<Tooltip title="Undo (Ctrl+Z / Cmd+Z)">
 				<IconButton
 					disabled={!canUndo}
 					onClick={onUndo}
@@ -180,7 +180,7 @@ export default function Toolbar({
 				</IconButton>
 			</Tooltip>
 
-			<Tooltip title="Redo (Ctrl+Y)">
+			<Tooltip title="Redo (Ctrl+Y / Cmd+Y)">
 				<IconButton
 					disabled={!canRedo}
 					onClick={onRedo}

@@ -1314,6 +1314,26 @@ export default function Canvas({
 	// Handle keyboard events for deleting selected components and pending recognition
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {
+			// Handle Ctrl+A / Cmd+A to select all components
+			if ((e.ctrlKey || e.metaKey) && e.key === "a") {
+				// Don't prevent default if user is typing in an input/textarea/select
+				const target = e.target as HTMLElement;
+				if (
+					target.tagName === "INPUT" ||
+					target.tagName === "TEXTAREA" ||
+					target.tagName === "SELECT" ||
+					target.isContentEditable
+				) {
+					return;
+				}
+				e.preventDefault();
+				e.stopPropagation();
+				if (components.length > 0) {
+					setSelectedComponentIds(components.map((c) => c.id));
+				}
+				return;
+			}
+
 			// Handle Enter key for shape recognition/submission
 			if (e.key === "Enter") {
 				// Submit pending recognition if it exists
@@ -1361,12 +1381,12 @@ export default function Canvas({
 			}
 		};
 
-		// Add event listener
-		window.addEventListener("keydown", handleKeyDown);
+		// Add event listener with capture phase to catch events early
+		window.addEventListener("keydown", handleKeyDown, true);
 
 		// Cleanup
 		return () => {
-			window.removeEventListener("keydown", handleKeyDown);
+			window.removeEventListener("keydown", handleKeyDown, true);
 		};
 	}, [
 		selectedComponentIds,
