@@ -194,7 +194,14 @@ export default function ToolsBar({
                 <CursorIcon />
               </IconButton>
             </Tooltip>
+          </Box>
+        </Box>
 
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+          <Typography variant="body2" color="text.secondary">
+            Drawing Tools
+          </Typography>
+          <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
             <Tooltip title="Pen Tool" slotProps={tooltipSlotProps}>
               <IconButton
                 color={isDrawing ? "primary" : "default"}
