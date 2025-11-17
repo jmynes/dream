@@ -6,6 +6,7 @@ import {
 	AutoFixHigh as ThinkingPenIcon,
 	Undo as UndoIcon,
 	Redo as RedoIcon,
+	NearMe as CursorIcon,
 } from "@mui/icons-material";
 import { Box, IconButton, Slider, Tooltip, Typography } from "@mui/material";
 
@@ -22,6 +23,8 @@ interface ToolbarProps {
 	onEraserToggle: (eraser: boolean) => void;
 	isThinkingPen: boolean;
 	onThinkingPenToggle: (thinkingPen: boolean) => void;
+	onCursorMode: () => void;
+	isCursorMode: boolean;
 	onDeleteEverything: () => void;
 	onUndo: () => void;
 	onRedo: () => void;
@@ -42,6 +45,8 @@ export default function Toolbar({
 	onEraserToggle,
 	isThinkingPen,
 	onThinkingPenToggle,
+	onCursorMode,
+	isCursorMode,
 	onDeleteEverything,
 	onUndo,
 	onRedo,
@@ -59,6 +64,15 @@ export default function Toolbar({
 				backgroundColor: "#f5f5f5",
 			}}
 		>
+			<Tooltip title="Cursor Mode - Select and move components">
+				<IconButton
+					color={isCursorMode ? "primary" : "default"}
+					onClick={onCursorMode}
+				>
+					<CursorIcon />
+				</IconButton>
+			</Tooltip>
+
 			<Tooltip title="Pen Tool">
 				<IconButton
 					color={isDrawing ? "primary" : "default"}

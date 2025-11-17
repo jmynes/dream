@@ -732,23 +732,34 @@ export default function Canvas({
 	const handleOverlayClick = useCallback(
 		(e: React.MouseEvent<HTMLDivElement>) => {
 			// Only place if clicking on the overlay itself (empty space), not on components
-			if (e.target === e.currentTarget && selectedComponentType) {
-				const point = getPointFromEvent(e);
-				const snappedPoint = snapToGridPoint(point);
-				const newComponent: CanvasComponent = {
-					id: `component-${Date.now()}`,
-					type: selectedComponentType,
-					x: snappedPoint.x,
-					y: snappedPoint.y,
-					width: gridCellWidth,
-					height: gridCellHeight,
-					props: {},
-				};
-				onComponentsChange([...components, newComponent]);
-				onComponentPlaced();
+			if (e.target === e.currentTarget) {
+				// In cursor mode (no drawing tools active), deselect components when clicking empty space
+				if (!isDrawing && !isEraser && !isThinkingPen && !selectedComponentType) {
+					setSelectedComponentId(null);
+					return;
+				}
+				// Place component if a component type is selected
+				if (selectedComponentType) {
+					const point = getPointFromEvent(e);
+					const snappedPoint = snapToGridPoint(point);
+					const newComponent: CanvasComponent = {
+						id: `component-${Date.now()}`,
+						type: selectedComponentType,
+						x: snappedPoint.x,
+						y: snappedPoint.y,
+						width: gridCellWidth,
+						height: gridCellHeight,
+						props: {},
+					};
+					onComponentsChange([...components, newComponent]);
+					onComponentPlaced();
+				}
 			}
 		},
 		[
+			isDrawing,
+			isEraser,
+			isThinkingPen,
 			selectedComponentType,
 			getPointFromEvent,
 			snapToGridPoint,
@@ -1276,7 +1287,8 @@ export default function Canvas({
 					left: 0,
 					width: "100%",
 					height: "100%",
-					pointerEvents: selectedComponentType ? "auto" : "none",
+					// Allow selection in cursor mode (no drawing tools active) or when placing components
+					pointerEvents: (!isDrawing && !isEraser && !isThinkingPen) || selectedComponentType ? "auto" : "none",
 					zIndex: 2,
 					cursor,
 				}}

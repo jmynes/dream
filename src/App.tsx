@@ -19,7 +19,7 @@ function App() {
 	const [penColor, setPenColor] = useState("#000000");
 	const [penSize, setPenSize] = useState(2);
 	const [eraserSize] = useState(15);
-	const [isDrawing, setIsDrawing] = useState(true);
+	const [isDrawing, setIsDrawing] = useState(false);
 	const [isEraser, setIsEraser] = useState(false);
 	const [isThinkingPen, setIsThinkingPen] = useState(false);
 	const [snapToGrid, setSnapToGrid] = useState(true);
@@ -237,6 +237,13 @@ function App() {
 							setSelectedComponentType(null);
 						}
 					}}
+					onCursorMode={() => {
+						setIsDrawing(false);
+						setIsEraser(false);
+						setIsThinkingPen(false);
+						setSelectedComponentType(null);
+					}}
+					isCursorMode={!isDrawing && !isEraser && !isThinkingPen}
 					onDeleteEverything={handleDeleteEverything}
 					onUndo={handleUndo}
 					onRedo={handleRedo}
