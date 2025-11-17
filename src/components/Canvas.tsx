@@ -367,6 +367,8 @@ export default function Canvas({
     gridCellHeight,
     resizeMode,
     snapToGridPoint: snapToGridPointFn,
+    canvasWidth: actualWidth,
+    canvasHeight: actualHeight,
   });
 
   // Brush preview hook
