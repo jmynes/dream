@@ -19,10 +19,77 @@ import {
   Typography,
   Switch,
   FormControlLabel,
+  TextField,
 } from "@mui/material";
+import {
+  amber,
+  blue,
+  blueGrey,
+  brown,
+  cyan,
+  deepOrange,
+  deepPurple,
+  green,
+  grey,
+  indigo,
+  lightBlue,
+  lightGreen,
+  lime,
+  orange,
+  pink,
+  purple,
+  red,
+  teal,
+  yellow,
+} from "@mui/material/colors";
 import { useState, useEffect, useRef } from "react";
-import { SketchPicker } from "react-color";
-import type { ColorResult } from "react-color";
+
+const materialColorGroups = [
+  {
+    label: "Blues & Teals",
+    colors: [
+      blue[500],
+      lightBlue[500],
+      cyan[500],
+      teal[500],
+      indigo[500],
+      deepPurple[500],
+    ],
+  },
+  {
+    label: "Purples & Reds",
+    colors: [
+      purple[500],
+      pink[500],
+      red[500],
+      deepOrange[500],
+      orange[500],
+      amber[500],
+    ],
+  },
+  {
+    label: "Greens & Yellows",
+    colors: [
+      green[500],
+      lightGreen[500],
+      lime[500],
+      yellow[500],
+      brown[500],
+      blueGrey[500],
+    ],
+  },
+  {
+    label: "Neutrals",
+    colors: [
+      grey[900],
+      grey[700],
+      grey[500],
+      grey[300],
+      grey[100],
+      "#FFFFFF",
+    ],
+  },
+];
 
 interface ToolsBarProps {
   penColor: string;
@@ -91,27 +158,112 @@ export default function ToolsBar({
 }: ToolsBarProps) {
   const tooltipSlotProps = { tooltip: { sx: { fontSize: "0.85rem" } } };
   // State for color picker popovers
-  const [componentColorAnchor, setComponentColorAnchor] = useState<HTMLElement | null>(null);
+  const [componentColorAnchor, setComponentColorAnchor] =
+    useState<HTMLElement | null>(null);
   const [penColorAnchor, setPenColorAnchor] = useState<HTMLElement | null>(null);
-  const [canvasColorAnchor, setCanvasColorAnchor] = useState<HTMLElement | null>(null);
+  const [canvasColorAnchor, setCanvasColorAnchor] =
+    useState<HTMLElement | null>(null);
   
-  // Local color states for the pickers (before applying)
-  const [localComponentColor, setLocalComponentColor] = useState(componentColor);
-  const [localPenColor, setLocalPenColor] = useState(penColor);
-  const [localCanvasColor, setLocalCanvasColor] = useState(canvasColor);
-  
-  // Sync local states when props change
-  useEffect(() => {
-    setLocalComponentColor(componentColor);
-  }, [componentColor]);
-  
-  useEffect(() => {
-    setLocalPenColor(penColor);
-  }, [penColor]);
-  
-  useEffect(() => {
-    setLocalCanvasColor(canvasColor);
-  }, [canvasColor]);
+  // Helper to render color picker
+  const renderColorPicker = (
+    currentColor: string,
+    onColorChange: (color: string) => void,
+    onClose: () => void
+  ) => (
+    <Box sx={{ p: 2, minWidth: 300 }}>
+      <Typography variant="body2" sx={{ mb: 1.5, fontWeight: 500 }}>
+        Choose Color
+      </Typography>
+
+      {materialColorGroups.map((group) => (
+        <Box key={group.label} sx={{ mb: 1.5 }}>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ display: "block", mb: 0.5, letterSpacing: 0.5 }}
+          >
+            {group.label.toUpperCase()}
+          </Typography>
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: "repeat(6, minmax(0, 1fr))",
+              gap: 0.5,
+            }}
+          >
+            {group.colors.map((color) => (
+              <Box
+                key={`${group.label}-${color}`}
+                onClick={() => {
+                  onColorChange(color);
+                }}
+                sx={{
+                  width: "100%",
+                  aspectRatio: "1",
+                  backgroundColor: color,
+                  border:
+                    currentColor.toUpperCase() === color.toUpperCase()
+                      ? "2px solid #1976d2"
+                      : "1px solid #ccc",
+                  borderRadius: 0.5,
+                  cursor: "pointer",
+                  "&:hover": {
+                    border: "2px solid #1976d2",
+                    transform: "scale(1.05)",
+                  },
+                  transition: "all 0.15s ease",
+                }}
+              />
+            ))}
+          </Box>
+        </Box>
+      ))}
+
+      {/* Native color picker and hex input */}
+      <Box sx={{ display: "flex", gap: 1, alignItems: "center", mb: 2 }}>
+        <Box
+          component="input"
+          type="color"
+          value={currentColor}
+          onChange={(e) => onColorChange(e.target.value)}
+          sx={{
+            width: 50,
+            height: 40,
+            border: "1px solid #ccc",
+            borderRadius: 1,
+            cursor: "pointer",
+            padding: 0,
+          }}
+        />
+        <TextField
+          size="small"
+          label="Hex"
+          value={currentColor.toUpperCase().replace("#", "")}
+          onChange={(e) => {
+            const hex = e.target.value.replace(/[^0-9A-Fa-f]/g, "");
+            if (hex.length <= 6) {
+              const color = hex.length === 6 ? `#${hex}` : `#${hex.padEnd(6, "0")}`;
+              onColorChange(color);
+            }
+          }}
+          sx={{ flex: 1 }}
+          inputProps={{
+            maxLength: 6,
+            style: { textTransform: "uppercase" },
+          }}
+        />
+      </Box>
+      
+      <Button
+        variant="contained"
+        fullWidth
+        onClick={onClose}
+        size="small"
+      >
+        Done
+      </Button>
+    </Box>
+  );
   
   // Brush size slider refs/state for performant updates
   const [displayPenSize, setDisplayPenSize] = useState(penSize);
@@ -148,44 +300,30 @@ export default function ToolsBar({
 
   const handleComponentColorOpen = (event: React.MouseEvent<HTMLElement>) => {
     setComponentColorAnchor(event.currentTarget);
-    setLocalComponentColor(componentColor);
   };
   
   const handleComponentColorClose = () => {
     setComponentColorAnchor(null);
   };
   
-  const handleComponentColorApply = () => {
-    onComponentColorChange(localComponentColor, Date.now());
-    handleComponentColorClose();
+  const handleComponentColorChange = (color: string) => {
+    onComponentColorChange(color, Date.now());
   };
   
   const handlePenColorOpen = (event: React.MouseEvent<HTMLElement>) => {
     setPenColorAnchor(event.currentTarget);
-    setLocalPenColor(penColor);
   };
   
   const handlePenColorClose = () => {
     setPenColorAnchor(null);
   };
   
-  const handlePenColorApply = () => {
-    onPenColorChange(localPenColor);
-    handlePenColorClose();
-  };
-  
   const handleCanvasColorOpen = (event: React.MouseEvent<HTMLElement>) => {
     setCanvasColorAnchor(event.currentTarget);
-    setLocalCanvasColor(canvasColor);
   };
   
   const handleCanvasColorClose = () => {
     setCanvasColorAnchor(null);
-  };
-  
-  const handleCanvasColorApply = () => {
-    onCanvasColorChange(localCanvasColor);
-    handleCanvasColorClose();
   };
   
   return (
@@ -332,10 +470,10 @@ export default function ToolsBar({
                 height: 30,
                 minWidth: 60,
                 padding: 0,
-                backgroundColor: localPenColor,
+                backgroundColor: penColor,
                 border: "1px solid #ccc",
                 "&:hover": {
-                  backgroundColor: localPenColor,
+                  backgroundColor: penColor,
                   border: "1px solid #999",
                 },
               }}
@@ -349,20 +487,7 @@ export default function ToolsBar({
                 horizontal: "left",
               }}
             >
-              <Box sx={{ p: 2 }}>
-                <SketchPicker
-                  color={localPenColor}
-                  onChange={(color: ColorResult) => setLocalPenColor(color.hex)}
-                />
-                <Box sx={{ display: "flex", gap: 1, mt: 2, justifyContent: "flex-end" }}>
-                  <Button size="small" onClick={handlePenColorClose}>
-                    Cancel
-                  </Button>
-                  <Button size="small" variant="contained" onClick={handlePenColorApply}>
-                    Apply
-                  </Button>
-                </Box>
-              </Box>
+              {renderColorPicker(penColor, onPenColorChange, handlePenColorClose)}
             </Popover>
             {penColor !== "#1976d2" && (
               <Tooltip title="Reset to default" slotProps={tooltipSlotProps}>
@@ -392,10 +517,10 @@ export default function ToolsBar({
                 height: 30,
                 minWidth: 60,
                 padding: 0,
-                backgroundColor: localComponentColor,
+                backgroundColor: componentColor,
                 border: "1px solid #ccc",
                 "&:hover": {
-                  backgroundColor: localComponentColor,
+                  backgroundColor: componentColor,
                   border: "1px solid #999",
                 },
               }}
@@ -409,20 +534,7 @@ export default function ToolsBar({
                 horizontal: "left",
               }}
             >
-              <Box sx={{ p: 2 }}>
-                <SketchPicker
-                  color={localComponentColor}
-                  onChange={(color: ColorResult) => setLocalComponentColor(color.hex)}
-                />
-                <Box sx={{ display: "flex", gap: 1, mt: 2, justifyContent: "flex-end" }}>
-                  <Button size="small" onClick={handleComponentColorClose}>
-                    Cancel
-                  </Button>
-                  <Button size="small" variant="contained" onClick={handleComponentColorApply}>
-                    Apply
-                  </Button>
-                </Box>
-              </Box>
+              {renderColorPicker(componentColor, handleComponentColorChange, handleComponentColorClose)}
             </Popover>
             {componentColor !== "#1976d2" && (
               <Tooltip title="Reset to default" slotProps={tooltipSlotProps}>
@@ -452,10 +564,10 @@ export default function ToolsBar({
                 height: 30,
                 minWidth: 60,
                 padding: 0,
-                backgroundColor: localCanvasColor,
+                backgroundColor: canvasColor,
                 border: "1px solid #ccc",
                 "&:hover": {
-                  backgroundColor: localCanvasColor,
+                  backgroundColor: canvasColor,
                   border: "1px solid #999",
                 },
               }}
@@ -469,20 +581,7 @@ export default function ToolsBar({
                 horizontal: "left",
               }}
             >
-              <Box sx={{ p: 2 }}>
-                <SketchPicker
-                  color={localCanvasColor}
-                  onChange={(color: ColorResult) => setLocalCanvasColor(color.hex)}
-                />
-                <Box sx={{ display: "flex", gap: 1, mt: 2, justifyContent: "flex-end" }}>
-                  <Button size="small" onClick={handleCanvasColorClose}>
-                    Cancel
-                  </Button>
-                  <Button size="small" variant="contained" onClick={handleCanvasColorApply}>
-                    Apply
-                  </Button>
-                </Box>
-              </Box>
+              {renderColorPicker(canvasColor, onCanvasColorChange, handleCanvasColorClose)}
             </Popover>
             {canvasColor !== "#ffffff" && (
               <Tooltip title="Reset to default" slotProps={tooltipSlotProps}>
