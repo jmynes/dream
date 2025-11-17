@@ -565,30 +565,45 @@ export default function ComponentRenderer({
     cursor: "s-resize",
   };
 
-  const leftHandleStyle: React.CSSProperties = {
-    ...resizeHandleBaseStyle,
-    left: -4,
-    top: "50%",
-    transform: "translateY(-50%)",
-    cursor: "w-resize",
-  };
+const leftHandleStyle: React.CSSProperties = {
+  ...resizeHandleBaseStyle,
+  left: -4,
+  top: "50%",
+  transform: "translateY(-50%)",
+  cursor: "w-resize",
+};
 
-  // Helper function to determine if a color is dark (for text contrast)
-  const isDarkColor = (color: string): boolean => {
-    // Convert hex to RGB
-    const hex = color.replace("#", "");
-    const r = parseInt(hex.substring(0, 2), 16);
-    const g = parseInt(hex.substring(2, 4), 16);
-    const b = parseInt(hex.substring(4, 6), 16);
-    // Calculate luminance
-    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-    return luminance < 0.5;
-  };
+// Shared inline input style to avoid layout shifts
+const inlineInputStyle: React.CSSProperties = {
+  background: "transparent",
+  border: "none",
+  outline: "none",
+  color: "inherit",
+  fontSize: "inherit",
+  fontFamily: "inherit",
+  padding: 0,
+  margin: 0,
+  width: "100%",
+  minWidth: 0,
+  boxSizing: "border-box",
+};
 
-  // Helper to get text color for filled components
-  const getTextColorForFilled = (bgColor: string): string => {
-    return isDarkColor(bgColor) ? "#ffffff" : "#000000";
-  };
+// Helper function to determine if a color is dark (for text contrast)
+const isDarkColor = (color: string): boolean => {
+  // Convert hex to RGB
+  const hex = color.replace("#", "");
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+  // Calculate luminance
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance < 0.5;
+};
+
+// Helper to get text color for filled components
+const getTextColorForFilled = (bgColor: string): string => {
+  return isDarkColor(bgColor) ? "#ffffff" : "#000000";
+};
 
   const renderComponent = () => {
     const widthProps = componentWidth ? { sx: { width: "100%" } } : {};
@@ -626,18 +641,7 @@ export default function ComponentRenderer({
                 onBlur={handleBlur}
                 onKeyDown={handleKeyDown}
                 onClick={(e) => e.stopPropagation()}
-                style={{
-                  background: "transparent",
-                  border: "none",
-                  outline: "none",
-                  color: "inherit",
-                  fontSize: "inherit",
-                  fontFamily: "inherit",
-                  textAlign: "center",
-                  width: "100%",
-                  padding: 0,
-                  margin: 0,
-                }}
+                style={{ ...inlineInputStyle, textAlign: "center" }}
               />
             ) : (
               (component.props?.text as string) || "Button"
@@ -696,16 +700,9 @@ export default function ComponentRenderer({
                   onKeyDown={handleKeyDown}
                   onClick={(e) => e.stopPropagation()}
                   style={{
-                    background: "transparent",
-                    border: "none",
-                    outline: "none",
-                    color: componentColor,
-                    fontSize: "14px",
-                    fontFamily: "inherit",
+                    ...inlineInputStyle,
                     textAlign: "center",
-                    width: "100%",
-                    padding: 0,
-                    margin: 0,
+                    color: componentColor,
                   }}
                 />
               ) : (
@@ -739,18 +736,7 @@ export default function ComponentRenderer({
                   onBlur={handleBlur}
                   onKeyDown={handleKeyDown}
                   onClick={(e) => e.stopPropagation()}
-                  style={{
-                    background: "transparent",
-                    border: "none",
-                    outline: "none",
-                    color: "inherit",
-                    fontSize: "inherit",
-                    fontFamily: "inherit",
-                    textAlign: "center",
-                    width: "100%",
-                    padding: 0,
-                    margin: 0,
-                  }}
+                  style={{ ...inlineInputStyle, textAlign: "center" }}
                 />
               ) : (
                 (component.props?.text as string) || "Typography"
@@ -943,18 +929,7 @@ export default function ComponentRenderer({
                   onBlur={handleBlur}
                   onKeyDown={handleKeyDown}
                   onClick={(e) => e.stopPropagation()}
-                  style={{
-                    background: "transparent",
-                    border: "none",
-                    outline: "none",
-                    color: "inherit",
-                    fontSize: "inherit",
-                    fontFamily: "inherit",
-                    textAlign: "center",
-                    width: "100%",
-                    padding: 0,
-                    margin: 0,
-                  }}
+                  style={{ ...inlineInputStyle, textAlign: "center" }}
                 />
               ) : (
                 (component.props?.text as string) || "A"
@@ -1013,16 +988,9 @@ export default function ComponentRenderer({
                 onKeyDown={handleKeyDown}
                 onClick={(e) => e.stopPropagation()}
                 style={{
-                  background: "transparent",
-                  border: "none",
-                  outline: "none",
-                  color: getTextColorForFilled(componentColor),
-                  fontSize: "14px",
-                  fontFamily: "inherit",
+                  ...inlineInputStyle,
                   textAlign: "center",
-                  width: "100%",
-                  padding: 0,
-                  margin: 0,
+                  color: getTextColorForFilled(componentColor),
                 }}
               />
             ) : (
@@ -1060,18 +1028,7 @@ export default function ComponentRenderer({
                 onBlur={handleBlur}
                 onKeyDown={handleKeyDown}
                 onClick={(e) => e.stopPropagation()}
-                style={{
-                  background: "transparent",
-                  border: "none",
-                  outline: "none",
-                  color: "inherit",
-                  fontSize: "14px",
-                  fontFamily: "inherit",
-                  textAlign: "center",
-                  width: "100%",
-                  padding: 0,
-                  margin: 0,
-                }}
+                style={{ ...inlineInputStyle, textAlign: "center" }}
               />
             ) : (
               <Typography variant="body2">
@@ -1211,13 +1168,16 @@ export default function ComponentRenderer({
               width: "100%",
               height: "100%",
               overflow: "auto",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
             <Table size="small" sx={{ border: `1px solid ${componentColor}` }}>
               <TableHead>
                 <TableRow>
                   <TableCell
-                    sx={{ borderColor: componentColor, fontWeight: "bold" }}
+                    sx={{ borderColor: componentColor, fontWeight: "bold", textAlign: "center" }}
                     data-field="header1"
                     onDoubleClick={(e) => {
                       e.stopPropagation();
@@ -1237,16 +1197,9 @@ export default function ComponentRenderer({
                         onKeyDown={handleKeyDown}
                         onClick={(e) => e.stopPropagation()}
                         style={{
-                          background: "transparent",
-                          border: "none",
-                          outline: "none",
-                          color: "inherit",
-                          fontSize: "inherit",
-                          fontFamily: "inherit",
+                          ...inlineInputStyle,
+                          textAlign: "center",
                           fontWeight: "bold",
-                          padding: 0,
-                          margin: 0,
-                          width: "100%",
                         }}
                       />
                     ) : (
@@ -1254,7 +1207,7 @@ export default function ComponentRenderer({
                     )}
                   </TableCell>
                   <TableCell
-                    sx={{ borderColor: componentColor, fontWeight: "bold" }}
+                    sx={{ borderColor: componentColor, fontWeight: "bold", textAlign: "center" }}
                     data-field="header2"
                     onDoubleClick={(e) => {
                       e.stopPropagation();
@@ -1274,16 +1227,9 @@ export default function ComponentRenderer({
                         onKeyDown={handleKeyDown}
                         onClick={(e) => e.stopPropagation()}
                         style={{
-                          background: "transparent",
-                          border: "none",
-                          outline: "none",
-                          color: "inherit",
-                          fontSize: "inherit",
-                          fontFamily: "inherit",
+                          ...inlineInputStyle,
+                          textAlign: "center",
                           fontWeight: "bold",
-                          padding: 0,
-                          margin: 0,
-                          width: "100%",
                         }}
                       />
                     ) : (
@@ -1291,7 +1237,7 @@ export default function ComponentRenderer({
                     )}
                   </TableCell>
                   <TableCell
-                    sx={{ borderColor: componentColor, fontWeight: "bold" }}
+                    sx={{ borderColor: componentColor, fontWeight: "bold", textAlign: "center" }}
                     data-field="header3"
                     onDoubleClick={(e) => {
                       e.stopPropagation();
@@ -1311,16 +1257,9 @@ export default function ComponentRenderer({
                         onKeyDown={handleKeyDown}
                         onClick={(e) => e.stopPropagation()}
                         style={{
-                          background: "transparent",
-                          border: "none",
-                          outline: "none",
-                          color: "inherit",
-                          fontSize: "inherit",
-                          fontFamily: "inherit",
+                          ...inlineInputStyle,
+                          textAlign: "center",
                           fontWeight: "bold",
-                          padding: 0,
-                          margin: 0,
-                          width: "100%",
                         }}
                       />
                     ) : (
@@ -1332,7 +1271,7 @@ export default function ComponentRenderer({
               <TableBody>
                 <TableRow>
                   <TableCell
-                    sx={{ borderColor: componentColor }}
+                    sx={{ borderColor: componentColor, textAlign: "center" }}
                     data-field="cell1_1"
                     onDoubleClick={(e) => {
                       e.stopPropagation();
@@ -1352,15 +1291,8 @@ export default function ComponentRenderer({
                         onKeyDown={handleKeyDown}
                         onClick={(e) => e.stopPropagation()}
                         style={{
-                          background: "transparent",
-                          border: "none",
-                          outline: "none",
-                          color: "inherit",
-                          fontSize: "inherit",
-                          fontFamily: "inherit",
-                          padding: 0,
-                          margin: 0,
-                          width: "100%",
+                          ...inlineInputStyle,
+                          textAlign: "center",
                         }}
                       />
                     ) : (
@@ -1368,7 +1300,7 @@ export default function ComponentRenderer({
                     )}
                   </TableCell>
                   <TableCell
-                    sx={{ borderColor: componentColor }}
+                    sx={{ borderColor: componentColor, textAlign: "center" }}
                     data-field="cell1_2"
                     onDoubleClick={(e) => {
                       e.stopPropagation();
@@ -1388,15 +1320,8 @@ export default function ComponentRenderer({
                         onKeyDown={handleKeyDown}
                         onClick={(e) => e.stopPropagation()}
                         style={{
-                          background: "transparent",
-                          border: "none",
-                          outline: "none",
-                          color: "inherit",
-                          fontSize: "inherit",
-                          fontFamily: "inherit",
-                          padding: 0,
-                          margin: 0,
-                          width: "100%",
+                          ...inlineInputStyle,
+                          textAlign: "center",
                         }}
                       />
                     ) : (
@@ -1404,7 +1329,7 @@ export default function ComponentRenderer({
                     )}
                   </TableCell>
                   <TableCell
-                    sx={{ borderColor: componentColor }}
+                    sx={{ borderColor: componentColor, textAlign: "center" }}
                     data-field="cell1_3"
                     onDoubleClick={(e) => {
                       e.stopPropagation();
@@ -1424,15 +1349,8 @@ export default function ComponentRenderer({
                         onKeyDown={handleKeyDown}
                         onClick={(e) => e.stopPropagation()}
                         style={{
-                          background: "transparent",
-                          border: "none",
-                          outline: "none",
-                          color: "inherit",
-                          fontSize: "inherit",
-                          fontFamily: "inherit",
-                          padding: 0,
-                          margin: 0,
-                          width: "100%",
+                          ...inlineInputStyle,
+                          textAlign: "center",
                         }}
                       />
                     ) : (
@@ -1442,7 +1360,7 @@ export default function ComponentRenderer({
                 </TableRow>
                 <TableRow>
                   <TableCell
-                    sx={{ borderColor: componentColor }}
+                    sx={{ borderColor: componentColor, textAlign: "center" }}
                     data-field="cell2_1"
                     onDoubleClick={(e) => {
                       e.stopPropagation();
@@ -1462,15 +1380,8 @@ export default function ComponentRenderer({
                         onKeyDown={handleKeyDown}
                         onClick={(e) => e.stopPropagation()}
                         style={{
-                          background: "transparent",
-                          border: "none",
-                          outline: "none",
-                          color: "inherit",
-                          fontSize: "inherit",
-                          fontFamily: "inherit",
-                          padding: 0,
-                          margin: 0,
-                          width: "100%",
+                          ...inlineInputStyle,
+                          textAlign: "center",
                         }}
                       />
                     ) : (
@@ -1478,7 +1389,7 @@ export default function ComponentRenderer({
                     )}
                   </TableCell>
                   <TableCell
-                    sx={{ borderColor: componentColor }}
+                    sx={{ borderColor: componentColor, textAlign: "center" }}
                     data-field="cell2_2"
                     onDoubleClick={(e) => {
                       e.stopPropagation();
@@ -1498,15 +1409,8 @@ export default function ComponentRenderer({
                         onKeyDown={handleKeyDown}
                         onClick={(e) => e.stopPropagation()}
                         style={{
-                          background: "transparent",
-                          border: "none",
-                          outline: "none",
-                          color: "inherit",
-                          fontSize: "inherit",
-                          fontFamily: "inherit",
-                          padding: 0,
-                          margin: 0,
-                          width: "100%",
+                          ...inlineInputStyle,
+                          textAlign: "center",
                         }}
                       />
                     ) : (
@@ -1514,7 +1418,7 @@ export default function ComponentRenderer({
                     )}
                   </TableCell>
                   <TableCell
-                    sx={{ borderColor: componentColor }}
+                    sx={{ borderColor: componentColor, textAlign: "center" }}
                     data-field="cell2_3"
                     onDoubleClick={(e) => {
                       e.stopPropagation();
@@ -1534,15 +1438,8 @@ export default function ComponentRenderer({
                         onKeyDown={handleKeyDown}
                         onClick={(e) => e.stopPropagation()}
                         style={{
-                          background: "transparent",
-                          border: "none",
-                          outline: "none",
-                          color: "inherit",
-                          fontSize: "inherit",
-                          fontFamily: "inherit",
-                          padding: 0,
-                          margin: 0,
-                          width: "100%",
+                          ...inlineInputStyle,
+                          textAlign: "center",
                         }}
                       />
                     ) : (
