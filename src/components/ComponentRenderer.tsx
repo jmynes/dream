@@ -200,7 +200,7 @@ export default function ComponentRenderer({
     setSpeedDialOpen(false);
     setSpeedDialAnchor(null);
     // Trigger text editing mode (same as double-click)
-    const hasText = ["Button", "Card", "Typography", "Avatar", "Paper", "Box", "Radio", "Table", "TextField", "Chip"].includes(component.type);
+    const hasText = ["Button", "Card", "Typography", "Avatar", "Paper", "Box", "Radio", "Table", "TextField", "Chip", "Checkbox"].includes(component.type);
     if (hasText && onComponentUpdate) {
       let currentText = "";
       let field = "";
@@ -217,6 +217,9 @@ export default function ComponentRenderer({
       } else if (component.type === "Chip") {
         field = "label";
         currentText = (component.props?.label as string) || "Chip";
+      } else if (component.type === "Checkbox") {
+        field = "label";
+        currentText = (component.props?.label as string) || "Checkbox";
       } else {
         field = "text";
         currentText = (component.props?.text as string) || "";
@@ -228,7 +231,7 @@ export default function ComponentRenderer({
     }
   };
 
-  const canEditText = ["Button", "Card", "Typography", "Avatar", "Paper", "Box", "TextField", "Chip", "Radio", "Table"].includes(component.type);
+  const canEditText = ["Button", "Card", "Typography", "Avatar", "Paper", "Box", "TextField", "Chip", "Radio", "Table", "Checkbox"].includes(component.type);
 
   const handleColorPickerClose = () => {
     setColorPickerAnchor(null);
@@ -288,7 +291,7 @@ export default function ComponentRenderer({
   const triggerInlineEdit = (e: React.MouseEvent) => {
     e.stopPropagation();
     // Only allow editing for components that have text
-    const hasText = ["Button", "Card", "Typography", "Avatar", "Paper", "Box", "Radio", "Table", "TextField", "Chip"].includes(component.type);
+    const hasText = ["Button", "Card", "Typography", "Avatar", "Paper", "Box", "Radio", "Table", "TextField", "Chip", "Checkbox"].includes(component.type);
     if (hasText && onComponentUpdate) {
       let currentText = "";
       let field = "";
@@ -359,6 +362,9 @@ export default function ComponentRenderer({
       } else if (component.type === "Chip") {
         field = "label";
         currentText = (component.props?.label as string) || "Chip";
+      } else if (component.type === "Checkbox") {
+        field = "label";
+        currentText = (component.props?.label as string) || "Checkbox";
       } else {
         field = "text";
         currentText = (component.props?.text as string) || "";
@@ -397,6 +403,8 @@ export default function ComponentRenderer({
       } else if (component.type === "TextField") {
         updateProps.value = editValue;
       } else if (component.type === "Chip") {
+        updateProps.label = editValue;
+      } else if (component.type === "Checkbox") {
         updateProps.label = editValue;
       } else {
         updateProps.text = editValue;
@@ -772,21 +780,55 @@ const getTextColorForFilled = (bgColor: string): string => {
               height: "100%",
             }}
           >
-            <Checkbox
-              {...(component.props as object)}
-              defaultChecked={component.props?.checked as boolean}
-              sx={{ 
-                color: isDarkColor(componentColor) ? componentColor : "#000000",
-                "&.Mui-checked": { 
-                  color: isDarkColor(componentColor) ? componentColor : "#000000",
-                },
-                "& .MuiSvgIcon-root": {
-                  color: isDarkColor(componentColor) ? componentColor : "#000000",
-                },
-                "&.Mui-checked .MuiSvgIcon-root": {
-                  color: isDarkColor(componentColor) ? componentColor : "#000000",
-                },
-              }}
+            <FormControlLabel
+              control={
+                <Checkbox
+                  {...(component.props as object)}
+                  defaultChecked={component.props?.checked as boolean}
+                  sx={{ 
+                    color: isDarkColor(componentColor) ? componentColor : "#000000",
+                    "&.Mui-checked": { 
+                      color: isDarkColor(componentColor) ? componentColor : "#000000",
+                    },
+                    "& .MuiSvgIcon-root": {
+                      color: isDarkColor(componentColor) ? componentColor : "#000000",
+                    },
+                    "&.Mui-checked .MuiSvgIcon-root": {
+                      color: isDarkColor(componentColor) ? componentColor : "#000000",
+                    },
+                  }}
+                />
+              }
+              label={
+                isEditing && editingField === "label" ? (
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    value={editValue}
+                    onChange={(e) => setEditValue(e.target.value)}
+                    onBlur={handleBlur}
+                    onKeyDown={handleKeyDown}
+                    onClick={(e) => e.stopPropagation()}
+                    style={{
+                      ...inlineInputStyle,
+                      minWidth: 0,
+                    }}
+                  />
+                ) : (
+                  <span
+                    data-field="label"
+                    onDoubleClick={(e) => {
+                      e.stopPropagation();
+                      const currentText = (component.props?.label as string) || "Checkbox";
+                      setEditingField("label");
+                      setEditValue(currentText);
+                      setIsEditing(true);
+                    }}
+                  >
+                    {(component.props?.label as string) || "Checkbox"}
+                  </span>
+                )
+              }
             />
           </Box>
         );
