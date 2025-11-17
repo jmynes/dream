@@ -1330,11 +1330,17 @@ export default function Canvas({
 				}
 			}
 
-			// Handle Escape key to cancel recognition
+			// Handle Escape key to cancel recognition or deselect components
 			if (e.key === "Escape") {
+				e.preventDefault();
+				// First priority: cancel recognition if active
 				if (pendingRecognition || recognitionFailed || (isThinkingPen && hasDrawing)) {
-					e.preventDefault();
 					handleCancelRecognition();
+					return;
+				}
+				// Second priority: deselect components if any are selected
+				if (selectedComponentIds.length > 0) {
+					setSelectedComponentIds([]);
 					return;
 				}
 			}
