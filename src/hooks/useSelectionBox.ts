@@ -7,6 +7,7 @@ interface UseSelectionBoxProps {
   isEraser: boolean;
   isMagicWand: boolean;
   isLasso: boolean;
+  isTextMode: boolean;
   selectedComponentType: string | null;
   components: CanvasComponent[];
   onSelectionChange: (ids: string[]) => void;
@@ -17,6 +18,7 @@ export function useSelectionBox({
   isEraser,
   isMagicWand,
   isLasso,
+  isTextMode,
   selectedComponentType,
   components,
   onSelectionChange,
@@ -33,6 +35,7 @@ export function useSelectionBox({
     !isEraser &&
     !isMagicWand &&
     !isLasso &&
+    !isTextMode &&
     !selectedComponentType;
 
   const startSelectionBox = useCallback(

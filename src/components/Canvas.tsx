@@ -69,6 +69,7 @@ interface CanvasProps {
   isBrowserUIEnabled?: boolean;
   isMacOSStyle?: boolean;
   canvasColor?: string;
+  isTextSelectMode?: boolean;
 }
 
 export default function Canvas({
@@ -96,6 +97,7 @@ export default function Canvas({
   isBrowserUIEnabled = false,
   isMacOSStyle = false,
   canvasColor = "#ffffff",
+  isTextSelectMode = false,
 }: CanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -227,6 +229,7 @@ export default function Canvas({
     isEraser,
     isMagicWand,
     isLasso,
+    isTextMode: isTextSelectMode,
     selectedComponentType,
     components,
     onSelectionChange: setSelectedComponentIds,
@@ -595,6 +598,9 @@ export default function Canvas({
   // Component mouse down handler
   const handleComponentMouseDown = useCallback(
     (e: React.MouseEvent, componentId: string, resizeDirection?: string) => {
+      if (isTextSelectMode) {
+        return;
+      }
       const point = getPointFromEventFn(e);
       handleComponentMouseDownBase(
         e,
@@ -605,7 +611,7 @@ export default function Canvas({
         resizeDirection,
       );
     },
-    [getPointFromEventFn, handleComponentMouseDownBase, isEraser],
+    [getPointFromEventFn, handleComponentMouseDownBase, isEraser, isTextSelectMode],
   );
 
   // Container mouse handlers
@@ -783,8 +789,9 @@ export default function Canvas({
   });
 
   // Hide default cursor when showing brush preview
-  const cursor =
-    (isDrawing || isEraser || isMagicWand) && !selectedComponentType
+  const cursor = isTextSelectMode
+    ? "text"
+    : (isDrawing || isEraser || isMagicWand) && !selectedComponentType
       ? "none"
       : selectedComponentType
         ? "crosshair"
@@ -891,6 +898,7 @@ export default function Canvas({
         cursor={cursor}
         selectedComponentIds={selectedComponentIds}
         getPointFromEvent={getPointFromEventFn}
+        isTextSelectMode={isTextSelectMode}
         onSelectionBoxStart={startSelectionBox}
         onSelectionBoxUpdate={(point) =>
           updateSelectionBox(point, draggedComponentId, resizingComponentId)

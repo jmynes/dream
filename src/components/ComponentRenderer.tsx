@@ -45,6 +45,7 @@ interface ComponentRendererProps {
   onComponentCopy?: (component: CanvasComponent) => void;
   isDragging?: boolean;
   isSelected?: boolean;
+  isTextSelectMode?: boolean;
 }
 
 export default function ComponentRenderer({
@@ -56,6 +57,7 @@ export default function ComponentRenderer({
   onComponentCopy,
   isDragging = false,
   isSelected = false,
+  isTextSelectMode = false,
 }: ComponentRendererProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState("");
@@ -98,6 +100,10 @@ export default function ComponentRenderer({
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
+    if (isTextSelectMode) {
+      e.stopPropagation();
+      return;
+    }
     // Don't start dragging if clicking on interactive elements like Slider
     const target = e.target as HTMLElement;
     if (
@@ -279,7 +285,7 @@ export default function ComponentRenderer({
     }, 100);
   };
 
-  const handleDoubleClick = (e: React.MouseEvent) => {
+  const triggerInlineEdit = (e: React.MouseEvent) => {
     e.stopPropagation();
     // Only allow editing for components that have text
     const hasText = ["Button", "Card", "Typography", "Avatar", "Paper", "Box", "Radio", "Table", "TextField", "Chip"].includes(component.type);
@@ -362,6 +368,17 @@ export default function ComponentRenderer({
       setEditValue(currentText);
       setIsEditing(true);
     }
+  };
+
+  const handleDoubleClick = (e: React.MouseEvent) => {
+    triggerInlineEdit(e);
+  };
+
+  const handleTextClick = (e: React.MouseEvent) => {
+    if (!isTextSelectMode) {
+      return;
+    }
+    triggerInlineEdit(e);
   };
 
   const handleBlur = () => {
@@ -1482,6 +1499,7 @@ const getTextColorForFilled = (bgColor: string): string => {
         style={containerStyle}
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
+        onClick={handleTextClick}
         onDoubleClick={handleDoubleClick}
         onContextMenu={handleContextMenu}
       >

@@ -25,6 +25,7 @@ function App() {
   const [isEraser, setIsEraser] = useState(false);
   const [isMagicWand, setIsMagicWand] = useState(false);
   const [isLasso, setIsLasso] = useState(false);
+  const [isTextSelectMode, setIsTextSelectMode] = useState(false);
   const [snapToGrid, setSnapToGrid] = useState(true);
   const [resizeMode, setResizeMode] = useState<"relative" | "match">(
     "relative",
@@ -75,6 +76,7 @@ function App() {
   const handleComponentSelect = (type: ComponentType) => {
     setSelectedComponentType(type);
     setIsDrawing(false);
+    setIsTextSelectMode(false);
   };
 
   const handleComponentPlaced = () => {
@@ -262,6 +264,7 @@ function App() {
                 setIsEraser(false);
                 setIsMagicWand(false);
                 setIsLasso(false);
+                setIsTextSelectMode(false);
               }
             }}
             snapToGrid={snapToGrid}
@@ -274,6 +277,7 @@ function App() {
                 setIsMagicWand(false);
                 setIsLasso(false);
                 setSelectedComponentType(null);
+                setIsTextSelectMode(false);
               }
             }}
             isMagicWand={isMagicWand}
@@ -284,6 +288,7 @@ function App() {
                 setIsEraser(false);
                 setIsLasso(false);
                 setSelectedComponentType(null);
+                setIsTextSelectMode(false);
               }
             }}
             isLasso={isLasso}
@@ -294,6 +299,7 @@ function App() {
                 setIsEraser(false);
                 setIsMagicWand(false);
                 setSelectedComponentType(null);
+                setIsTextSelectMode(false);
               }
             }}
             onCursorMode={() => {
@@ -302,8 +308,27 @@ function App() {
               setIsMagicWand(false);
               setIsLasso(false);
               setSelectedComponentType(null);
+              setIsTextSelectMode(false);
             }}
-            isCursorMode={!isDrawing && !isEraser && !isMagicWand && !isLasso}
+            isCursorMode={
+              !isDrawing &&
+              !isEraser &&
+              !isMagicWand &&
+              !isLasso &&
+              !isTextSelectMode &&
+              !selectedComponentType
+            }
+            isTextSelectMode={isTextSelectMode}
+            onTextSelectToggle={(next) => {
+              setIsTextSelectMode(next);
+              if (next) {
+                setIsDrawing(false);
+                setIsEraser(false);
+                setIsMagicWand(false);
+                setIsLasso(false);
+                setSelectedComponentType(null);
+              }
+            }}
             resizeMode={resizeMode}
             onResizeModeChange={setResizeMode}
             showTitleBar={showTitleBar}
@@ -342,6 +367,7 @@ function App() {
               isMacOSStyle={isMacOSStyle}
               canvasColor={canvasColor}
               resizeMode={resizeMode}
+              isTextSelectMode={isTextSelectMode}
             />
           </Box>
           <ComponentsBar

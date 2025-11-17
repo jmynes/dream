@@ -4,6 +4,7 @@ import {
   Edit as PenIcon,
   AutoFixHigh as MagicWandIcon,
   NearMe as CursorIcon,
+  TextFields as TextIcon,
   Web as WebIcon,
   Refresh as RefreshIcon,
   Gesture as GestureIcon,
@@ -46,6 +47,8 @@ interface ToolsBarProps {
   onLassoToggle: (enabled: boolean) => void;
   onCursorMode: () => void;
   isCursorMode: boolean;
+  isTextSelectMode: boolean;
+  onTextSelectToggle: (enabled: boolean) => void;
   resizeMode: "relative" | "match";
   onResizeModeChange: (mode: "relative" | "match") => void;
   showTitleBar: boolean;
@@ -81,6 +84,8 @@ export default function ToolsBar({
   onLassoToggle,
   onCursorMode,
   isCursorMode,
+  isTextSelectMode,
+  onTextSelectToggle,
   resizeMode,
   onResizeModeChange,
   showTitleBar,
@@ -213,11 +218,21 @@ export default function ToolsBar({
                     onDrawingToggle(false);
                     onEraserToggle(false);
                     onMagicWandToggle(false);
+                    onTextSelectToggle(false);
                   }
                 }}
                 size="small"
               >
                 <GestureIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Text Select" slotProps={tooltipSlotProps}>
+              <IconButton
+                color={isTextSelectMode ? "primary" : "default"}
+                onClick={() => onTextSelectToggle(!isTextSelectMode)}
+                size="small"
+              >
+                <TextIcon />
               </IconButton>
             </Tooltip>
           </Box>

@@ -7,6 +7,7 @@ interface ComponentOverlayProps {
   components: CanvasComponent[];
   isCursorMode: boolean;
   isLassoMode: boolean;
+  isTextSelectMode: boolean;
   selectionBoxStart: Point | null;
   draggedComponentId: string | null;
   resizingComponentId: string | null;
@@ -40,6 +41,7 @@ export default function ComponentOverlay({
   components,
   isCursorMode,
   isLassoMode,
+  isTextSelectMode,
   selectionBoxStart,
   draggedComponentId,
   resizingComponentId,
@@ -156,6 +158,7 @@ export default function ComponentOverlay({
           onComponentColorChange={onComponentColorChange}
           onComponentDelete={onComponentDelete}
           onComponentCopy={onComponentCopy}
+          isTextSelectMode={isTextSelectMode}
           isDragging={draggedComponentId === component.id}
           isSelected={selectedComponentIds.includes(component.id)}
         />
