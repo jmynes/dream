@@ -786,15 +786,15 @@ const getTextColorForFilled = (bgColor: string): string => {
                   {...(component.props as object)}
                   defaultChecked={component.props?.checked as boolean}
                   sx={{ 
-                    color: isDarkColor(componentColor) ? componentColor : "#000000",
+                    color: componentColor,
                     "&.Mui-checked": { 
-                      color: isDarkColor(componentColor) ? componentColor : "#000000",
+                      color: componentColor,
                     },
                     "& .MuiSvgIcon-root": {
-                      color: isDarkColor(componentColor) ? componentColor : "#000000",
+                      color: componentColor,
                     },
                     "&.Mui-checked .MuiSvgIcon-root": {
-                      color: isDarkColor(componentColor) ? componentColor : "#000000",
+                      color: componentColor,
                     },
                   }}
                 />
