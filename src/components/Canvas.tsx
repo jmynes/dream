@@ -6,6 +6,7 @@ import GridOverlay from "./GridOverlay";
 import BrushPreview from "./BrushPreview";
 import SelectionBox from "./SelectionBox";
 import ComponentOverlay from "./ComponentOverlay";
+import LassoPath from "./LassoPath";
 import BrowserUI from "./BrowserUI";
 import {
   getPointFromEvent,
@@ -22,6 +23,26 @@ import { useComponentDragResize } from "../hooks/useComponentDragResize";
 import { useMagicWand } from "../hooks/useMagicWand";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
 
+const isPointInPolygon = (point: Point, polygon: Point[]): boolean => {
+  let inside = false;
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const xi = polygon[i].x;
+    const yi = polygon[i].y;
+    const xj = polygon[j].x;
+    const yj = polygon[j].y;
+
+    const intersect =
+      yi > point.y !== yj > point.y &&
+      point.x <
+        ((xj - xi) * (point.y - yi)) / (yj - yi + Number.EPSILON) + xi;
+
+    if (intersect) {
+      inside = !inside;
+    }
+  }
+  return inside;
+};
+
 interface CanvasProps {
   width?: number;
   height?: number;
@@ -32,6 +53,7 @@ interface CanvasProps {
   isDrawing?: boolean;
   isEraser?: boolean;
   isMagicWand?: boolean;
+  isLasso?: boolean;
   components: CanvasComponent[];
   onComponentsChange: (components: CanvasComponent[]) => void;
   selectedComponentType: ComponentType | null;
@@ -58,6 +80,7 @@ export default function Canvas({
   isDrawing = true,
   isEraser = false,
   isMagicWand = false,
+  isLasso = false,
   components,
   onComponentsChange,
   selectedComponentType,
@@ -81,6 +104,21 @@ export default function Canvas({
   const [copiedComponents, setCopiedComponents] = useState<CanvasComponent[]>(
     [],
   );
+  const [lassoPath, setLassoPath] = useState<Point[]>([]);
+  const lassoPathRef = useRef<Point[]>([]);
+  const [isLassoDrawing, setIsLassoDrawing] = useState(false);
+
+  const resetLasso = useCallback(() => {
+    setIsLassoDrawing(false);
+    lassoPathRef.current = [];
+    setLassoPath([]);
+  }, []);
+
+  useEffect(() => {
+    if (!isLasso) {
+      resetLasso();
+    }
+  }, [isLasso, resetLasso]);
 
   // Update selected components' colors when componentColor changes or when timestamp changes
   // The timestamp allows us to force updates even when the same color is selected
@@ -185,10 +223,53 @@ export default function Canvas({
     isDrawing,
     isEraser,
     isMagicWand,
+    isLasso,
     selectedComponentType,
     components,
     onSelectionChange: setSelectedComponentIds,
   });
+
+  const handleLassoStart = useCallback(
+    (point: Point) => {
+      if (!isLasso) return;
+      setIsLassoDrawing(true);
+      lassoPathRef.current = [point];
+      setLassoPath([point]);
+      setSelectedComponentIds([]);
+    },
+    [isLasso],
+  );
+
+  const handleLassoUpdate = useCallback(
+    (point: Point) => {
+      if (!isLassoDrawing) return;
+      lassoPathRef.current = [...lassoPathRef.current, point];
+      setLassoPath((prev) => [...prev, point]);
+    },
+    [isLassoDrawing],
+  );
+
+  const handleLassoFinish = useCallback(() => {
+    if (!isLassoDrawing) return;
+    const path = lassoPathRef.current;
+    if (!path || path.length < 3) {
+      resetLasso();
+      return;
+    }
+
+    const selected = components.filter((comp) => {
+      const width = comp.width || 100;
+      const height = comp.height || 40;
+      const center = {
+        x: comp.x + width / 2,
+        y: comp.y + height / 2,
+      };
+      return isPointInPolygon(center, path);
+    });
+
+    setSelectedComponentIds(selected.map((c) => c.id));
+    resetLasso();
+  }, [isLassoDrawing, components, resetLasso]);
 
   // Update selection in real-time during drag
   useEffect(() => {
@@ -267,7 +348,9 @@ export default function Canvas({
   const handleCanvasMouseDown = useCallback(
     (e: React.MouseEvent<HTMLCanvasElement>) => {
       const point = getPointFromEventFn(e);
-      handleCanvasMouseDownBase(point);
+      if (!isLasso) {
+        handleCanvasMouseDownBase(point);
+      }
       if (isMagicWand) {
         addPathPoint(point);
       }
@@ -277,22 +360,26 @@ export default function Canvas({
       handleCanvasMouseDownBase,
       isMagicWand,
       addPathPoint,
+      isLasso,
     ],
   );
 
   const handleCanvasMouseMove = useCallback(
     (e: React.MouseEvent<HTMLCanvasElement>) => {
       const point = getPointFromEventFn(e);
-      handleCanvasMouseMoveBase(
-        point,
-        isMagicWand ? addPathPoint : undefined,
-      );
+      if (!isLasso) {
+        handleCanvasMouseMoveBase(
+          point,
+          isMagicWand ? addPathPoint : undefined,
+        );
+      }
     },
     [
       getPointFromEventFn,
       handleCanvasMouseMoveBase,
       isMagicWand,
       addPathPoint,
+      isLasso,
     ],
   );
 
@@ -343,7 +430,7 @@ export default function Canvas({
         if (checkJustFinishedResize()) {
           return;
         }
-        if (isCursorMode) {
+        if (isCursorMode || isLasso) {
           setSelectedComponentIds([]);
           return;
         }
@@ -632,16 +719,19 @@ export default function Canvas({
       />
 
       <SelectionBox start={selectionBoxStart} end={selectionBoxEnd} endRef={selectionBoxEndRef} />
+      <LassoPath path={lassoPath} isActive={isLassoDrawing} />
 
       <ComponentOverlay
         components={components}
         isCursorMode={isCursorMode}
+        isLassoMode={isLasso}
         selectionBoxStart={selectionBoxStart}
         draggedComponentId={draggedComponentId}
         resizingComponentId={resizingComponentId}
         isDrawing={isDrawing}
         isEraser={isEraser}
         isMagicWand={isMagicWand}
+        isLassoDrawing={isLassoDrawing}
         selectedComponentType={selectedComponentType}
         cursor={cursor}
         selectedComponentIds={selectedComponentIds}
@@ -654,6 +744,9 @@ export default function Canvas({
         onSelectionBoxClear={clearSelectionBox}
         onBrushMouseMove={handleBrushMouseMove}
         onBrushMouseLeave={handleBrushMouseLeave}
+        onLassoStart={handleLassoStart}
+        onLassoUpdate={handleLassoUpdate}
+        onLassoFinish={handleLassoFinish}
         onComponentMouseDown={handleComponentMouseDown}
         onComponentUpdate={(componentId, props) => {
           onComponentsChange(

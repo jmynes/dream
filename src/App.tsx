@@ -24,6 +24,7 @@ function App() {
   const [isDrawing, setIsDrawing] = useState(false);
   const [isEraser, setIsEraser] = useState(false);
   const [isMagicWand, setIsMagicWand] = useState(false);
+  const [isLasso, setIsLasso] = useState(false);
   const [snapToGrid, setSnapToGrid] = useState(true);
   const [resizeMode, setResizeMode] = useState<"relative" | "match">(
     "relative",
@@ -260,6 +261,7 @@ function App() {
                 setSelectedComponentType(null);
                 setIsEraser(false);
                 setIsMagicWand(false);
+                setIsLasso(false);
               }
             }}
             snapToGrid={snapToGrid}
@@ -270,6 +272,7 @@ function App() {
               if (eraser) {
                 setIsDrawing(false);
                 setIsMagicWand(false);
+                setIsLasso(false);
                 setSelectedComponentType(null);
               }
             }}
@@ -279,6 +282,17 @@ function App() {
               if (magicWand) {
                 setIsDrawing(false);
                 setIsEraser(false);
+                setIsLasso(false);
+                setSelectedComponentType(null);
+              }
+            }}
+            isLasso={isLasso}
+            onLassoToggle={(lasso) => {
+              setIsLasso(lasso);
+              if (lasso) {
+                setIsDrawing(false);
+                setIsEraser(false);
+                setIsMagicWand(false);
                 setSelectedComponentType(null);
               }
             }}
@@ -286,9 +300,10 @@ function App() {
               setIsDrawing(false);
               setIsEraser(false);
               setIsMagicWand(false);
+              setIsLasso(false);
               setSelectedComponentType(null);
             }}
-            isCursorMode={!isDrawing && !isEraser && !isMagicWand}
+            isCursorMode={!isDrawing && !isEraser && !isMagicWand && !isLasso}
             resizeMode={resizeMode}
             onResizeModeChange={setResizeMode}
             showTitleBar={showTitleBar}
@@ -312,6 +327,7 @@ function App() {
               isDrawing={isDrawing}
               isEraser={isEraser}
               isMagicWand={isMagicWand}
+              isLasso={isLasso}
               components={components}
               onComponentsChange={handleComponentsChange}
               onCanvasStateChange={handleCanvasStateChange}

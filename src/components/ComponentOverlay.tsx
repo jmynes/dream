@@ -6,12 +6,14 @@ import type { Point } from "../utils/canvasUtils";
 interface ComponentOverlayProps {
   components: CanvasComponent[];
   isCursorMode: boolean;
+  isLassoMode: boolean;
   selectionBoxStart: Point | null;
   draggedComponentId: string | null;
   resizingComponentId: string | null;
   isDrawing: boolean;
   isEraser: boolean;
   isMagicWand: boolean;
+  isLassoDrawing: boolean;
   selectedComponentType: string | null;
   cursor: string;
   selectedComponentIds: string[];
@@ -22,6 +24,9 @@ interface ComponentOverlayProps {
   onSelectionBoxClear: () => void;
   onBrushMouseMove: (e: React.MouseEvent<HTMLDivElement>) => void;
   onBrushMouseLeave: () => void;
+  onLassoStart: (point: Point) => void;
+  onLassoUpdate: (point: Point) => void;
+  onLassoFinish: () => void;
   onComponentMouseDown: (e: React.MouseEvent, componentId: string, resizeDirection?: string) => void;
   onComponentUpdate?: (componentId: string, props: Partial<CanvasComponent["props"]>) => void;
   onOverlayClick: (e: React.MouseEvent<HTMLDivElement>) => void;
@@ -30,12 +35,14 @@ interface ComponentOverlayProps {
 export default function ComponentOverlay({
   components,
   isCursorMode,
+  isLassoMode,
   selectionBoxStart,
   draggedComponentId,
   resizingComponentId,
   isDrawing,
   isEraser,
   isMagicWand,
+  isLassoDrawing,
   selectedComponentType,
   cursor,
   selectedComponentIds,
@@ -46,6 +53,9 @@ export default function ComponentOverlay({
   onSelectionBoxClear,
   onBrushMouseMove,
   onBrushMouseLeave,
+  onLassoStart,
+  onLassoUpdate,
+  onLassoFinish,
   onComponentMouseDown,
   onComponentUpdate,
   onOverlayClick,
@@ -59,7 +69,9 @@ export default function ComponentOverlay({
         width: "100%",
         height: "100%",
         pointerEvents:
-          (!isDrawing && !isEraser && !isMagicWand) || selectedComponentType
+          (!isDrawing && !isEraser && !isMagicWand) ||
+          selectedComponentType ||
+          isLassoMode
             ? "auto"
             : "none",
         zIndex: 2,
@@ -69,6 +81,11 @@ export default function ComponentOverlay({
         if (isCursorMode && e.target === e.currentTarget) {
           const point = getPointFromEvent(e);
           onSelectionBoxStart(point);
+          return;
+        }
+        if (isLassoMode && e.target === e.currentTarget) {
+          const point = getPointFromEvent(e);
+          onLassoStart(point);
         }
       }}
       onMouseMove={(e) => {
@@ -81,6 +98,10 @@ export default function ComponentOverlay({
           const point = getPointFromEvent(e);
           onSelectionBoxUpdate(point);
         }
+        if (isLassoMode && isLassoDrawing) {
+          const point = getPointFromEvent(e);
+          onLassoUpdate(point);
+        }
         if (
           (isDrawing || isEraser || isMagicWand) &&
           !selectedComponentType
@@ -89,6 +110,10 @@ export default function ComponentOverlay({
         }
       }}
       onMouseUp={() => {
+        if (isLassoDrawing) {
+          onLassoFinish();
+          return;
+        }
         // Don't finish selection box if we're resizing
         if (!resizingComponentId) {
           onSelectionBoxFinish();
@@ -98,6 +123,9 @@ export default function ComponentOverlay({
       onMouseLeave={() => {
         onBrushMouseLeave();
         onSelectionBoxClear();
+        if (isLassoDrawing) {
+          onLassoFinish();
+        }
       }}
     >
       {components.map((component) => (

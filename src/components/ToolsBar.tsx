@@ -6,6 +6,7 @@ import {
   NearMe as CursorIcon,
   Web as WebIcon,
   Refresh as RefreshIcon,
+  Gesture as GestureIcon,
 } from "@mui/icons-material";
 import {
   Box,
@@ -41,6 +42,8 @@ interface ToolsBarProps {
   onEraserToggle: (eraser: boolean) => void;
   isMagicWand: boolean;
   onMagicWandToggle: (magicWand: boolean) => void;
+  isLasso: boolean;
+  onLassoToggle: (enabled: boolean) => void;
   onCursorMode: () => void;
   isCursorMode: boolean;
   resizeMode: "relative" | "match";
@@ -74,6 +77,8 @@ export default function ToolsBar({
   onEraserToggle,
   isMagicWand,
   onMagicWandToggle,
+  isLasso,
+  onLassoToggle,
   onCursorMode,
   isCursorMode,
   resizeMode,
@@ -188,7 +193,10 @@ export default function ToolsBar({
             >
               <IconButton
                 color={isCursorMode ? "primary" : "default"}
-                onClick={onCursorMode}
+                onClick={() => {
+                  onCursorMode();
+                  onLassoToggle(false);
+                }}
                 size="small"
               >
                 <CursorIcon />
@@ -210,6 +218,7 @@ export default function ToolsBar({
                   if (!isDrawing) {
                     onEraserToggle(false);
                     onMagicWandToggle(false);
+                    onLassoToggle(false);
                   }
                 }}
                 size="small"
@@ -226,6 +235,7 @@ export default function ToolsBar({
                   if (!isEraser) {
                     onDrawingToggle(false);
                     onMagicWandToggle(false);
+                    onLassoToggle(false);
                   }
                 }}
                 size="small"
@@ -245,11 +255,30 @@ export default function ToolsBar({
                   if (!isMagicWand) {
                     onDrawingToggle(false);
                     onEraserToggle(false);
+                    onLassoToggle(false);
                   }
                 }}
                 size="small"
               >
                 <MagicWandIcon />
+              </IconButton>
+            </Tooltip>
+
+            <Tooltip title="Lasso Select" slotProps={tooltipSlotProps}>
+              <IconButton
+                color={isLasso ? "primary" : "default"}
+                onClick={() => {
+                  const next = !isLasso;
+                  onLassoToggle(next);
+                  if (next) {
+                    onDrawingToggle(false);
+                    onEraserToggle(false);
+                    onMagicWandToggle(false);
+                  }
+                }}
+                size="small"
+              >
+                <GestureIcon />
               </IconButton>
             </Tooltip>
           </Box>
