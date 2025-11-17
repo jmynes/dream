@@ -23,6 +23,7 @@ export function useSelectionBox({
     null,
   );
   const [selectionBoxEnd, setSelectionBoxEnd] = useState<Point | null>(null);
+  const selectionBoxEndRef = useRef<Point | null>(null);
   const justFinishedSelectionBoxRef = useRef(false);
 
   const isCursorMode =
@@ -32,6 +33,7 @@ export function useSelectionBox({
     (point: Point) => {
       if (!isCursorMode) return;
       setSelectionBoxStart(point);
+      selectionBoxEndRef.current = point;
       setSelectionBoxEnd(point);
       onSelectionChange([]);
     },
@@ -52,18 +54,25 @@ export function useSelectionBox({
       ) {
         return;
       }
-      setSelectionBoxEnd(point);
+      // Update ref immediately - no state update, no re-render!
+      // The SelectionBox component reads from this ref via requestAnimationFrame
+      selectionBoxEndRef.current = point;
     },
     [isCursorMode, selectionBoxStart],
   );
 
   const finishSelectionBox = useCallback(() => {
-    if (!selectionBoxStart || !selectionBoxEnd) return;
+    // Use ref value for final calculation (most up-to-date)
+    const endPoint = selectionBoxEndRef.current;
+    if (!selectionBoxStart || !endPoint) return;
+    
+    // Sync state with ref value for final render
+    setSelectionBoxEnd(endPoint);
 
-    const minX = Math.min(selectionBoxStart.x, selectionBoxEnd.x);
-    const maxX = Math.max(selectionBoxStart.x, selectionBoxEnd.x);
-    const minY = Math.min(selectionBoxStart.y, selectionBoxEnd.y);
-    const maxY = Math.max(selectionBoxStart.y, selectionBoxEnd.y);
+    const minX = Math.min(selectionBoxStart.x, endPoint.x);
+    const maxX = Math.max(selectionBoxStart.x, endPoint.x);
+    const minY = Math.min(selectionBoxStart.y, endPoint.y);
+    const maxY = Math.max(selectionBoxStart.y, endPoint.y);
 
     // Only select if the selection box has some size (not just a click)
     const hasSelectionBoxSize =
@@ -101,11 +110,13 @@ export function useSelectionBox({
     }
 
     setSelectionBoxStart(null);
+    selectionBoxEndRef.current = null;
     setSelectionBoxEnd(null);
-  }, [selectionBoxStart, selectionBoxEnd, components, onSelectionChange]);
+  }, [selectionBoxStart, components, onSelectionChange]);
 
   const clearSelectionBox = useCallback(() => {
     setSelectionBoxStart(null);
+    selectionBoxEndRef.current = null;
     setSelectionBoxEnd(null);
   }, []);
 
@@ -116,6 +127,7 @@ export function useSelectionBox({
   return {
     selectionBoxStart,
     selectionBoxEnd,
+    selectionBoxEndRef, // Expose ref for direct DOM updates (no re-renders)
     isCursorMode,
     startSelectionBox,
     updateSelectionBox,

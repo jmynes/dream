@@ -134,6 +134,7 @@ export default function Canvas({
   const {
     selectionBoxStart,
     selectionBoxEnd,
+    selectionBoxEndRef,
     isCursorMode,
     startSelectionBox,
     updateSelectionBox,
@@ -477,7 +478,7 @@ export default function Canvas({
         penSize={penSize}
       />
 
-      <SelectionBox start={selectionBoxStart} end={selectionBoxEnd} />
+      <SelectionBox start={selectionBoxStart} end={selectionBoxEnd} endRef={selectionBoxEndRef} />
 
       <ComponentOverlay
         components={components}
