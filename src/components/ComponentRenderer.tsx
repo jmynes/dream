@@ -77,6 +77,7 @@ export default function ComponentRenderer({
 
 	const renderComponent = () => {
 		const widthProps = componentWidth ? { sx: { width: "100%" } } : {};
+		const heightProps = componentHeight ? { sx: { height: "100%" } } : {};
 		const centeredAlignment = { sx: { textAlign: "center" as const } };
 
 		switch (component.type) {
@@ -91,6 +92,7 @@ export default function ComponentRenderer({
 						{...otherProps}
 						sx={{
 							...(widthProps.sx || {}),
+							...(heightProps.sx || {}),
 							...(centeredAlignment.sx || {}),
 							...(propsSx as object || {}),
 						}}
