@@ -8,6 +8,7 @@ import {
   Checkbox,
   Chip,
   Divider,
+  InputAdornment,
   List,
   ListItem,
   ListItemButton,
@@ -17,6 +18,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
 import type { ComponentType } from "../types/component";
 import { useMemo, useState } from "react";
 
@@ -71,6 +73,29 @@ const getTextColorForFilled = (bgColor: string): string => {
 
 const getComponentItems = (componentColor: string): ComponentItem[] => [
   {
+    type: "Avatar",
+    label: "Avatar",
+    preview: <Avatar sx={{ bgcolor: componentColor }}>A</Avatar>,
+  },
+  {
+    type: "Box",
+    label: "Box",
+    preview: (
+      <Box
+        sx={{
+          p: 2,
+          minWidth: 120,
+          border: "1px dashed",
+          borderColor: componentColor,
+          backgroundColor: `${componentColor}20`,
+          textAlign: "center",
+        }}
+      >
+        <Typography variant="body2">Box</Typography>
+      </Box>
+    ),
+  },
+  {
     type: "Button",
     label: "Button",
     preview: (
@@ -87,11 +112,6 @@ const getComponentItems = (componentColor: string): ComponentItem[] => [
     ),
   },
   {
-    type: "TextField",
-    label: "Text Field",
-    preview: <TextField label="Text Field" size="small" />,
-  },
-  {
     type: "Card",
     label: "Card",
     preview: (
@@ -101,11 +121,6 @@ const getComponentItems = (componentColor: string): ComponentItem[] => [
         </CardContent>
       </Card>
     ),
-  },
-  {
-    type: "Typography",
-    label: "Typography",
-    preview: <Typography variant="body1" sx={{ color: componentColor }}>Typography</Typography>,
   },
   {
     type: "Checkbox",
@@ -129,26 +144,32 @@ const getComponentItems = (componentColor: string): ComponentItem[] => [
     ),
   },
   {
-    type: "Switch",
-    label: "Switch",
+    type: "Chip",
+    label: "Chip",
+    preview: <Chip label="Chip" sx={{ backgroundColor: componentColor, color: "#fff" }} />,
+  },
+  {
+    type: "Divider",
+    label: "Divider",
     preview: (
-      <Switch 
-        defaultChecked 
-        sx={{ 
-          "& .MuiSwitch-switchBase.Mui-checked": { color: componentColor }, 
-          "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": { 
-            backgroundColor: componentColor,
-            ...(isDarkColor(componentColor) ? {} : {
-              boxShadow: "0 0 0 1px rgba(0, 0, 0, 0.2)",
-            }),
-          },
-          "& .MuiSwitch-thumb": {
-            ...(isDarkColor(componentColor) ? {} : {
-              boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
-            }),
-          },
-        }} 
+      <Divider
+        sx={{
+          width: 120,
+          borderColor: componentColor,
+          borderTopWidth: "2px",
+        }}
       />
+    ),
+  },
+  {
+    type: "Paper",
+    label: "Paper",
+    preview: (
+      <Paper sx={{ p: 2, minWidth: 120, textAlign: "center", backgroundColor: componentColor }}>
+        <Typography variant="body2" sx={{ color: getTextColorForFilled(componentColor) }}>
+          Paper
+        </Typography>
+      </Paper>
     ),
   },
   {
@@ -180,56 +201,37 @@ const getComponentItems = (componentColor: string): ComponentItem[] => [
     ),
   },
   {
-    type: "Chip",
-    label: "Chip",
-    preview: <Chip label="Chip" sx={{ backgroundColor: componentColor, color: "#fff" }} />,
-  },
-  {
-    type: "Avatar",
-    label: "Avatar",
-    preview: <Avatar sx={{ bgcolor: componentColor }}>A</Avatar>,
-  },
-  {
-    type: "Divider",
-    label: "Divider",
+    type: "Switch",
+    label: "Switch",
     preview: (
-      <Divider
-        sx={{
-          width: 120,
-          borderColor: componentColor,
-          borderTopWidth: "2px",
-        }}
+      <Switch 
+        defaultChecked 
+        sx={{ 
+          "& .MuiSwitch-switchBase.Mui-checked": { color: componentColor }, 
+          "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": { 
+            backgroundColor: componentColor,
+            ...(isDarkColor(componentColor) ? {} : {
+              boxShadow: "0 0 0 1px rgba(0, 0, 0, 0.2)",
+            }),
+          },
+          "& .MuiSwitch-thumb": {
+            ...(isDarkColor(componentColor) ? {} : {
+              boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
+            }),
+          },
+        }} 
       />
     ),
   },
   {
-    type: "Paper",
-    label: "Paper",
-    preview: (
-      <Paper sx={{ p: 2, minWidth: 120, textAlign: "center", backgroundColor: componentColor }}>
-        <Typography variant="body2" sx={{ color: getTextColorForFilled(componentColor) }}>
-          Paper
-        </Typography>
-      </Paper>
-    ),
+    type: "TextField",
+    label: "Text Field",
+    preview: <TextField label="Text Field" size="small" />,
   },
   {
-    type: "Box",
-    label: "Box",
-    preview: (
-      <Box
-        sx={{
-          p: 2,
-          minWidth: 120,
-          border: "1px dashed",
-          borderColor: componentColor,
-          backgroundColor: `${componentColor}20`,
-          textAlign: "center",
-        }}
-      >
-        <Typography variant="body2">Box</Typography>
-      </Box>
-    ),
+    type: "Typography",
+    label: "Typography",
+    preview: <Typography variant="body1" sx={{ color: componentColor }}>Typography</Typography>,
   },
 ];
 
@@ -278,8 +280,16 @@ export default function ComponentsBar({
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           sx={{ mt: 1 }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon fontSize="small" />
+              </InputAdornment>
+            ),
+          }}
           inputProps={{ "aria-label": "Search components" }}
         />
+        <Divider sx={{ mt: 1.5, mb: 0.5 }} />
       </Box>
       <Box sx={{ flex: 1, overflow: "auto" }}>
         <List>
