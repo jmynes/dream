@@ -202,6 +202,7 @@ export default function RightSidebar({
                   pt: 1,
                   borderTop: "1px solid",
                   borderColor: "divider",
+                  pointerEvents: "none",
                 }}
               >
                 {item.preview}
