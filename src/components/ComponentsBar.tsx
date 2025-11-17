@@ -18,6 +18,7 @@ import {
   Typography,
 } from "@mui/material";
 import type { ComponentType } from "../types/component";
+import { useMemo, useState } from "react";
 
 interface ComponentsBarProps {
   onComponentSelect: (type: ComponentType) => void;
@@ -30,6 +31,26 @@ interface ComponentItem {
   label: string;
   preview: React.ReactNode;
 }
+
+const fuzzyMatch = (query: string, target: string): boolean => {
+  if (!query) {
+    return true;
+  }
+
+  let queryIndex = 0;
+  let targetIndex = 0;
+  const normalizedQuery = query.toLowerCase();
+  const normalizedTarget = target.toLowerCase();
+
+  while (queryIndex < normalizedQuery.length && targetIndex < normalizedTarget.length) {
+    if (normalizedQuery[queryIndex] === normalizedTarget[targetIndex]) {
+      queryIndex += 1;
+    }
+    targetIndex += 1;
+  }
+
+  return queryIndex === normalizedQuery.length;
+};
 
 // Helper function to determine if a color is dark (for text contrast)
 const isDarkColor = (color: string): boolean => {
@@ -218,6 +239,18 @@ export default function ComponentsBar({
   componentColor,
 }: ComponentsBarProps) {
   const componentItems = getComponentItems(componentColor);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredItems = useMemo(() => {
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+    if (!normalizedQuery) {
+      return componentItems;
+    }
+    return componentItems.filter((item) => {
+      const searchable = `${item.label} ${item.type}`;
+      return fuzzyMatch(normalizedQuery, searchable);
+    });
+  }, [componentItems, searchQuery]);
 
   return (
     <Paper
@@ -238,66 +271,83 @@ export default function ComponentsBar({
         <Typography variant="caption" color="text.secondary" gutterBottom sx={{ userSelect: "none" }}>
           Click or drag to add to canvas
         </Typography>
+        <TextField
+          size="small"
+          fullWidth
+          placeholder="Search components"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          sx={{ mt: 1 }}
+          inputProps={{ "aria-label": "Search components" }}
+        />
       </Box>
       <Box sx={{ flex: 1, overflow: "auto" }}>
         <List>
-          {componentItems.map((item) => (
-          <ListItem key={item.type} disablePadding sx={{ mb: 1 }}>
-            <ListItemButton
-              selected={selectedComponentType === item.type}
-              onClick={() => onComponentSelect(item.type)}
-              draggable
-              onDragStart={(e) => {
-                e.dataTransfer.setData("componentType", item.type);
-                e.dataTransfer.effectAllowed = "copy";
-              }}
-              sx={{
-                flexDirection: "column",
-                alignItems: "flex-start",
-                border: "1px solid",
-                borderColor:
-                  selectedComponentType === item.type
-                    ? "primary.main"
-                    : "divider",
-                borderRadius: 1,
-                cursor: "grab",
-                "&:hover": {
-                  borderColor: "primary.main",
-                },
-                "&:active": {
-                  cursor: "grabbing",
-                },
-              }}
-            >
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  width: "100%",
-                  mb: 1,
-                }}
-              >
-                <AddIcon sx={{ mr: 1, fontSize: 16 }} />
-                <Typography variant="body2" fontWeight="medium">
-                  {item.label}
-                </Typography>
-              </Box>
-              <Box
-                sx={{
-                  width: "100%",
-                  display: "flex",
-                  justifyContent: "center",
-                  pt: 1,
-                  borderTop: "1px solid",
-                  borderColor: "divider",
-                  pointerEvents: "none",
-                }}
-              >
-                {item.preview}
-              </Box>
-            </ListItemButton>
-          </ListItem>
-        ))}
+          {filteredItems.length === 0 ? (
+            <Box sx={{ px: 2, py: 3 }}>
+              <Typography variant="body2" color="text.secondary">
+                No components match "{searchQuery.trim()}"
+              </Typography>
+            </Box>
+          ) : (
+            filteredItems.map((item) => (
+              <ListItem key={item.type} disablePadding sx={{ mb: 1 }}>
+                <ListItemButton
+                  selected={selectedComponentType === item.type}
+                  onClick={() => onComponentSelect(item.type)}
+                  draggable
+                  onDragStart={(e) => {
+                    e.dataTransfer.setData("componentType", item.type);
+                    e.dataTransfer.effectAllowed = "copy";
+                  }}
+                  sx={{
+                    flexDirection: "column",
+                    alignItems: "flex-start",
+                    border: "1px solid",
+                    borderColor:
+                      selectedComponentType === item.type
+                        ? "primary.main"
+                        : "divider",
+                    borderRadius: 1,
+                    cursor: "grab",
+                    "&:hover": {
+                      borderColor: "primary.main",
+                    },
+                    "&:active": {
+                      cursor: "grabbing",
+                    },
+                  }}
+                >
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      width: "100%",
+                      mb: 1,
+                    }}
+                  >
+                    <AddIcon sx={{ mr: 1, fontSize: 16 }} />
+                    <Typography variant="body2" fontWeight="medium">
+                      {item.label}
+                    </Typography>
+                  </Box>
+                  <Box
+                    sx={{
+                      width: "100%",
+                      display: "flex",
+                      justifyContent: "center",
+                      pt: 1,
+                      borderTop: "1px solid",
+                      borderColor: "divider",
+                      pointerEvents: "none",
+                    }}
+                  >
+                    {item.preview}
+                  </Box>
+                </ListItemButton>
+              </ListItem>
+            ))
+          )}
         </List>
       </Box>
     </Paper>
