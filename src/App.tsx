@@ -1,4 +1,4 @@
-import { Box } from "@mui/material";
+import { Box, Snackbar } from "@mui/material";
 import CssBaseline from "@mui/material/CssBaseline";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -39,6 +39,7 @@ function App() {
   const [selectedComponentType, setSelectedComponentType] =
     useState<ComponentType | null>(null);
   const [clearCanvasKey, setClearCanvasKey] = useState(0);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Undo/Redo history
   interface HistoryState {
@@ -143,6 +144,7 @@ function App() {
       setComponents([...state.components]);
       canvasImageDataRef.current = state.canvasImageData;
       setRestoreCanvasImageData(state.canvasImageData);
+      setToastMessage("Undone");
       // Reset the flag after a short delay to allow state updates
       setTimeout(() => {
         isUndoRedoRef.current = false;
@@ -162,6 +164,7 @@ function App() {
       setComponents([...state.components]);
       canvasImageDataRef.current = state.canvasImageData;
       setRestoreCanvasImageData(state.canvasImageData);
+      setToastMessage("Redone");
       // Reset the flag after a short delay to allow state updates
       setTimeout(() => {
         isUndoRedoRef.current = false;
@@ -386,6 +389,14 @@ function App() {
         </Box>
         <Footer />
       </Box>
+      {/* Toast notification */}
+      <Snackbar
+        open={toastMessage !== null}
+        autoHideDuration={3000}
+        onClose={() => setToastMessage(null)}
+        message={toastMessage}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      />
     </ThemeProvider>
   );
 }
