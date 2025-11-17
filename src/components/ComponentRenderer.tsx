@@ -1173,7 +1173,7 @@ const getTextColorForFilled = (bgColor: string): string => {
               justifyContent: "center",
             }}
           >
-            <Table size="small" sx={{ border: `1px solid ${componentColor}` }}>
+            <Table size="small" sx={{ border: `1px solid ${componentColor}`, tableLayout: "fixed", width: "100%" }}>
               <TableHead>
                 <TableRow>
                   <TableCell
@@ -1188,20 +1188,22 @@ const getTextColorForFilled = (bgColor: string): string => {
                     }}
                   >
                     {isEditing && editingField === "header1" ? (
-                      <input
-                        ref={inputRef}
-                        type="text"
-                        value={editValue}
-                        onChange={(e) => setEditValue(e.target.value)}
-                        onBlur={handleBlur}
-                        onKeyDown={handleKeyDown}
-                        onClick={(e) => e.stopPropagation()}
-                        style={{
-                          ...inlineInputStyle,
-                          textAlign: "center",
-                          fontWeight: "bold",
-                        }}
-                      />
+                      <Box sx={{ textAlign: "center", width: "100%" }}>
+                        <input
+                          ref={inputRef}
+                          type="text"
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          onBlur={handleBlur}
+                          onKeyDown={handleKeyDown}
+                          onClick={(e) => e.stopPropagation()}
+                          style={{
+                            ...inlineInputStyle,
+                            textAlign: "center",
+                            fontWeight: "bold",
+                          }}
+                        />
+                      </Box>
                     ) : (
                       (component.props?.header1 as string) || "Header 1"
                     )}
@@ -1218,20 +1220,22 @@ const getTextColorForFilled = (bgColor: string): string => {
                     }}
                   >
                     {isEditing && editingField === "header2" ? (
-                      <input
-                        ref={inputRef}
-                        type="text"
-                        value={editValue}
-                        onChange={(e) => setEditValue(e.target.value)}
-                        onBlur={handleBlur}
-                        onKeyDown={handleKeyDown}
-                        onClick={(e) => e.stopPropagation()}
-                        style={{
-                          ...inlineInputStyle,
-                          textAlign: "center",
-                          fontWeight: "bold",
-                        }}
-                      />
+                      <Box sx={{ textAlign: "center", width: "100%" }}>
+                        <input
+                          ref={inputRef}
+                          type="text"
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          onBlur={handleBlur}
+                          onKeyDown={handleKeyDown}
+                          onClick={(e) => e.stopPropagation()}
+                          style={{
+                            ...inlineInputStyle,
+                            textAlign: "center",
+                            fontWeight: "bold",
+                          }}
+                        />
+                      </Box>
                     ) : (
                       (component.props?.header2 as string) || "Header 2"
                     )}
@@ -1248,20 +1252,22 @@ const getTextColorForFilled = (bgColor: string): string => {
                     }}
                   >
                     {isEditing && editingField === "header3" ? (
-                      <input
-                        ref={inputRef}
-                        type="text"
-                        value={editValue}
-                        onChange={(e) => setEditValue(e.target.value)}
-                        onBlur={handleBlur}
-                        onKeyDown={handleKeyDown}
-                        onClick={(e) => e.stopPropagation()}
-                        style={{
-                          ...inlineInputStyle,
-                          textAlign: "center",
-                          fontWeight: "bold",
-                        }}
-                      />
+                      <Box sx={{ textAlign: "center", width: "100%" }}>
+                        <input
+                          ref={inputRef}
+                          type="text"
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          onBlur={handleBlur}
+                          onKeyDown={handleKeyDown}
+                          onClick={(e) => e.stopPropagation()}
+                          style={{
+                            ...inlineInputStyle,
+                            textAlign: "center",
+                            fontWeight: "bold",
+                          }}
+                        />
+                      </Box>
                     ) : (
                       (component.props?.header3 as string) || "Header 3"
                     )}
@@ -1282,19 +1288,21 @@ const getTextColorForFilled = (bgColor: string): string => {
                     }}
                   >
                     {isEditing && editingField === "cell1_1" ? (
-                      <input
-                        ref={inputRef}
-                        type="text"
-                        value={editValue}
-                        onChange={(e) => setEditValue(e.target.value)}
-                        onBlur={handleBlur}
-                        onKeyDown={handleKeyDown}
-                        onClick={(e) => e.stopPropagation()}
-                        style={{
-                          ...inlineInputStyle,
-                          textAlign: "center",
-                        }}
-                      />
+                      <Box sx={{ textAlign: "center", width: "100%" }}>
+                        <input
+                          ref={inputRef}
+                          type="text"
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          onBlur={handleBlur}
+                          onKeyDown={handleKeyDown}
+                          onClick={(e) => e.stopPropagation()}
+                          style={{
+                            ...inlineInputStyle,
+                            textAlign: "center",
+                          }}
+                        />
+                      </Box>
                     ) : (
                       (component.props?.cell1_1 as string) || "Cell 1-1"
                     )}
@@ -1311,19 +1319,21 @@ const getTextColorForFilled = (bgColor: string): string => {
                     }}
                   >
                     {isEditing && editingField === "cell1_2" ? (
-                      <input
-                        ref={inputRef}
-                        type="text"
-                        value={editValue}
-                        onChange={(e) => setEditValue(e.target.value)}
-                        onBlur={handleBlur}
-                        onKeyDown={handleKeyDown}
-                        onClick={(e) => e.stopPropagation()}
-                        style={{
-                          ...inlineInputStyle,
-                          textAlign: "center",
-                        }}
-                      />
+                      <Box sx={{ textAlign: "center", width: "100%" }}>
+                        <input
+                          ref={inputRef}
+                          type="text"
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          onBlur={handleBlur}
+                          onKeyDown={handleKeyDown}
+                          onClick={(e) => e.stopPropagation()}
+                          style={{
+                            ...inlineInputStyle,
+                            textAlign: "center",
+                          }}
+                        />
+                      </Box>
                     ) : (
                       (component.props?.cell1_2 as string) || "Cell 1-2"
                     )}
@@ -1340,19 +1350,21 @@ const getTextColorForFilled = (bgColor: string): string => {
                     }}
                   >
                     {isEditing && editingField === "cell1_3" ? (
-                      <input
-                        ref={inputRef}
-                        type="text"
-                        value={editValue}
-                        onChange={(e) => setEditValue(e.target.value)}
-                        onBlur={handleBlur}
-                        onKeyDown={handleKeyDown}
-                        onClick={(e) => e.stopPropagation()}
-                        style={{
-                          ...inlineInputStyle,
-                          textAlign: "center",
-                        }}
-                      />
+                      <Box sx={{ textAlign: "center", width: "100%" }}>
+                        <input
+                          ref={inputRef}
+                          type="text"
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          onBlur={handleBlur}
+                          onKeyDown={handleKeyDown}
+                          onClick={(e) => e.stopPropagation()}
+                          style={{
+                            ...inlineInputStyle,
+                            textAlign: "center",
+                          }}
+                        />
+                      </Box>
                     ) : (
                       (component.props?.cell1_3 as string) || "Cell 1-3"
                     )}
@@ -1371,19 +1383,21 @@ const getTextColorForFilled = (bgColor: string): string => {
                     }}
                   >
                     {isEditing && editingField === "cell2_1" ? (
-                      <input
-                        ref={inputRef}
-                        type="text"
-                        value={editValue}
-                        onChange={(e) => setEditValue(e.target.value)}
-                        onBlur={handleBlur}
-                        onKeyDown={handleKeyDown}
-                        onClick={(e) => e.stopPropagation()}
-                        style={{
-                          ...inlineInputStyle,
-                          textAlign: "center",
-                        }}
-                      />
+                      <Box sx={{ textAlign: "center", width: "100%" }}>
+                        <input
+                          ref={inputRef}
+                          type="text"
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          onBlur={handleBlur}
+                          onKeyDown={handleKeyDown}
+                          onClick={(e) => e.stopPropagation()}
+                          style={{
+                            ...inlineInputStyle,
+                            textAlign: "center",
+                          }}
+                        />
+                      </Box>
                     ) : (
                       (component.props?.cell2_1 as string) || "Cell 2-1"
                     )}
@@ -1400,19 +1414,21 @@ const getTextColorForFilled = (bgColor: string): string => {
                     }}
                   >
                     {isEditing && editingField === "cell2_2" ? (
-                      <input
-                        ref={inputRef}
-                        type="text"
-                        value={editValue}
-                        onChange={(e) => setEditValue(e.target.value)}
-                        onBlur={handleBlur}
-                        onKeyDown={handleKeyDown}
-                        onClick={(e) => e.stopPropagation()}
-                        style={{
-                          ...inlineInputStyle,
-                          textAlign: "center",
-                        }}
-                      />
+                      <Box sx={{ textAlign: "center", width: "100%" }}>
+                        <input
+                          ref={inputRef}
+                          type="text"
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          onBlur={handleBlur}
+                          onKeyDown={handleKeyDown}
+                          onClick={(e) => e.stopPropagation()}
+                          style={{
+                            ...inlineInputStyle,
+                            textAlign: "center",
+                          }}
+                        />
+                      </Box>
                     ) : (
                       (component.props?.cell2_2 as string) || "Cell 2-2"
                     )}
@@ -1429,19 +1445,21 @@ const getTextColorForFilled = (bgColor: string): string => {
                     }}
                   >
                     {isEditing && editingField === "cell2_3" ? (
-                      <input
-                        ref={inputRef}
-                        type="text"
-                        value={editValue}
-                        onChange={(e) => setEditValue(e.target.value)}
-                        onBlur={handleBlur}
-                        onKeyDown={handleKeyDown}
-                        onClick={(e) => e.stopPropagation()}
-                        style={{
-                          ...inlineInputStyle,
-                          textAlign: "center",
-                        }}
-                      />
+                      <Box sx={{ textAlign: "center", width: "100%" }}>
+                        <input
+                          ref={inputRef}
+                          type="text"
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          onBlur={handleBlur}
+                          onKeyDown={handleKeyDown}
+                          onClick={(e) => e.stopPropagation()}
+                          style={{
+                            ...inlineInputStyle,
+                            textAlign: "center",
+                          }}
+                        />
+                      </Box>
                     ) : (
                       (component.props?.cell2_3 as string) || "Cell 2-3"
                     )}
