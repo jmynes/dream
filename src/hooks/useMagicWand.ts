@@ -28,6 +28,7 @@ export function useMagicWand({
   const magicWandPathRef = useRef<Point[]>([]);
   const hasDrawingRef = useRef(false);
   const [hasDrawing, setHasDrawing] = useState(false);
+  const savedCanvasStateRef = useRef<ImageData | null>(null);
   const [pendingRecognition, setPendingRecognition] = useState<{
     type: ComponentType;
     x: number;
@@ -45,6 +46,14 @@ export function useMagicWand({
   const addPathPoint = useCallback((point: Point) => {
     // Update ref immediately (no re-render)
     if (magicWandPathRef.current.length === 0) {
+      // Save canvas state before starting to draw
+      const canvas = canvasRef.current;
+      if (canvas) {
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          savedCanvasStateRef.current = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        }
+      }
       magicWandPathRef.current = [point];
       // Only update state when transitioning from no drawing to drawing
       if (!hasDrawingRef.current) {
@@ -55,7 +64,7 @@ export function useMagicWand({
       magicWandPathRef.current.push(point);
       // No state update needed - already drawing
     }
-  }, []);
+  }, [canvasRef]);
 
   const handleRecognizePath = useCallback(() => {
     if (magicWandPathRef.current.length === 0) return;
@@ -110,29 +119,14 @@ export function useMagicWand({
 
     if (!pendingRecognition) return;
 
-    // Clear the drawn shape from canvas
+    // Clear the drawn shape from canvas by restoring saved state
     const canvas = canvasRef.current;
-    if (canvas && magicWandPathRef.current.length > 0) {
+    if (canvas && savedCanvasStateRef.current) {
       const ctx = canvas.getContext("2d");
       if (ctx) {
-        const path = magicWandPathRef.current;
-        // Save current content
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        // Clear and restore
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.putImageData(imageData, 0, 0);
-        // Clear the specific area where we drew
-        ctx.globalCompositeOperation = "destination-out";
-        ctx.beginPath();
-        ctx.moveTo(path[0].x, path[0].y);
-        for (let i = 1; i < path.length; i++) {
-          ctx.lineTo(path[i].x, path[i].y);
-        }
-        ctx.lineWidth = penSize * 2;
-        ctx.lineCap = "round";
-        ctx.lineJoin = "round";
-        ctx.stroke();
-        ctx.globalCompositeOperation = "source-over";
+        // Restore the canvas state from before we started drawing
+        ctx.putImageData(savedCanvasStateRef.current, 0, 0);
+        savedCanvasStateRef.current = null;
       }
     }
 
@@ -158,7 +152,6 @@ export function useMagicWand({
   }, [
     pendingRecognition,
     handleRecognizePath,
-    penSize,
     components,
     onComponentsChange,
     onComponentPlaced,
@@ -182,29 +175,14 @@ export function useMagicWand({
   );
 
   const handleCancelRecognition = useCallback(() => {
-    // Clear the drawn shape from canvas
+    // Clear the drawn shape from canvas by restoring saved state
     const canvas = canvasRef.current;
-    if (canvas && magicWandPathRef.current.length > 0) {
+    if (canvas && savedCanvasStateRef.current) {
       const ctx = canvas.getContext("2d");
       if (ctx) {
-        const path = magicWandPathRef.current;
-        // Save current content
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        // Clear and restore
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.putImageData(imageData, 0, 0);
-        // Clear the specific area where we drew
-        ctx.globalCompositeOperation = "destination-out";
-        ctx.beginPath();
-        ctx.moveTo(path[0].x, path[0].y);
-        for (let i = 1; i < path.length; i++) {
-          ctx.lineTo(path[i].x, path[i].y);
-        }
-        ctx.lineWidth = penSize * 2;
-        ctx.lineCap = "round";
-        ctx.lineJoin = "round";
-        ctx.stroke();
-        ctx.globalCompositeOperation = "source-over";
+        // Restore the canvas state from before we started drawing
+        ctx.putImageData(savedCanvasStateRef.current, 0, 0);
+        savedCanvasStateRef.current = null;
       }
     }
 
@@ -214,7 +192,7 @@ export function useMagicWand({
     magicWandPathRef.current = [];
     hasDrawingRef.current = false;
     setHasDrawing(false);
-  }, [penSize, canvasRef]);
+  }, [canvasRef]);
 
   return {
     hasDrawing,
