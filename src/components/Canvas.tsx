@@ -260,11 +260,62 @@ export default function Canvas({
     const selected = components.filter((comp) => {
       const width = comp.width || 100;
       const height = comp.height || 40;
+      const corners: Point[] = [
+        { x: comp.x, y: comp.y },
+        { x: comp.x + width, y: comp.y },
+        { x: comp.x + width, y: comp.y + height },
+        { x: comp.x, y: comp.y + height },
+      ];
       const center = {
         x: comp.x + width / 2,
         y: comp.y + height / 2,
       };
-      return isPointInPolygon(center, path);
+
+      const anyCornerInside = corners.some((corner) =>
+        isPointInPolygon(corner, path),
+      );
+      if (anyCornerInside) {
+        return true;
+      }
+
+      // Check center as fallback
+      if (isPointInPolygon(center, path)) {
+        return true;
+      }
+
+      // Check if lasso edge intersects component edges
+      const lassoEdges = path.map((point, index) => [
+        point,
+        path[(index + 1) % path.length],
+      ]);
+      const rectEdges = [
+        [corners[0], corners[1]],
+        [corners[1], corners[2]],
+        [corners[2], corners[3]],
+        [corners[3], corners[0]],
+      ] as [Point, Point][];
+
+      const edgesIntersect = rectEdges.some(([rStart, rEnd]) =>
+        lassoEdges.some(([lStart, lEnd]) => {
+          const denominator =
+            (lEnd.y - lStart.y) * (rEnd.x - rStart.x) -
+            (lEnd.x - lStart.x) * (rEnd.y - rStart.y);
+          if (denominator === 0) {
+            return false;
+          }
+          const uA =
+            ((lEnd.x - lStart.x) * (rStart.y - lStart.y) -
+              (lEnd.y - lStart.y) * (rStart.x - lStart.x)) /
+            denominator;
+          const uB =
+            ((rEnd.x - rStart.x) * (rStart.y - lStart.y) -
+              (rEnd.y - rStart.y) * (rStart.x - lStart.x)) /
+            denominator;
+          return uA >= 0 && uA <= 1 && uB >= 0 && uB <= 1;
+        }),
+      );
+
+      return edgesIntersect;
     });
 
     setSelectedComponentIds(selected.map((c) => c.id));
@@ -430,7 +481,7 @@ export default function Canvas({
         if (checkJustFinishedResize()) {
           return;
         }
-        if (isCursorMode || isLasso) {
+        if (isCursorMode) {
           setSelectedComponentIds([]);
           return;
         }

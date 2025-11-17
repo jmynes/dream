@@ -202,6 +202,7 @@ export default function ToolsBar({
                 <CursorIcon />
               </IconButton>
             </Tooltip>
+
             <Tooltip title="Lasso Select" slotProps={tooltipSlotProps}>
               <IconButton
                 color={isLasso ? "primary" : "default"}
@@ -277,24 +278,6 @@ export default function ToolsBar({
                 size="small"
               >
                 <MagicWandIcon />
-              </IconButton>
-            </Tooltip>
-
-            <Tooltip title="Lasso Select" slotProps={tooltipSlotProps}>
-              <IconButton
-                color={isLasso ? "primary" : "default"}
-                onClick={() => {
-                  const next = !isLasso;
-                  onLassoToggle(next);
-                  if (next) {
-                    onDrawingToggle(false);
-                    onEraserToggle(false);
-                    onMagicWandToggle(false);
-                  }
-                }}
-                size="small"
-              >
-                <GestureIcon />
               </IconButton>
             </Tooltip>
           </Box>
