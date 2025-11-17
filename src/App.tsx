@@ -17,6 +17,7 @@ const theme = createTheme({
 
 function App() {
   const [penColor, setPenColor] = useState("#1976d2");
+  const [componentColor, setComponentColor] = useState("#1976d2");
   const [penSize, setPenSize] = useState(2);
   const [eraserSize] = useState(15);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -235,6 +236,8 @@ function App() {
           <Sidebar
             penColor={penColor}
             onPenColorChange={setPenColor}
+            componentColor={componentColor}
+            onComponentColorChange={setComponentColor}
             penSize={penSize}
             onPenSizeChange={setPenSize}
             isDrawing={isDrawing}
@@ -280,6 +283,7 @@ function App() {
             <Canvas
               key={clearCanvasKey}
               penColor={penColor}
+              componentColor={componentColor}
               penSize={isEraser ? eraserSize : penSize}
               isDrawing={isDrawing}
               isEraser={isEraser}

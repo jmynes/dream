@@ -25,6 +25,7 @@ interface CanvasProps {
   width?: number;
   height?: number;
   penColor?: string;
+  componentColor?: string;
   penSize?: number;
   isDrawing?: boolean;
   isEraser?: boolean;
@@ -43,6 +44,7 @@ export default function Canvas({
   width = 800,
   height = 600,
   penColor = "#1976d2",
+  componentColor = "#1976d2",
   penSize = 2,
   isDrawing = true,
   isEraser = false,
@@ -237,6 +239,7 @@ export default function Canvas({
         snappedPoint,
         gridCellWidth,
         gridCellHeight,
+        componentColor,
       );
       onComponentsChange([...components, newComponent]);
       onComponentPlaced();
@@ -246,6 +249,7 @@ export default function Canvas({
       snapToGridPointFn,
       gridCellWidth,
       gridCellHeight,
+      componentColor,
       components,
       onComponentsChange,
       onComponentPlaced,
@@ -359,6 +363,7 @@ export default function Canvas({
         snappedPoint,
         gridCellWidth,
         gridCellHeight,
+        componentColor,
       );
       onComponentsChange([...components, newComponent]);
       onComponentPlaced();
@@ -368,6 +373,7 @@ export default function Canvas({
       snapToGridPointFn,
       gridCellWidth,
       gridCellHeight,
+      componentColor,
       components,
       onComponentsChange,
       onComponentPlaced,

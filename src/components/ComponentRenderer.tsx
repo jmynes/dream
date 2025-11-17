@@ -79,6 +79,7 @@ export default function ComponentRenderer({
     const widthProps = componentWidth ? { sx: { width: "100%" } } : {};
     const heightProps = componentHeight ? { sx: { height: "100%" } } : {};
     const centeredAlignment = { sx: { textAlign: "center" as const } };
+    const componentColor = component.color || "#1976d2";
 
     switch (component.type) {
       case "Button": {
@@ -94,6 +95,8 @@ export default function ComponentRenderer({
               ...(widthProps.sx || {}),
               ...(heightProps.sx || {}),
               ...(centeredAlignment.sx || {}),
+              backgroundColor: componentColor,
+              "&:hover": { backgroundColor: componentColor },
               ...((propsSx as object) || {}),
             }}
           >
@@ -121,6 +124,7 @@ export default function ComponentRenderer({
               width: "100%",
               height: "100%",
               minWidth: componentWidth || 200,
+              backgroundColor: componentColor,
             }}
           >
             <CardContent sx={{ textAlign: "center", height: "100%" }}>
@@ -137,6 +141,11 @@ export default function ComponentRenderer({
             {...(component.props as object)}
             {...widthProps}
             {...centeredAlignment}
+            sx={{
+              ...(widthProps.sx || {}),
+              ...(centeredAlignment.sx || {}),
+              color: componentColor,
+            }}
           >
             {(component.props?.text as string) || "Typography"}
           </Typography>
@@ -190,7 +199,7 @@ export default function ComponentRenderer({
             <Slider
               {...(component.props as object)}
               defaultValue={(component.props?.value as number) || 50}
-              sx={{ width: "100%" }}
+              sx={{ width: "100%", color: componentColor }}
             />
           </Box>
         );
@@ -208,6 +217,7 @@ export default function ComponentRenderer({
             <Chip
               {...(component.props as object)}
               label={(component.props?.label as string) || "Chip"}
+              sx={{ backgroundColor: componentColor, color: "#fff" }}
             />
           </Box>
         );
@@ -227,6 +237,7 @@ export default function ComponentRenderer({
               sx={{
                 width: Math.min(componentWidth || 40, componentHeight || 40),
                 height: Math.min(componentWidth || 40, componentHeight || 40),
+                bgcolor: componentColor,
               }}
             >
               {(component.props?.text as string) || "A"}
@@ -265,6 +276,7 @@ export default function ComponentRenderer({
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
+              backgroundColor: componentColor,
               ...centeredAlignment.sx,
             }}
             {...(component.props as object)}
@@ -284,7 +296,8 @@ export default function ComponentRenderer({
               alignItems: "center",
               justifyContent: "center",
               border: "1px dashed",
-              borderColor: "divider",
+              borderColor: componentColor,
+              backgroundColor: `${componentColor}20`,
               ...centeredAlignment.sx,
             }}
             {...(component.props as object)}

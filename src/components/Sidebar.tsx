@@ -19,6 +19,8 @@ import {
 interface SidebarProps {
   penColor: string;
   onPenColorChange: (color: string) => void;
+  componentColor: string;
+  onComponentColorChange: (color: string) => void;
   penSize: number;
   onPenSizeChange: (size: number) => void;
   isDrawing: boolean;
@@ -38,6 +40,8 @@ interface SidebarProps {
 export default function Sidebar({
   penColor,
   onPenColorChange,
+  componentColor,
+  onComponentColorChange,
   penSize,
   onPenSizeChange,
   isDrawing,
@@ -193,6 +197,27 @@ export default function Sidebar({
               type="color"
               value={penColor}
               onChange={(e) => onPenColorChange(e.target.value)}
+              style={{
+                width: 60,
+                height: 30,
+                border: "1px solid #ccc",
+                borderRadius: 4,
+                cursor: "pointer",
+              }}
+            />
+          </Box>
+        </Box>
+
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+          <Typography variant="body2" color="text.secondary">
+            Component Color
+          </Typography>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <ColorIcon sx={{ color: componentColor }} />
+            <input
+              type="color"
+              value={componentColor}
+              onChange={(e) => onComponentColorChange(e.target.value)}
               style={{
                 width: 60,
                 height: 30,

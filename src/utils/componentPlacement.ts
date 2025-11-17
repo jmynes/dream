@@ -6,6 +6,7 @@ export function createComponentAtPoint(
   point: Point,
   gridCellWidth: number,
   gridCellHeight: number,
+  color?: string,
 ): CanvasComponent {
   return {
     id: `component-${Date.now()}`,
@@ -14,6 +15,7 @@ export function createComponentAtPoint(
     y: point.y,
     width: gridCellWidth,
     height: gridCellHeight,
+    color,
     props: {},
   };
 }

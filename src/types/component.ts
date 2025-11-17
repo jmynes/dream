@@ -19,5 +19,6 @@ export interface CanvasComponent {
   y: number;
   width?: number; // Width in pixels, if not set uses component's natural width
   height?: number; // Height in pixels, if not set uses component's natural height
+  color?: string; // Color stored when component was created
   props?: Record<string, unknown>;
 }
