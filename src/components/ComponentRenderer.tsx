@@ -215,6 +215,7 @@ export default function ComponentRenderer({
               backgroundColor: componentColor,
               color: getTextColorForFilled(componentColor),
               "&:hover": { backgroundColor: componentColor },
+              textTransform: "none",
               ...((propsSx as object) || {}),
             }}
           >
@@ -268,19 +269,21 @@ export default function ComponentRenderer({
         );
       case "Typography":
         return (
-          <Typography
-            variant="body1"
-            {...(component.props as object)}
-            {...widthProps}
-            {...centeredAlignment}
-            sx={{
-              ...(widthProps.sx || {}),
-              ...(centeredAlignment.sx || {}),
-              color: componentColor,
-            }}
-          >
-            {(component.props?.text as string) || "Typography"}
-          </Typography>
+          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", width: "100%", height: "100%" }}>
+            <Typography
+              variant="body1"
+              {...(component.props as object)}
+              {...widthProps}
+              {...centeredAlignment}
+              sx={{
+                ...(widthProps.sx || {}),
+                ...(centeredAlignment.sx || {}),
+                color: componentColor,
+              }}
+            >
+              {(component.props?.text as string) || "Typography"}
+            </Typography>
+          </Box>
         );
       case "Checkbox":
         return (
