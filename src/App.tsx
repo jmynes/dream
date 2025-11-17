@@ -23,6 +23,7 @@ function App() {
 	const [isEraser, setIsEraser] = useState(false);
 	const [isThinkingPen, setIsThinkingPen] = useState(false);
 	const [snapToGrid, setSnapToGrid] = useState(true);
+	const [resizeMode, setResizeMode] = useState<"relative" | "clone">("relative");
 	const [components, setComponents] = useState<CanvasComponent[]>([]);
 	const [selectedComponentType, setSelectedComponentType] =
 		useState<ComponentType | null>(null);
@@ -261,6 +262,8 @@ function App() {
 							setSelectedComponentType(null);
 						}}
 						isCursorMode={!isDrawing && !isEraser && !isThinkingPen}
+						resizeMode={resizeMode}
+						onResizeModeChange={setResizeMode}
 					/>
 					<Box sx={{ flex: 1, overflow: "hidden", display: "flex" }}>
 					<Canvas
@@ -277,6 +280,7 @@ function App() {
 						selectedComponentType={selectedComponentType}
 						onComponentPlaced={handleComponentPlaced}
 						snapToGrid={snapToGrid}
+						resizeMode={resizeMode}
 					/>
 					</Box>
 					<RightSidebar

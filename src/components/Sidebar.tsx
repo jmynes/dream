@@ -5,7 +5,7 @@ import {
 	AutoFixHigh as ThinkingPenIcon,
 	NearMe as CursorIcon,
 } from "@mui/icons-material";
-import { Box, IconButton, Paper, Slider, Tooltip, Typography } from "@mui/material";
+import { Box, Button, ButtonGroup, IconButton, Paper, Slider, Tooltip, Typography } from "@mui/material";
 
 interface SidebarProps {
 	penColor: string;
@@ -22,6 +22,8 @@ interface SidebarProps {
 	onThinkingPenToggle: (thinkingPen: boolean) => void;
 	onCursorMode: () => void;
 	isCursorMode: boolean;
+	resizeMode: "relative" | "clone";
+	onResizeModeChange: (mode: "relative" | "clone") => void;
 }
 
 export default function Sidebar({
@@ -39,6 +41,8 @@ export default function Sidebar({
 	onThinkingPenToggle,
 	onCursorMode,
 	isCursorMode,
+	resizeMode,
+	onResizeModeChange,
 }: SidebarProps) {
 	return (
 		<Paper
@@ -128,6 +132,33 @@ export default function Sidebar({
 							</IconButton>
 						</Tooltip>
 					</Box>
+				</Box>
+
+				<Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+					<Typography variant="body2" color="text.secondary">
+						Resize Mode
+					</Typography>
+					<ButtonGroup size="small" fullWidth>
+						<Button
+							variant={resizeMode === "relative" ? "contained" : "outlined"}
+							onClick={() => onResizeModeChange("relative")}
+							sx={{ fontSize: "0.75rem" }}
+						>
+							Relative
+						</Button>
+						<Button
+							variant={resizeMode === "clone" ? "contained" : "outlined"}
+							onClick={() => onResizeModeChange("clone")}
+							sx={{ fontSize: "0.75rem" }}
+						>
+							Clone
+						</Button>
+					</ButtonGroup>
+					<Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
+						{resizeMode === "relative"
+							? "Scale components proportionally"
+							: "Make all components match size"}
+					</Typography>
 				</Box>
 
 				<Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>

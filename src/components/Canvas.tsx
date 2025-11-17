@@ -22,6 +22,7 @@ interface CanvasProps {
 	selectedComponentType: ComponentType | null;
 	onComponentPlaced: () => void;
 	snapToGrid?: boolean;
+	resizeMode?: "relative" | "clone";
 	onCanvasStateChange?: (imageData: string | null) => void;
 	restoreCanvasImageData?: string | null;
 }
@@ -39,6 +40,7 @@ export default function Canvas({
 	selectedComponentType,
 	onComponentPlaced,
 	snapToGrid = false,
+	resizeMode = "relative",
 	onCanvasStateChange,
 	restoreCanvasImageData,
 }: CanvasProps) {
@@ -951,19 +953,26 @@ export default function Canvas({
 						snappedWidth = numColumns * gridCellWidth;
 					}
 
-					// Calculate scale factor based on the resized component
-					const scaleFactor = snappedWidth / resizeStartWidth;
-
 					// Apply resize to all selected components
 					const updatedComponents = components.map((comp) => {
 						if (selectedComponentIds.includes(comp.id)) {
-							const initialState = initialSelectedComponentStates.get(comp.id);
-							if (initialState) {
-								const newCompWidth = Math.max(50, initialState.width * scaleFactor);
+							if (resizeMode === "clone") {
+								// In clone mode, all selected components match the resized component's width
 								return {
 									...comp,
-									width: snapToGrid ? Math.round(newCompWidth / gridCellWidth) * gridCellWidth : newCompWidth,
+									width: snappedWidth,
 								};
+							} else {
+								// Relative mode: calculate scale factor based on the resized component
+								const scaleFactor = snappedWidth / resizeStartWidth;
+								const initialState = initialSelectedComponentStates.get(comp.id);
+								if (initialState) {
+									const newCompWidth = Math.max(50, initialState.width * scaleFactor);
+									return {
+										...comp,
+										width: snapToGrid ? Math.round(newCompWidth / gridCellWidth) * gridCellWidth : newCompWidth,
+									};
+								}
 							}
 						}
 						return comp;
@@ -981,19 +990,26 @@ export default function Canvas({
 						snappedHeight = numRows * gridCellHeight;
 					}
 
-					// Calculate scale factor based on the resized component
-					const scaleFactor = snappedHeight / resizeStartHeight;
-
 					// Apply resize to all selected components
 					const updatedComponents = components.map((comp) => {
 						if (selectedComponentIds.includes(comp.id)) {
-							const initialState = initialSelectedComponentStates.get(comp.id);
-							if (initialState) {
-								const newCompHeight = Math.max(30, initialState.height * scaleFactor);
+							if (resizeMode === "clone") {
+								// In clone mode, all selected components match the resized component's height
 								return {
 									...comp,
-									height: snapToGrid ? Math.round(newCompHeight / gridCellHeight) * gridCellHeight : newCompHeight,
+									height: snappedHeight,
 								};
+							} else {
+								// Relative mode: calculate scale factor based on the resized component
+								const scaleFactor = snappedHeight / resizeStartHeight;
+								const initialState = initialSelectedComponentStates.get(comp.id);
+								if (initialState) {
+									const newCompHeight = Math.max(30, initialState.height * scaleFactor);
+									return {
+										...comp,
+										height: snapToGrid ? Math.round(newCompHeight / gridCellHeight) * gridCellHeight : newCompHeight,
+									};
+								}
 							}
 						}
 						return comp;
@@ -1062,6 +1078,7 @@ export default function Canvas({
 			resizeStartHeight,
 			selectedComponentIds,
 			initialSelectedComponentStates,
+			resizeMode,
 			snapToGrid,
 			gridCellWidth,
 			gridCellHeight,
@@ -1145,7 +1162,12 @@ export default function Canvas({
 		setSelectionBoxStart(null);
 		setSelectionBoxEnd(null);
 		setInitialSelectedComponentStates(new Map());
-	}, [selectionBoxStart, selectionBoxEnd, components]);
+		}, [
+		selectionBoxStart,
+		selectionBoxEnd,
+		components,
+		onComponentsChange,
+	]);
 
 	// Handle clicking on canvas background to deselect
 	const handleCanvasBackgroundClick = useCallback(
