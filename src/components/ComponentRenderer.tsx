@@ -8,18 +8,24 @@ import {
   Chip,
   Divider,
   Paper,
+  Popover,
   Slider,
+  SpeedDial,
+  SpeedDialAction,
   Switch,
   TextField,
   Typography,
 } from "@mui/material";
+import { Palette as PaletteIcon } from "@mui/icons-material";
 import { useState, useRef, useEffect } from "react";
 import type { CanvasComponent } from "../types/component";
+import ColorPicker from "./ColorPicker";
 
 interface ComponentRendererProps {
   component: CanvasComponent;
   onMouseDown: (e: React.MouseEvent, componentId: string, resizeDirection?: string) => void;
   onComponentUpdate?: (componentId: string, props: Partial<CanvasComponent["props"]>) => void;
+  onComponentColorChange?: (componentId: string, color: string) => void;
   isDragging?: boolean;
   isSelected?: boolean;
 }
@@ -28,6 +34,7 @@ export default function ComponentRenderer({
   component,
   onMouseDown,
   onComponentUpdate,
+  onComponentColorChange,
   isDragging = false,
   isSelected = false,
 }: ComponentRendererProps) {
@@ -42,6 +49,9 @@ export default function ComponentRenderer({
   const [sliderDisplayValue, setSliderDisplayValue] = useState(
     sliderValueRef.current,
   );
+  const [speedDialOpen, setSpeedDialOpen] = useState(false);
+  const [speedDialAnchor, setSpeedDialAnchor] = useState<{ x: number; y: number } | null>(null);
+  const [colorPickerAnchor, setColorPickerAnchor] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
     const propValue = (component.props?.value as number) ?? 50;
@@ -96,6 +106,57 @@ export default function ComponentRenderer({
     const resizeDirection = (e.target as HTMLElement)?.dataset?.resize;
     if (resizeDirection) {
       e.stopPropagation();
+    }
+  };
+
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const rect = e.currentTarget.getBoundingClientRect();
+    setSpeedDialAnchor({ x: rect.right, y: rect.top + rect.height / 2 });
+    setSpeedDialOpen(true);
+  };
+
+  const handleSpeedDialClose = (event: React.SyntheticEvent, reason?: string) => {
+    // Don't close if the reason is mouseLeave and the mouse is over a tooltip
+    if (reason === "mouseLeave") {
+      const target = event.target as HTMLElement;
+      const relatedTarget = (event.nativeEvent as MouseEvent).relatedTarget as HTMLElement | null;
+      
+      // Check if we're moving to a tooltip or tooltip-related element
+      if (relatedTarget) {
+        const isMovingToTooltip = 
+          relatedTarget.closest(".MuiTooltip-root") !== null ||
+          relatedTarget.closest(".MuiTooltip-popper") !== null ||
+          relatedTarget.closest(".MuiTooltip-tooltip") !== null ||
+          relatedTarget.classList.contains("MuiTooltip-tooltip") ||
+          relatedTarget.closest(".MuiSpeedDialAction-staticTooltipLabel") !== null ||
+          relatedTarget.classList.contains("MuiSpeedDialAction-staticTooltipLabel");
+        
+        if (isMovingToTooltip) {
+          return; // Don't close
+        }
+      }
+    }
+    
+    setSpeedDialOpen(false);
+    setSpeedDialAnchor(null);
+  };
+
+  const handleEditColor = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSpeedDialOpen(false);
+    setSpeedDialAnchor(null);
+    setColorPickerAnchor(e.currentTarget as HTMLElement);
+  };
+
+  const handleColorPickerClose = () => {
+    setColorPickerAnchor(null);
+  };
+
+  const handleColorChange = (color: string) => {
+    if (onComponentColorChange) {
+      onComponentColorChange(component.id, color);
     }
   };
   
@@ -181,6 +242,82 @@ export default function ComponentRenderer({
       inputRef.current.select();
     }
   }, [isEditing]);
+
+  // Helper function to check if element is within SpeedDial area
+  const isWithinSpeedDialArea = (target: HTMLElement | null): boolean => {
+    if (!target) return false;
+    return (
+      target.closest(".MuiSpeedDial-root") !== null ||
+      target.closest(".MuiPopover-root") !== null ||
+      target.closest(".MuiTooltip-root") !== null ||
+      target.closest(".MuiTooltip-popper") !== null ||
+      target.closest("[role='tooltip']") !== null ||
+      target.classList.contains("MuiTooltip-tooltip") ||
+      target.closest(".MuiTooltip-tooltip") !== null ||
+      target.classList.contains("MuiSpeedDialAction-staticTooltipLabel") ||
+      target.closest(".MuiSpeedDialAction-staticTooltipLabel") !== null ||
+      target.closest(".MuiSpeedDialAction-fab") !== null ||
+      target.closest(".MuiFab-root") !== null
+    );
+  };
+
+  // Close SpeedDial when clicking outside or pressing escape
+  useEffect(() => {
+    if (!speedDialOpen) return;
+
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!isWithinSpeedDialArea(target)) {
+        setSpeedDialOpen(false);
+        setSpeedDialAnchor(null);
+      }
+    };
+
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && speedDialOpen) {
+        e.preventDefault();
+        e.stopPropagation();
+        setSpeedDialOpen(false);
+        setSpeedDialAnchor(null);
+      }
+    };
+
+    // Also add mouseenter/mouseleave handlers to tooltip elements to keep menu open
+    const handleTooltipMouseEnter = () => {
+      // Keep menu open when mouse enters tooltip area
+    };
+
+    const handleTooltipMouseLeave = () => {
+      // Keep menu open when mouse leaves tooltip area
+    };
+
+    // Add a small delay to prevent immediate closure from the right-click event
+    const timeoutId = setTimeout(() => {
+      document.addEventListener("click", handleClickOutside, true);
+      document.addEventListener("contextmenu", handleClickOutside, true);
+      document.addEventListener("keydown", handleEscape, true);
+      
+      // Attach to tooltip elements if they exist
+      const tooltipElements = document.querySelectorAll(".MuiTooltip-root, .MuiTooltip-popper, .MuiSpeedDialAction-staticTooltipLabel");
+      tooltipElements.forEach((el) => {
+        el.addEventListener("mouseenter", handleTooltipMouseEnter);
+        el.addEventListener("mouseleave", handleTooltipMouseLeave);
+      });
+    }, 100);
+
+    return () => {
+      clearTimeout(timeoutId);
+      document.removeEventListener("click", handleClickOutside, true);
+      document.removeEventListener("contextmenu", handleClickOutside, true);
+      document.removeEventListener("keydown", handleEscape, true);
+      
+      const tooltipElements = document.querySelectorAll(".MuiTooltip-root, .MuiTooltip-popper, .MuiSpeedDialAction-staticTooltipLabel");
+      tooltipElements.forEach((el) => {
+        el.removeEventListener("mouseenter", handleTooltipMouseEnter);
+        el.removeEventListener("mouseleave", handleTooltipMouseLeave);
+      });
+    };
+  }, [speedDialOpen]);
 
   const componentWidth = component.width;
   const componentHeight = component.height;
@@ -649,37 +786,136 @@ export default function ComponentRenderer({
   };
 
   return (
-    // biome-ignore lint/a11y/noStaticElementInteractions: Draggable container wrapper
-    <div
-      style={containerStyle}
-      onMouseDown={handleMouseDown}
-      onMouseUp={handleMouseUp}
-      onDoubleClick={handleDoubleClick}
-    >
-      {renderComponent()}
-      {renderEditableInput()}
-      {isSelected && (
-        <>
-          {/* Corner handles */}
-          {/* biome-ignore lint/a11y/noStaticElementInteractions: Resize handle */}
-          <div style={topLeftHandleStyle} onMouseDown={handleMouseDown} data-resize="nw" />
-          {/* biome-ignore lint/a11y/noStaticElementInteractions: Resize handle */}
-          <div style={topRightHandleStyle} onMouseDown={handleMouseDown} data-resize="ne" />
-          {/* biome-ignore lint/a11y/noStaticElementInteractions: Resize handle */}
-          <div style={bottomLeftHandleStyle} onMouseDown={handleMouseDown} data-resize="sw" />
-          {/* biome-ignore lint/a11y/noStaticElementInteractions: Resize handle */}
-          <div style={bottomRightHandleStyle} onMouseDown={handleMouseDown} data-resize="se" />
-          {/* Edge handles */}
-          {/* biome-ignore lint/a11y/noStaticElementInteractions: Resize handle */}
-          <div style={topHandleStyle} onMouseDown={handleMouseDown} data-resize="n" />
-          {/* biome-ignore lint/a11y/noStaticElementInteractions: Resize handle */}
-          <div style={rightHandleStyle} onMouseDown={handleMouseDown} data-resize="e" />
-          {/* biome-ignore lint/a11y/noStaticElementInteractions: Resize handle */}
-          <div style={bottomHandleStyle} onMouseDown={handleMouseDown} data-resize="s" />
-          {/* biome-ignore lint/a11y/noStaticElementInteractions: Resize handle */}
-          <div style={leftHandleStyle} onMouseDown={handleMouseDown} data-resize="w" />
-        </>
+    <>
+      {/* biome-ignore lint/a11y/noStaticElementInteractions: Draggable container wrapper */}
+      <div
+        style={containerStyle}
+        onMouseDown={handleMouseDown}
+        onMouseUp={handleMouseUp}
+        onDoubleClick={handleDoubleClick}
+        onContextMenu={handleContextMenu}
+      >
+        {renderComponent()}
+        {renderEditableInput()}
+        {isSelected && (
+          <>
+            {/* Corner handles */}
+            {/* biome-ignore lint/a11y/noStaticElementInteractions: Resize handle */}
+            <div style={topLeftHandleStyle} onMouseDown={handleMouseDown} data-resize="nw" />
+            {/* biome-ignore lint/a11y/noStaticElementInteractions: Resize handle */}
+            <div style={topRightHandleStyle} onMouseDown={handleMouseDown} data-resize="ne" />
+            {/* biome-ignore lint/a11y/noStaticElementInteractions: Resize handle */}
+            <div style={bottomLeftHandleStyle} onMouseDown={handleMouseDown} data-resize="sw" />
+            {/* biome-ignore lint/a11y/noStaticElementInteractions: Resize handle */}
+            <div style={bottomRightHandleStyle} onMouseDown={handleMouseDown} data-resize="se" />
+            {/* Edge handles */}
+            {/* biome-ignore lint/a11y/noStaticElementInteractions: Resize handle */}
+            <div style={topHandleStyle} onMouseDown={handleMouseDown} data-resize="n" />
+            {/* biome-ignore lint/a11y/noStaticElementInteractions: Resize handle */}
+            <div style={rightHandleStyle} onMouseDown={handleMouseDown} data-resize="e" />
+            {/* biome-ignore lint/a11y/noStaticElementInteractions: Resize handle */}
+            <div style={bottomHandleStyle} onMouseDown={handleMouseDown} data-resize="s" />
+            {/* biome-ignore lint/a11y/noStaticElementInteractions: Resize handle */}
+            <div style={leftHandleStyle} onMouseDown={handleMouseDown} data-resize="w" />
+          </>
+        )}
+      </div>
+
+      {/* Speed Dial for right-click menu */}
+      {speedDialAnchor && (
+        <Box
+          sx={{
+            position: "fixed",
+            left: speedDialAnchor.x,
+            top: speedDialAnchor.y,
+            transform: "translateY(-50%)",
+            zIndex: 1500,
+            "& .MuiSpeedDialAction-staticTooltipLabel": {
+              pointerEvents: "auto",
+              userSelect: "none",
+              cursor: "pointer",
+            },
+            "& .MuiTooltip-root": {
+              pointerEvents: "auto",
+            },
+            "& .MuiTooltip-tooltip": {
+              userSelect: "none",
+              cursor: "pointer",
+            },
+          }}
+          onMouseEnter={(e) => {
+            // Prevent closing when hovering over SpeedDial area
+            e.stopPropagation();
+          }}
+          onMouseLeave={(e) => {
+            // Don't close on mouse leave - let it stay open
+            // Only close on explicit clicks outside or escape key
+            e.stopPropagation();
+          }}
+        >
+          <SpeedDial
+            ariaLabel="Component actions"
+            icon={null}
+            open={speedDialOpen}
+            onClose={(event, reason) => {
+              // Only close on backdrop click, not on mouse leave or escape (handled separately)
+              if (reason === "backdropClick") {
+                handleSpeedDialClose(event, reason);
+              }
+            }}
+            onClick={(e) => e.stopPropagation()}
+            direction="down"
+            FabProps={{
+              sx: {
+                width: 0,
+                height: 0,
+                minHeight: 0,
+                minWidth: 0,
+                padding: 0,
+                opacity: 0,
+                pointerEvents: "none",
+                boxShadow: "none",
+              },
+            }}
+          >
+            <SpeedDialAction
+              key="edit-color"
+              icon={<PaletteIcon />}
+              tooltipTitle="Edit Color"
+              tooltipOpen
+              tooltipPlacement="right"
+              onClick={handleEditColor}
+              onMouseEnter={(e) => {
+                // Keep menu open when hovering over button
+                e.stopPropagation();
+              }}
+              onMouseLeave={(e) => {
+                // Keep menu open when unhovering from button
+                // Don't close, just stop propagation
+                e.stopPropagation();
+              }}
+            />
+          </SpeedDial>
+        </Box>
       )}
-    </div>
+
+      {/* Color Picker Popover */}
+      <Popover
+        open={Boolean(colorPickerAnchor)}
+        anchorEl={colorPickerAnchor}
+        onClose={handleColorPickerClose}
+        anchorOrigin={{
+          vertical: "bottom",
+          horizontal: "left",
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <ColorPicker
+          currentColor={component.color || "#1976d2"}
+          onColorChange={handleColorChange}
+          onClose={handleColorPickerClose}
+        />
+      </Popover>
+    </>
   );
 }

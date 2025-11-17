@@ -806,6 +806,13 @@ export default function Canvas({
             )
           );
         }}
+        onComponentColorChange={(componentId, color) => {
+          onComponentsChange(
+            components.map((c) =>
+              c.id === componentId ? { ...c, color } : c
+            )
+          );
+        }}
         onOverlayClick={handleOverlayClick}
       />
 
