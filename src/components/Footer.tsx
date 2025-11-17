@@ -73,7 +73,7 @@ export default function Footer() {
         }}
       >
         <Typography variant="caption" color="text.secondary">
-          © {currentYear}
+          © {currentYear} - Dream v0.3
         </Typography>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <IconButton
