@@ -2,6 +2,7 @@ import {
 	GridOn as GridIcon,
 	Palette as ColorIcon,
 	Edit as PenIcon,
+	AutoFixHigh as ThinkingPenIcon,
 } from "@mui/icons-material";
 import { Box, IconButton, Slider, Tooltip, Typography } from "@mui/material";
 
@@ -16,6 +17,8 @@ interface ToolbarProps {
 	onSnapToGridToggle: (snap: boolean) => void;
 	isEraser: boolean;
 	onEraserToggle: (eraser: boolean) => void;
+	isThinkingPen: boolean;
+	onThinkingPenToggle: (thinkingPen: boolean) => void;
 }
 
 export default function Toolbar({
@@ -29,6 +32,8 @@ export default function Toolbar({
 	onSnapToGridToggle,
 	isEraser,
 	onEraserToggle,
+	isThinkingPen,
+	onThinkingPenToggle,
 }: ToolbarProps) {
 	return (
 		<Box
@@ -46,7 +51,10 @@ export default function Toolbar({
 					color={isDrawing ? "primary" : "default"}
 					onClick={() => {
 						onDrawingToggle(!isDrawing);
-						if (!isDrawing) onEraserToggle(false);
+						if (!isDrawing) {
+							onEraserToggle(false);
+							onThinkingPenToggle(false);
+						}
 					}}
 				>
 					<PenIcon />
@@ -58,10 +66,28 @@ export default function Toolbar({
 					color={isEraser ? "primary" : "default"}
 					onClick={() => {
 						onEraserToggle(!isEraser);
-						if (!isEraser) onDrawingToggle(false);
+						if (!isEraser) {
+							onDrawingToggle(false);
+							onThinkingPenToggle(false);
+						}
 					}}
 				>
 					<i className="fas fa-eraser" style={{ fontSize: "1.25rem" }} />
+				</IconButton>
+			</Tooltip>
+
+			<Tooltip title="Thinking Pen - Draw shapes to create components">
+				<IconButton
+					color={isThinkingPen ? "primary" : "default"}
+					onClick={() => {
+						onThinkingPenToggle(!isThinkingPen);
+						if (!isThinkingPen) {
+							onDrawingToggle(false);
+							onEraserToggle(false);
+						}
+					}}
+				>
+					<ThinkingPenIcon />
 				</IconButton>
 			</Tooltip>
 

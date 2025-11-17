@@ -21,6 +21,7 @@ function App() {
 	const [eraserSize, setEraserSize] = useState(15);
 	const [isDrawing, setIsDrawing] = useState(true);
 	const [isEraser, setIsEraser] = useState(false);
+	const [isThinkingPen, setIsThinkingPen] = useState(false);
 	const [snapToGrid, setSnapToGrid] = useState(true);
 	const [components, setComponents] = useState<CanvasComponent[]>([]);
 	const [selectedComponentType, setSelectedComponentType] =
@@ -57,6 +58,7 @@ function App() {
 						if (drawing) {
 							setSelectedComponentType(null);
 							setIsEraser(false);
+							setIsThinkingPen(false);
 						}
 					}}
 					snapToGrid={snapToGrid}
@@ -66,6 +68,16 @@ function App() {
 						setIsEraser(eraser);
 						if (eraser) {
 							setIsDrawing(false);
+							setIsThinkingPen(false);
+							setSelectedComponentType(null);
+						}
+					}}
+					isThinkingPen={isThinkingPen}
+					onThinkingPenToggle={(thinkingPen) => {
+						setIsThinkingPen(thinkingPen);
+						if (thinkingPen) {
+							setIsDrawing(false);
+							setIsEraser(false);
 							setSelectedComponentType(null);
 						}
 					}}
@@ -90,6 +102,7 @@ function App() {
 						penSize={isEraser ? eraserSize : penSize}
 						isDrawing={isDrawing}
 						isEraser={isEraser}
+						isThinkingPen={isThinkingPen}
 						components={components}
 						onComponentsChange={setComponents}
 						selectedComponentType={selectedComponentType}
