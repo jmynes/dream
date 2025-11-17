@@ -1,4 +1,4 @@
-import { Box, Button, Paper } from "@mui/material";
+import { Box, Button, Paper, Snackbar } from "@mui/material";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { CanvasComponent, ComponentType } from "../types/component";
 import RecognitionUI from "./RecognitionUI";
@@ -107,6 +107,7 @@ export default function Canvas({
   const [lassoPath, setLassoPath] = useState<Point[]>([]);
   const lassoPathRef = useRef<Point[]>([]);
   const [isLassoDrawing, setIsLassoDrawing] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const resetLasso = useCallback(() => {
     setIsLassoDrawing(false);
@@ -819,25 +820,9 @@ export default function Canvas({
           );
         }}
         onComponentCopy={(component) => {
-          const offsetX = snapToGrid ? gridCellWidth : 10;
-          const offsetY = snapToGrid ? gridCellHeight : 10;
-
-          let newX = component.x + offsetX;
-          let newY = component.y + offsetY;
-
-          if (snapToGrid) {
-            newX = Math.round(newX / gridCellWidth) * gridCellWidth;
-            newY = Math.round(newY / gridCellHeight) * gridCellHeight;
-          }
-
-          const newComponent: CanvasComponent = {
-            ...component,
-            id: `component-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
-            x: newX,
-            y: newY,
-          };
-
-          onComponentsChange([...components, newComponent]);
+          // Store component in clipboard instead of immediately pasting
+          setCopiedComponents([component]);
+          setToastMessage("Component copied to clipboard");
         }}
         onOverlayClick={handleOverlayClick}
       />
