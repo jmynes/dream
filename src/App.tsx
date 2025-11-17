@@ -18,6 +18,7 @@ const theme = createTheme({
 function App() {
   const [penColor, setPenColor] = useState("#1976d2");
   const [componentColor, setComponentColor] = useState("#1976d2");
+  const [canvasColor, setCanvasColor] = useState("#ffffff");
   const [penSize, setPenSize] = useState(2);
   const [isDrawing, setIsDrawing] = useState(false);
   const [isEraser, setIsEraser] = useState(false);
@@ -242,6 +243,8 @@ function App() {
             onPenColorChange={setPenColor}
             componentColor={componentColor}
             onComponentColorChange={setComponentColor}
+            canvasColor={canvasColor}
+            onCanvasColorChange={setCanvasColor}
             penSize={penSize}
             onPenSizeChange={setPenSize}
             isDrawing={isDrawing}
@@ -314,6 +317,7 @@ function App() {
               showBookmarkBar={showBookmarkBar}
               isBrowserUIEnabled={isBrowserUIEnabled}
               isMacOSStyle={isMacOSStyle}
+              canvasColor={canvasColor}
               resizeMode={resizeMode}
             />
           </Box>

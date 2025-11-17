@@ -5,6 +5,7 @@ import {
   AutoFixHigh as MagicWandIcon,
   NearMe as CursorIcon,
   Web as WebIcon,
+  Refresh as RefreshIcon,
 } from "@mui/icons-material";
 import {
   Box,
@@ -24,6 +25,8 @@ interface SidebarProps {
   onPenColorChange: (color: string) => void;
   componentColor: string;
   onComponentColorChange: (color: string) => void;
+  canvasColor: string;
+  onCanvasColorChange: (color: string) => void;
   penSize: number;
   onPenSizeChange: (size: number) => void;
   isDrawing: boolean;
@@ -55,6 +58,8 @@ export default function Sidebar({
   onPenColorChange,
   componentColor,
   onComponentColorChange,
+  canvasColor,
+  onCanvasColorChange,
   penSize,
   onPenSizeChange,
   isDrawing,
@@ -218,7 +223,7 @@ export default function Sidebar({
             Brush Color
           </Typography>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <ColorIcon sx={{ color: penColor }} />
+            <ColorIcon sx={{ color: "#1976d2" }} />
             <input
               type="color"
               value={penColor}
@@ -231,6 +236,17 @@ export default function Sidebar({
                 cursor: "pointer",
               }}
             />
+            {penColor !== "#1976d2" && (
+              <Tooltip title="Reset to default">
+                <IconButton
+                  size="small"
+                  onClick={() => onPenColorChange("#1976d2")}
+                  sx={{ padding: 0.5 }}
+                >
+                  <RefreshIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            )}
           </Box>
         </Box>
 
@@ -239,7 +255,7 @@ export default function Sidebar({
             Component Color
           </Typography>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <ColorIcon sx={{ color: componentColor }} />
+            <ColorIcon sx={{ color: "#1976d2" }} />
             <input
               type="color"
               value={componentColor}
@@ -252,6 +268,49 @@ export default function Sidebar({
                 cursor: "pointer",
               }}
             />
+            {componentColor !== "#1976d2" && (
+              <Tooltip title="Reset to default">
+                <IconButton
+                  size="small"
+                  onClick={() => onComponentColorChange("#1976d2")}
+                  sx={{ padding: 0.5 }}
+                >
+                  <RefreshIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            )}
+          </Box>
+        </Box>
+
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+          <Typography variant="body2" color="text.secondary">
+            Canvas Color
+          </Typography>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <ColorIcon sx={{ color: "#1976d2" }} />
+            <input
+              type="color"
+              value={canvasColor}
+              onChange={(e) => onCanvasColorChange(e.target.value)}
+              style={{
+                width: 60,
+                height: 30,
+                border: "1px solid #ccc",
+                borderRadius: 4,
+                cursor: "pointer",
+              }}
+            />
+            {canvasColor !== "#ffffff" && (
+              <Tooltip title="Reset to default">
+                <IconButton
+                  size="small"
+                  onClick={() => onCanvasColorChange("#ffffff")}
+                  sx={{ padding: 0.5 }}
+                >
+                  <RefreshIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            )}
           </Box>
         </Box>
       </Box>

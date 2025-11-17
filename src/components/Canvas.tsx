@@ -44,6 +44,7 @@ interface CanvasProps {
   showBookmarkBar?: boolean;
   isBrowserUIEnabled?: boolean;
   isMacOSStyle?: boolean;
+  canvasColor?: string;
 }
 
 export default function Canvas({
@@ -68,6 +69,7 @@ export default function Canvas({
   showBookmarkBar = false,
   isBrowserUIEnabled = false,
   isMacOSStyle = false,
+  canvasColor = "#ffffff",
 }: CanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -562,6 +564,7 @@ export default function Canvas({
         cursor,
         width: "100%",
         height: "100%",
+        backgroundColor: canvasColor,
       }}
       onClick={(e) => {
         handleContainerClick(e);
