@@ -44,6 +44,7 @@ export default function Canvas({
 }: CanvasProps) {
 	const canvasRef = useRef<HTMLCanvasElement>(null);
 	const containerRef = useRef<HTMLDivElement>(null);
+	const justFinishedSelectionBoxRef = useRef(false);
 	const [actualWidth, setActualWidth] = useState(width);
 	const [actualHeight, setActualHeight] = useState(height);
 	const [isDraggingPen, setIsDraggingPen] = useState(false);
@@ -739,6 +740,10 @@ export default function Canvas({
 		(e: React.MouseEvent<HTMLDivElement>) => {
 			// Only place if clicking on the overlay itself (empty space), not on components
 			if (e.target === e.currentTarget) {
+				// Don't deselect if we just finished a selection box drag
+				if (justFinishedSelectionBoxRef.current) {
+					return;
+				}
 				// In cursor mode (no drawing tools active), deselect components when clicking empty space
 				if (!isDrawing && !isEraser && !isThinkingPen && !selectedComponentType) {
 					setSelectedComponentIds([]);
@@ -1094,21 +1099,38 @@ export default function Canvas({
 			const minY = Math.min(selectionBoxStart.y, selectionBoxEnd.y);
 			const maxY = Math.max(selectionBoxStart.y, selectionBoxEnd.y);
 
-			// Find components that are within the selection box
-			const selectedComponents = components.filter((comp) => {
-				const compRight = comp.x + (comp.width || 100);
-				const compBottom = comp.y + (comp.height || 40);
-				return (
-					comp.x < maxX &&
-					compRight > minX &&
-					comp.y < maxY &&
-					compBottom > minY
-				);
-			});
+			// Only select if the selection box has some size (not just a click)
+			const hasSelectionBoxSize = Math.abs(maxX - minX) > 5 || Math.abs(maxY - minY) > 5;
 
-			// Select all components in the box
-			if (selectedComponents.length > 0) {
-				setSelectedComponentIds(selectedComponents.map((c) => c.id));
+			if (hasSelectionBoxSize) {
+				// Mark that we just finished a selection box drag
+				justFinishedSelectionBoxRef.current = true;
+				
+				// Find components that intersect with the selection box
+				const selectedComponents = components.filter((comp) => {
+					const compRight = comp.x + (comp.width || 100);
+					const compBottom = comp.y + (comp.height || 40);
+					// Check for intersection: component overlaps with selection box
+					return (
+						comp.x < maxX &&
+						compRight > minX &&
+						comp.y < maxY &&
+						compBottom > minY
+					);
+				});
+
+				// Select all components that intersect with the box
+				if (selectedComponents.length > 0) {
+					setSelectedComponentIds(selectedComponents.map((c) => c.id));
+				} else {
+					// If no components were found in the box, deselect all
+					setSelectedComponentIds([]);
+				}
+				
+				// Reset the flag after a short delay to allow click handler to check it
+				setTimeout(() => {
+					justFinishedSelectionBoxRef.current = false;
+				}, 0);
 			}
 		}
 
@@ -1571,21 +1593,38 @@ export default function Canvas({
 						const minY = Math.min(selectionBoxStart.y, selectionBoxEnd.y);
 						const maxY = Math.max(selectionBoxStart.y, selectionBoxEnd.y);
 
-						// Find components that are within the selection box
-						const selectedComponents = components.filter((comp) => {
-							const compRight = comp.x + (comp.width || 100);
-							const compBottom = comp.y + (comp.height || 40);
-							return (
-								comp.x < maxX &&
-								compRight > minX &&
-								comp.y < maxY &&
-								compBottom > minY
-							);
-						});
+						// Only select if the selection box has some size (not just a click)
+						const hasSelectionBoxSize = Math.abs(maxX - minX) > 5 || Math.abs(maxY - minY) > 5;
 
-						// Select all components in the box
-						if (selectedComponents.length > 0) {
-							setSelectedComponentIds(selectedComponents.map((c) => c.id));
+						if (hasSelectionBoxSize) {
+							// Mark that we just finished a selection box drag
+							justFinishedSelectionBoxRef.current = true;
+							
+							// Find components that intersect with the selection box
+							const selectedComponents = components.filter((comp) => {
+								const compRight = comp.x + (comp.width || 100);
+								const compBottom = comp.y + (comp.height || 40);
+								// Check for intersection: component overlaps with selection box
+								return (
+									comp.x < maxX &&
+									compRight > minX &&
+									comp.y < maxY &&
+									compBottom > minY
+								);
+							});
+
+							// Select all components that intersect with the box
+							if (selectedComponents.length > 0) {
+								setSelectedComponentIds(selectedComponents.map((c) => c.id));
+							} else {
+								// If no components were found in the box, deselect all
+								setSelectedComponentIds([]);
+							}
+							
+							// Reset the flag after a short delay to allow click handler to check it
+							setTimeout(() => {
+								justFinishedSelectionBoxRef.current = false;
+							}, 0);
 						}
 
 						setSelectionBoxStart(null);
