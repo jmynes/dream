@@ -203,13 +203,6 @@ export default function Canvas({
 		return Math.atan2(p2.y - p1.y, p2.x - p1.x);
 	};
 
-	// Normalize angle to 0-2π
-	const normalizeAngle = (angle: number): number => {
-		while (angle < 0) angle += 2 * Math.PI;
-		while (angle >= 2 * Math.PI) angle -= 2 * Math.PI;
-		return angle;
-	};
-
 	// Detect checkmark pattern - looks for characteristic checkmark shape
 	const detectCheckmark = (path: Point[]): boolean => {
 		if (path.length < 5) return false;
@@ -250,7 +243,6 @@ export default function Canvas({
 
 		// Analyze the overall direction of movement
 		const movesRight = endPoint.x > startPoint.x;
-		const movesDown = endPoint.y > startPoint.y;
 		
 		// For a simple checkmark, we want it to move generally right (and possibly down)
 		if (!movesRight) return false;
@@ -1014,19 +1006,78 @@ export default function Canvas({
 	}, [actualWidth, actualHeight]);
 
 	// Restore canvas image data when provided (for undo/redo)
+	const previousRestoreDataRef = useRef<string | null>(null);
+	const isRestoringRef = useRef(false);
+	
 	useEffect(() => {
 		const canvas = canvasRef.current;
-		if (!canvas || !restoreCanvasImageData) return;
+		if (!canvas || !restoreCanvasImageData) {
+			previousRestoreDataRef.current = null;
+			return;
+		}
+		
+		// Only restore if the data actually changed (avoid unnecessary restores)
+		if (restoreCanvasImageData === previousRestoreDataRef.current) return;
+		previousRestoreDataRef.current = restoreCanvasImageData;
 
-		const ctx = canvas.getContext("2d");
-		if (!ctx) return;
+		// Ensure canvas is properly sized and stable before restoring
+		if (actualWidth === 0 || actualHeight === 0) {
+			return;
+		}
 
-		const img = new Image();
-		img.onload = () => {
-			ctx.clearRect(0, 0, canvas.width, canvas.height);
-			ctx.drawImage(img, 0, 0);
+		// Wait a tick to ensure canvas is properly initialized and grid is stable
+		isRestoringRef.current = true;
+		const timeoutId = setTimeout(() => {
+			const canvasElement = canvasRef.current;
+			if (!canvasElement) {
+				isRestoringRef.current = false;
+				return;
+			}
+
+			const ctx = canvasElement.getContext("2d");
+			if (!ctx) {
+				isRestoringRef.current = false;
+				return;
+			}
+
+			// Verify canvas is properly sized - don't change dimensions here
+			// Dimensions are handled by the initialization effect
+			// Changing them here would trigger grid recalculation and cause flashing
+			if (canvasElement.width !== actualWidth || canvasElement.height !== actualHeight) {
+				// If dimensions don't match, something went wrong - skip restoration
+				// The initialization effect should handle this
+				isRestoringRef.current = false;
+				return;
+			}
+
+			const img = new Image();
+			img.onload = () => {
+				if (!canvasRef.current) {
+					isRestoringRef.current = false;
+					return;
+				}
+				const canvasEl = canvasRef.current;
+				const ctx2 = canvasEl.getContext("2d");
+				if (!ctx2) {
+					isRestoringRef.current = false;
+					return;
+				}
+				// Only clear and restore - don't touch dimensions
+				ctx2.clearRect(0, 0, canvasEl.width, canvasEl.height);
+				ctx2.drawImage(img, 0, 0);
+				isRestoringRef.current = false;
+				// Reset the restore prop after restoration to allow future restorations
+				// This is done by the parent when it clears restoreCanvasImageData
+			};
+			img.onerror = () => {
+				isRestoringRef.current = false;
+			};
+			img.src = restoreCanvasImageData;
+		}, 0); // Use requestAnimationFrame would be better, but setTimeout 0 should work
+
+		return () => {
+			clearTimeout(timeoutId);
 		};
-		img.src = restoreCanvasImageData;
 	}, [restoreCanvasImageData, actualWidth, actualHeight]);
 
 	// Cleanup animation frames on unmount

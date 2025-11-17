@@ -18,7 +18,7 @@ const theme = createTheme({
 function App() {
 	const [penColor, setPenColor] = useState("#000000");
 	const [penSize, setPenSize] = useState(2);
-	const [eraserSize, setEraserSize] = useState(15);
+	const [eraserSize] = useState(15);
 	const [isDrawing, setIsDrawing] = useState(true);
 	const [isEraser, setIsEraser] = useState(false);
 	const [isThinkingPen, setIsThinkingPen] = useState(false);
@@ -37,10 +37,13 @@ function App() {
 		{ components: [], canvasImageData: null },
 	]);
 	const [historyIndex, setHistoryIndex] = useState(0);
+	const [restoreCanvasImageData, setRestoreCanvasImageData] = useState<string | null>(null);
 	const canvasImageDataRef = useRef<string | null>(null);
+	const componentsRef = useRef<CanvasComponent[]>([]);
 	const isUndoRedoRef = useRef(false);
 	const historyRef = useRef(history);
 	const historyIndexRef = useRef(0);
+	const pendingSaveRef = useRef<{ components: CanvasComponent[]; imageData: string | null } | null>(null);
 
 	// Keep refs in sync
 	useEffect(() => {
@@ -49,6 +52,9 @@ function App() {
 	useEffect(() => {
 		historyIndexRef.current = historyIndex;
 	}, [historyIndex]);
+	useEffect(() => {
+		componentsRef.current = components;
+	}, [components]);
 
 	const handleComponentSelect = (type: ComponentType) => {
 		setSelectedComponentType(type);
@@ -73,7 +79,8 @@ function App() {
 		}
 
 		setHistory((prev) => {
-			const newHistory = prev.slice(0, historyIndex + 1);
+			const currentIndex = historyIndexRef.current;
+			const newHistory = prev.slice(0, currentIndex + 1);
 			newHistory.push({ components: comps, canvasImageData: imageData });
 			// Limit history to 50 states
 			if (newHistory.length > 50) {
@@ -89,13 +96,21 @@ function App() {
 	};
 
 	// Handle canvas state update
+	// This is only called when canvas drawing changes, not when components change
 	const handleCanvasStateChange = (imageData: string | null) => {
 		if (isUndoRedoRef.current) {
 			canvasImageDataRef.current = imageData;
 			return;
 		}
 		canvasImageDataRef.current = imageData;
-		saveHistory(components, imageData);
+		// Update pending save if there is one (to batch component + canvas changes)
+		if (pendingSaveRef.current) {
+			pendingSaveRef.current.imageData = imageData;
+		} else {
+			// Only save history if this is a real canvas change (drawing/erasing), not just component placement
+			// Component changes are handled separately in handleComponentsChange
+			saveHistory(componentsRef.current, imageData);
+		}
 	};
 
 	// Undo function
@@ -109,7 +124,7 @@ function App() {
 			setHistoryIndex(newIndex);
 			setComponents([...state.components]);
 			canvasImageDataRef.current = state.canvasImageData;
-			setClearCanvasKey((prev) => prev + 1);
+			setRestoreCanvasImageData(state.canvasImageData);
 			// Reset the flag after a short delay to allow state updates
 			setTimeout(() => {
 				isUndoRedoRef.current = false;
@@ -128,7 +143,7 @@ function App() {
 			setHistoryIndex(newIndex);
 			setComponents([...state.components]);
 			canvasImageDataRef.current = state.canvasImageData;
-			setClearCanvasKey((prev) => prev + 1);
+			setRestoreCanvasImageData(state.canvasImageData);
 			// Reset the flag after a short delay to allow state updates
 			setTimeout(() => {
 				isUndoRedoRef.current = false;
@@ -140,7 +155,19 @@ function App() {
 	const handleComponentsChange = (comps: CanvasComponent[]) => {
 		setComponents(comps);
 		if (!isUndoRedoRef.current) {
-			saveHistory(comps, canvasImageDataRef.current);
+			// Defer save to batch with potential canvas state change
+			// This prevents double saves when component and canvas change together
+			pendingSaveRef.current = { components: comps, imageData: canvasImageDataRef.current };
+			setTimeout(() => {
+				if (pendingSaveRef.current) {
+					const { components: pendingComps, imageData: pendingImageData } = pendingSaveRef.current;
+					// Only save if we're still not in undo/redo mode
+					if (!isUndoRedoRef.current) {
+						saveHistory(pendingComps, pendingImageData);
+					}
+					pendingSaveRef.current = null;
+				}
+			}, 0);
 		}
 	};
 
@@ -211,6 +238,10 @@ function App() {
 						}
 					}}
 					onDeleteEverything={handleDeleteEverything}
+					onUndo={handleUndo}
+					onRedo={handleRedo}
+					canUndo={historyIndex > 0}
+					canRedo={historyIndex < history.length - 1}
 				/>
 
 				<Box
@@ -237,7 +268,7 @@ function App() {
 						components={components}
 						onComponentsChange={handleComponentsChange}
 						onCanvasStateChange={handleCanvasStateChange}
-						restoreCanvasImageData={canvasImageDataRef.current}
+						restoreCanvasImageData={restoreCanvasImageData}
 						selectedComponentType={selectedComponentType}
 						onComponentPlaced={handleComponentPlaced}
 						snapToGrid={snapToGrid}

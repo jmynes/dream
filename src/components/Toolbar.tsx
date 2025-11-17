@@ -4,6 +4,8 @@ import {
 	Palette as ColorIcon,
 	Edit as PenIcon,
 	AutoFixHigh as ThinkingPenIcon,
+	Undo as UndoIcon,
+	Redo as RedoIcon,
 } from "@mui/icons-material";
 import { Box, IconButton, Slider, Tooltip, Typography } from "@mui/material";
 
@@ -21,6 +23,10 @@ interface ToolbarProps {
 	isThinkingPen: boolean;
 	onThinkingPenToggle: (thinkingPen: boolean) => void;
 	onDeleteEverything: () => void;
+	onUndo: () => void;
+	onRedo: () => void;
+	canUndo: boolean;
+	canRedo: boolean;
 }
 
 export default function Toolbar({
@@ -37,6 +43,10 @@ export default function Toolbar({
 	isThinkingPen,
 	onThinkingPenToggle,
 	onDeleteEverything,
+	onUndo,
+	onRedo,
+	canUndo,
+	canRedo,
 }: ToolbarProps) {
 	return (
 		<Box
@@ -100,6 +110,28 @@ export default function Toolbar({
 					onClick={() => onSnapToGridToggle(!snapToGrid)}
 				>
 					<GridIcon />
+				</IconButton>
+			</Tooltip>
+
+			<Box sx={{ width: 1, borderRight: "1px solid #e0e0e0", mx: 1 }} />
+
+			<Tooltip title="Undo (Ctrl+Z)">
+				<IconButton
+					disabled={!canUndo}
+					onClick={onUndo}
+					color="default"
+				>
+					<UndoIcon />
+				</IconButton>
+			</Tooltip>
+
+			<Tooltip title="Redo (Ctrl+Y)">
+				<IconButton
+					disabled={!canRedo}
+					onClick={onRedo}
+					color="default"
+				>
+					<RedoIcon />
 				</IconButton>
 			</Tooltip>
 
