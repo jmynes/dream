@@ -22,6 +22,8 @@ interface CanvasProps {
 	selectedComponentType: ComponentType | null;
 	onComponentPlaced: () => void;
 	snapToGrid?: boolean;
+	onCanvasStateChange?: (imageData: string | null) => void;
+	restoreCanvasImageData?: string | null;
 }
 
 export default function Canvas({
@@ -37,6 +39,8 @@ export default function Canvas({
 	selectedComponentType,
 	onComponentPlaced,
 	snapToGrid = false,
+	onCanvasStateChange,
+	restoreCanvasImageData,
 }: CanvasProps) {
 	const canvasRef = useRef<HTMLCanvasElement>(null);
 	const containerRef = useRef<HTMLDivElement>(null);
@@ -78,6 +82,15 @@ export default function Canvas({
 		width: number;
 		height: number;
 	} | null>(null);
+
+	// Save canvas state as base64 image
+	const saveCanvasState = useCallback(() => {
+		const canvas = canvasRef.current;
+		if (!canvas || !onCanvasStateChange) return;
+
+		const imageData = canvas.toDataURL();
+		onCanvasStateChange(imageData);
+	}, [onCanvasStateChange]);
 
 	const drawLine = useCallback(
 		(from: Point, to: Point) => {
@@ -522,7 +535,15 @@ export default function Canvas({
 		// Just reset drag state - allow multiple strokes before submit
 		setIsDraggingPen(false);
 		setLastPoint(null);
-	}, []);
+		
+		// Save canvas state after drawing/erasing
+		if (isDrawing || isEraser) {
+			// Use setTimeout to ensure the drawing is complete
+			setTimeout(() => {
+				saveCanvasState();
+			}, 0);
+		}
+	}, [isDrawing, isEraser, saveCanvasState]);
 
 	// Recognize accumulated path and show pending UI
 	const handleRecognizePath = useCallback(() => {
@@ -991,6 +1012,22 @@ export default function Canvas({
 			ctx.fillRect(0, 0, actualWidth, actualHeight);
 		}
 	}, [actualWidth, actualHeight]);
+
+	// Restore canvas image data when provided (for undo/redo)
+	useEffect(() => {
+		const canvas = canvasRef.current;
+		if (!canvas || !restoreCanvasImageData) return;
+
+		const ctx = canvas.getContext("2d");
+		if (!ctx) return;
+
+		const img = new Image();
+		img.onload = () => {
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
+			ctx.drawImage(img, 0, 0);
+		};
+		img.src = restoreCanvasImageData;
+	}, [restoreCanvasImageData, actualWidth, actualHeight]);
 
 	// Cleanup animation frames on unmount
 	useEffect(() => {
