@@ -10,7 +10,9 @@ export type ComponentType =
   | "Avatar"
   | "Divider"
   | "Paper"
-  | "Box";
+  | "Box"
+  | "Radio"
+  | "Table";
 
 export interface CanvasComponent {
   id: string;

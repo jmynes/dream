@@ -8,13 +8,22 @@ import {
   Checkbox,
   Chip,
   Divider,
+  FormControlLabel,
   InputAdornment,
   List,
   ListItem,
   ListItemButton,
   Paper,
+  Radio,
+  RadioGroup,
   Slider,
   Switch,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
   TextField,
   Typography,
 } from "@mui/material";
@@ -232,6 +241,78 @@ const getComponentItems = (componentColor: string): ComponentItem[] => [
     type: "Typography",
     label: "Typography",
     preview: <Typography variant="body1" sx={{ color: componentColor }}>Typography</Typography>,
+  },
+  {
+    type: "Radio",
+    label: "Radio",
+    preview: (
+      <RadioGroup row>
+        <FormControlLabel
+          value="option1"
+          control={
+            <Radio
+              sx={{
+                color: isDarkColor(componentColor) ? componentColor : "#000000",
+                "&.Mui-checked": {
+                  color: componentColor,
+                },
+              }}
+            />
+          }
+          label="Option 1"
+        />
+        <FormControlLabel
+          value="option2"
+          control={
+            <Radio
+              sx={{
+                color: isDarkColor(componentColor) ? componentColor : "#000000",
+                "&.Mui-checked": {
+                  color: componentColor,
+                },
+              }}
+            />
+          }
+          label="Option 2"
+        />
+      </RadioGroup>
+    ),
+  },
+  {
+    type: "Table",
+    label: "Table",
+    preview: (
+      <TableContainer sx={{ maxHeight: 100, maxWidth: 220 }}>
+        <Table size="small" sx={{ border: `1px solid ${componentColor}` }}>
+          <TableHead>
+            <TableRow>
+              <TableCell sx={{ borderColor: componentColor, fontWeight: "bold", p: 0.5, fontSize: "0.7rem" }}>
+                H1
+              </TableCell>
+              <TableCell sx={{ borderColor: componentColor, fontWeight: "bold", p: 0.5, fontSize: "0.7rem" }}>
+                H2
+              </TableCell>
+              <TableCell sx={{ borderColor: componentColor, fontWeight: "bold", p: 0.5, fontSize: "0.7rem" }}>
+                H3
+              </TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            <TableRow>
+              <TableCell sx={{ borderColor: componentColor, p: 0.5, fontSize: "0.7rem" }}>
+                C1
+              </TableCell>
+              <TableCell sx={{ borderColor: componentColor, p: 0.5, fontSize: "0.7rem" }}>
+                C2
+              </TableCell>
+              <TableCell sx={{ borderColor: componentColor, p: 0.5, fontSize: "0.7rem" }}>
+                C3
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </TableContainer>
+    ),
   },
 ];
 

@@ -9,10 +9,19 @@ import {
   Divider,
   Paper,
   Popover,
+  Radio,
+  RadioGroup,
+  FormControlLabel,
   Slider,
   SpeedDial,
   SpeedDialAction,
   Switch,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
   TextField,
   Typography,
 } from "@mui/material";
@@ -191,7 +200,7 @@ export default function ComponentRenderer({
     }
   };
 
-  const canEditText = ["Button", "Card", "Typography", "Avatar", "Paper", "Box"].includes(component.type);
+  const canEditText = ["Button", "Card", "Typography", "Avatar", "Paper", "Box", "TextField", "Chip"].includes(component.type);
 
   const handleColorPickerClose = () => {
     setColorPickerAnchor(null);
@@ -776,6 +785,103 @@ export default function ComponentRenderer({
               {(component.props?.text as string) || "Box"}
             </Typography>
           </Box>
+        );
+      case "Radio":
+        return (
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "100%",
+              height: "100%",
+            }}
+          >
+            <RadioGroup
+              {...(component.props as object)}
+              defaultValue={component.props?.value as string || "option1"}
+              row
+            >
+              <FormControlLabel
+                value="option1"
+                control={
+                  <Radio
+                    sx={{
+                      color: isDarkColor(componentColor) ? componentColor : "#000000",
+                      "&.Mui-checked": {
+                        color: componentColor,
+                      },
+                    }}
+                  />
+                }
+                label={(component.props?.label as string) || "Option 1"}
+              />
+              <FormControlLabel
+                value="option2"
+                control={
+                  <Radio
+                    sx={{
+                      color: isDarkColor(componentColor) ? componentColor : "#000000",
+                      "&.Mui-checked": {
+                        color: componentColor,
+                      },
+                    }}
+                  />
+                }
+                label="Option 2"
+              />
+            </RadioGroup>
+          </Box>
+        );
+      case "Table":
+        return (
+          <TableContainer
+            sx={{
+              width: "100%",
+              height: "100%",
+              overflow: "auto",
+            }}
+          >
+            <Table size="small" sx={{ border: `1px solid ${componentColor}` }}>
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ borderColor: componentColor, fontWeight: "bold" }}>
+                    {(component.props?.header1 as string) || "Header 1"}
+                  </TableCell>
+                  <TableCell sx={{ borderColor: componentColor, fontWeight: "bold" }}>
+                    {(component.props?.header2 as string) || "Header 2"}
+                  </TableCell>
+                  <TableCell sx={{ borderColor: componentColor, fontWeight: "bold" }}>
+                    {(component.props?.header3 as string) || "Header 3"}
+                  </TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                <TableRow>
+                  <TableCell sx={{ borderColor: componentColor }}>
+                    {(component.props?.cell1_1 as string) || "Cell 1-1"}
+                  </TableCell>
+                  <TableCell sx={{ borderColor: componentColor }}>
+                    {(component.props?.cell1_2 as string) || "Cell 1-2"}
+                  </TableCell>
+                  <TableCell sx={{ borderColor: componentColor }}>
+                    {(component.props?.cell1_3 as string) || "Cell 1-3"}
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell sx={{ borderColor: componentColor }}>
+                    {(component.props?.cell2_1 as string) || "Cell 2-1"}
+                  </TableCell>
+                  <TableCell sx={{ borderColor: componentColor }}>
+                    {(component.props?.cell2_2 as string) || "Cell 2-2"}
+                  </TableCell>
+                  <TableCell sx={{ borderColor: componentColor }}>
+                    {(component.props?.cell2_3 as string) || "Cell 2-3"}
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </TableContainer>
         );
       default:
         return null;
