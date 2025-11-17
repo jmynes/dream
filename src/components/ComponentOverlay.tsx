@@ -35,6 +35,7 @@ interface ComponentOverlayProps {
   onComponentCopy?: (component: CanvasComponent) => void;
   onOverlayClick: (e: React.MouseEvent<HTMLDivElement>) => void;
   onContextMenu?: (e: React.MouseEvent<HTMLDivElement>) => void;
+  onResetTools?: () => void;
 }
 
 export default function ComponentOverlay({
@@ -69,6 +70,7 @@ export default function ComponentOverlay({
   onComponentCopy,
   onOverlayClick,
   onContextMenu,
+  onResetTools,
 }: ComponentOverlayProps) {
   return (
     <Box
@@ -88,6 +90,12 @@ export default function ComponentOverlay({
         cursor,
       }}
       onMouseDown={(e) => {
+        // Middle mouse button (button === 1) to reset tools
+        if (e.button === 1 && onResetTools) {
+          e.preventDefault();
+          onResetTools();
+          return;
+        }
         if (isCursorMode && e.target === e.currentTarget) {
           const point = getPointFromEvent(e);
           onSelectionBoxStart(point);

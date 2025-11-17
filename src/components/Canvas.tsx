@@ -70,6 +70,7 @@ interface CanvasProps {
   isMacOSStyle?: boolean;
   canvasColor?: string;
   isTextSelectMode?: boolean;
+  onResetTools?: () => void;
 }
 
 export default function Canvas({
@@ -98,6 +99,7 @@ export default function Canvas({
   isMacOSStyle = false,
   canvasColor = "#ffffff",
   isTextSelectMode = false,
+  onResetTools,
 }: CanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -826,13 +828,34 @@ export default function Canvas({
         }
       }}
       onMouseMove={handleContainerMouseMove}
-      onMouseUp={handleContainerMouseUp}
+      onMouseUp={(e) => {
+        // Prevent default middle mouse button behavior (auto-scroll)
+        if (e.button === 1) {
+          e.preventDefault();
+        }
+        handleContainerMouseUp();
+      }}
+      onMouseDown={(e) => {
+        // Middle mouse button (button === 1) to reset tools
+        if (e.button === 1 && onResetTools) {
+          e.preventDefault();
+          onResetTools();
+        }
+      }}
       onDragOver={handleDragOver}
       onDrop={handleDrop}
     >
       <canvas
         ref={canvasRef}
-        onMouseDown={handleCanvasMouseDown}
+        onMouseDown={(e) => {
+          // Middle mouse button (button === 1) to reset tools
+          if (e.button === 1 && onResetTools) {
+            e.preventDefault();
+            onResetTools();
+            return;
+          }
+          handleCanvasMouseDown(e);
+        }}
         onMouseMove={(e) => {
           handleCanvasMouseMove(e);
           handleBrushMouseMove(e);
@@ -945,6 +968,7 @@ export default function Canvas({
             mouseY: e.clientY,
           });
         }}
+        onResetTools={onResetTools}
       />
 
       {/* Submit button for magic wand - shown when drawing */}

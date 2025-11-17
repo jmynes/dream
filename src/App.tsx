@@ -368,6 +368,14 @@ function App() {
               canvasColor={canvasColor}
               resizeMode={resizeMode}
               isTextSelectMode={isTextSelectMode}
+              onResetTools={() => {
+                setIsDrawing(false);
+                setIsEraser(false);
+                setIsMagicWand(false);
+                setIsLasso(false);
+                setSelectedComponentType(null);
+                setIsTextSelectMode(false);
+              }}
             />
           </Box>
           <ComponentsBar
