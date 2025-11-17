@@ -24,6 +24,7 @@ export default function Footer() {
     { keys: "Ctrl/Cmd + V", description: "Paste components" },
     { keys: "Delete / Backspace", description: "Delete selected components" },
     { keys: "Arrow Keys", description: "Move selected components (1 grid cell)" },
+    { keys: "Middle Mouse Button", description: "Reset tools to default cursor" },
     { keys: "Escape", description: "Deselect all / Cancel recognition" },
     { keys: "Enter", description: "Submit shape recognition" },
     { keys: "Ctrl/Cmd + Z", description: "Undo" },

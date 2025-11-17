@@ -80,241 +80,246 @@ const getTextColorForFilled = (bgColor: string): string => {
   return isDarkColor(bgColor) ? "#ffffff" : "#000000";
 };
 
-const getComponentItems = (componentColor: string): ComponentItem[] => [
-  {
-    type: "Avatar",
-    label: "Avatar",
-    preview: <Avatar sx={{ bgcolor: componentColor }}>A</Avatar>,
-  },
-  {
-    type: "Box",
-    label: "Box",
-    preview: (
-      <Box
-        sx={{
-          p: 2,
-          minWidth: 120,
-          border: "1px dashed",
-          borderColor: componentColor,
-          backgroundColor: `${componentColor}20`,
-          textAlign: "center",
-        }}
-      >
-        <Typography variant="body2">Box</Typography>
-      </Box>
-    ),
-  },
-  {
-    type: "Button",
-    label: "Button",
-    preview: (
-      <Button 
-        variant="contained" 
-        sx={{ 
-          backgroundColor: componentColor, 
-          "&:hover": { backgroundColor: componentColor },
-          color: getTextColorForFilled(componentColor),
-        }}
-      >
-        Button
-      </Button>
-    ),
-  },
-  {
-    type: "Card",
-    label: "Card",
-    preview: (
-      <Card sx={{ minWidth: 120, border: `2px solid ${componentColor}` }}>
-        <CardContent>
-          <Typography variant="body2">Card</Typography>
-        </CardContent>
-      </Card>
-    ),
-  },
-  {
-    type: "Checkbox",
-    label: "Checkbox",
-    preview: (
-      <Checkbox 
-        defaultChecked 
-        sx={{ 
-          color: isDarkColor(componentColor) ? componentColor : "#000000",
-          "&.Mui-checked": { 
+const getComponentItems = (componentColor: string): ComponentItem[] => {
+  const items: ComponentItem[] = [
+    {
+      type: "Avatar",
+      label: "Avatar",
+      preview: <Avatar sx={{ bgcolor: componentColor }}>A</Avatar>,
+    },
+    {
+      type: "Box",
+      label: "Box",
+      preview: (
+        <Box
+          sx={{
+            p: 2,
+            minWidth: 120,
+            border: "1px dashed",
+            borderColor: componentColor,
+            backgroundColor: `${componentColor}20`,
+            textAlign: "center",
+          }}
+        >
+          <Typography variant="body2">Box</Typography>
+        </Box>
+      ),
+    },
+    {
+      type: "Button",
+      label: "Button",
+      preview: (
+        <Button 
+          variant="contained" 
+          sx={{ 
+            backgroundColor: componentColor, 
+            "&:hover": { backgroundColor: componentColor },
+            color: getTextColorForFilled(componentColor),
+          }}
+        >
+          Button
+        </Button>
+      ),
+    },
+    {
+      type: "Card",
+      label: "Card",
+      preview: (
+        <Card sx={{ minWidth: 120, border: `2px solid ${componentColor}` }}>
+          <CardContent>
+            <Typography variant="body2">Card</Typography>
+          </CardContent>
+        </Card>
+      ),
+    },
+    {
+      type: "Checkbox",
+      label: "Checkbox",
+      preview: (
+        <Checkbox 
+          defaultChecked 
+          sx={{ 
             color: isDarkColor(componentColor) ? componentColor : "#000000",
-          },
-          "& .MuiSvgIcon-root": {
-            color: isDarkColor(componentColor) ? componentColor : "#000000",
-          },
-          "&.Mui-checked .MuiSvgIcon-root": {
-            color: isDarkColor(componentColor) ? componentColor : "#000000",
-          },
-        }} 
-      />
-    ),
-  },
-  {
-    type: "Chip",
-    label: "Chip",
-    preview: <Chip label="Chip" sx={{ backgroundColor: componentColor, color: "#fff" }} />,
-  },
-  {
-    type: "Divider",
-    label: "Divider",
-    preview: (
-      <Divider
-        sx={{
-          width: 120,
-          borderColor: componentColor,
-          borderTopWidth: "2px",
-        }}
-      />
-    ),
-  },
-  {
-    type: "Paper",
-    label: "Paper",
-    preview: (
-      <Paper sx={{ p: 2, minWidth: 120, textAlign: "center", backgroundColor: componentColor }}>
-        <Typography variant="body2" sx={{ color: getTextColorForFilled(componentColor) }}>
-          Paper
-        </Typography>
-      </Paper>
-    ),
-  },
-  {
-    type: "Slider",
-    label: "Slider",
-    preview: (
-      <Slider 
-        defaultValue={50} 
-        sx={{ 
-          width: 120, 
-          color: componentColor,
-          "& .MuiSlider-thumb": {
-            ...(isDarkColor(componentColor) ? {} : {
-              boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
-            }),
-          },
-          "& .MuiSlider-track": {
-            ...(isDarkColor(componentColor) ? {} : {
-              border: "1px solid rgba(0, 0, 0, 0.1)",
-            }),
-          },
-          "& .MuiSlider-rail": {
-            ...(isDarkColor(componentColor) ? {} : {
-              border: "1px solid rgba(0, 0, 0, 0.1)",
-            }),
-          },
-        }} 
-      />
-    ),
-  },
-  {
-    type: "Switch",
-    label: "Switch",
-    preview: (
-      <Switch 
-        defaultChecked 
-        sx={{ 
-          "& .MuiSwitch-switchBase.Mui-checked": { color: componentColor }, 
-          "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": { 
-            backgroundColor: componentColor,
-            ...(isDarkColor(componentColor) ? {} : {
-              boxShadow: "0 0 0 1px rgba(0, 0, 0, 0.2)",
-            }),
-          },
-          "& .MuiSwitch-thumb": {
-            ...(isDarkColor(componentColor) ? {} : {
-              boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
-            }),
-          },
-        }} 
-      />
-    ),
-  },
-  {
-    type: "TextField",
-    label: "Text Field",
-    preview: <TextField label="Text Field" size="small" />,
-  },
-  {
-    type: "Typography",
-    label: "Typography",
-    preview: <Typography variant="body1" sx={{ color: componentColor }}>Typography</Typography>,
-  },
-  {
-    type: "Radio",
-    label: "Radio",
-    preview: (
-      <RadioGroup row>
-        <FormControlLabel
-          value="option1"
-          control={
-            <Radio
-              sx={{
-                color: isDarkColor(componentColor) ? componentColor : "#000000",
-                "&.Mui-checked": {
-                  color: componentColor,
-                },
-              }}
-            />
-          }
-          label="Option 1"
+            "&.Mui-checked": { 
+              color: isDarkColor(componentColor) ? componentColor : "#000000",
+            },
+            "& .MuiSvgIcon-root": {
+              color: isDarkColor(componentColor) ? componentColor : "#000000",
+            },
+            "&.Mui-checked .MuiSvgIcon-root": {
+              color: isDarkColor(componentColor) ? componentColor : "#000000",
+            },
+          }} 
         />
-        <FormControlLabel
-          value="option2"
-          control={
-            <Radio
-              sx={{
-                color: isDarkColor(componentColor) ? componentColor : "#000000",
-                "&.Mui-checked": {
-                  color: componentColor,
-                },
-              }}
-            />
-          }
-          label="Option 2"
+      ),
+    },
+    {
+      type: "Chip",
+      label: "Chip",
+      preview: <Chip label="Chip" sx={{ backgroundColor: componentColor, color: "#fff" }} />,
+    },
+    {
+      type: "Divider",
+      label: "Divider",
+      preview: (
+        <Divider
+          sx={{
+            width: 120,
+            borderColor: componentColor,
+            borderTopWidth: "2px",
+          }}
         />
-      </RadioGroup>
-    ),
-  },
-  {
-    type: "Table",
-    label: "Table",
-    preview: (
-      <TableContainer sx={{ maxHeight: 100, maxWidth: 220 }}>
-        <Table size="small" sx={{ border: `1px solid ${componentColor}` }}>
-          <TableHead>
-            <TableRow>
-              <TableCell sx={{ borderColor: componentColor, fontWeight: "bold", p: 0.5, fontSize: "0.7rem" }}>
-                H1
-              </TableCell>
-              <TableCell sx={{ borderColor: componentColor, fontWeight: "bold", p: 0.5, fontSize: "0.7rem" }}>
-                H2
-              </TableCell>
-              <TableCell sx={{ borderColor: componentColor, fontWeight: "bold", p: 0.5, fontSize: "0.7rem" }}>
-                H3
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            <TableRow>
-              <TableCell sx={{ borderColor: componentColor, p: 0.5, fontSize: "0.7rem" }}>
-                C1
-              </TableCell>
-              <TableCell sx={{ borderColor: componentColor, p: 0.5, fontSize: "0.7rem" }}>
-                C2
-              </TableCell>
-              <TableCell sx={{ borderColor: componentColor, p: 0.5, fontSize: "0.7rem" }}>
-                C3
-              </TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
-      </TableContainer>
-    ),
-  },
-];
+      ),
+    },
+    {
+      type: "Paper",
+      label: "Paper",
+      preview: (
+        <Paper sx={{ p: 2, minWidth: 120, textAlign: "center", backgroundColor: componentColor }}>
+          <Typography variant="body2" sx={{ color: getTextColorForFilled(componentColor) }}>
+            Paper
+          </Typography>
+        </Paper>
+      ),
+    },
+    {
+      type: "Slider",
+      label: "Slider",
+      preview: (
+        <Slider 
+          defaultValue={50} 
+          sx={{ 
+            width: 120, 
+            color: componentColor,
+            "& .MuiSlider-thumb": {
+              ...(isDarkColor(componentColor) ? {} : {
+                boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
+              }),
+            },
+            "& .MuiSlider-track": {
+              ...(isDarkColor(componentColor) ? {} : {
+                border: "1px solid rgba(0, 0, 0, 0.1)",
+              }),
+            },
+            "& .MuiSlider-rail": {
+              ...(isDarkColor(componentColor) ? {} : {
+                border: "1px solid rgba(0, 0, 0, 0.1)",
+              }),
+            },
+          }} 
+        />
+      ),
+    },
+    {
+      type: "Switch",
+      label: "Switch",
+      preview: (
+        <Switch 
+          defaultChecked 
+          sx={{ 
+            "& .MuiSwitch-switchBase.Mui-checked": { color: componentColor }, 
+            "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": { 
+              backgroundColor: componentColor,
+              ...(isDarkColor(componentColor) ? {} : {
+                boxShadow: "0 0 0 1px rgba(0, 0, 0, 0.2)",
+              }),
+            },
+            "& .MuiSwitch-thumb": {
+              ...(isDarkColor(componentColor) ? {} : {
+                boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
+              }),
+            },
+          }} 
+        />
+      ),
+    },
+    {
+      type: "TextField",
+      label: "Text Field",
+      preview: <TextField label="Text Field" size="small" />,
+    },
+    {
+      type: "Typography",
+      label: "Typography",
+      preview: <Typography variant="body1" sx={{ color: componentColor }}>Typography</Typography>,
+    },
+    {
+      type: "Radio",
+      label: "Radio",
+      preview: (
+        <RadioGroup row>
+          <FormControlLabel
+            value="option1"
+            control={
+              <Radio
+                sx={{
+                  color: isDarkColor(componentColor) ? componentColor : "#000000",
+                  "&.Mui-checked": {
+                    color: componentColor,
+                  },
+                }}
+              />
+            }
+            label="Option 1"
+          />
+          <FormControlLabel
+            value="option2"
+            control={
+              <Radio
+                sx={{
+                  color: isDarkColor(componentColor) ? componentColor : "#000000",
+                  "&.Mui-checked": {
+                    color: componentColor,
+                  },
+                }}
+              />
+            }
+            label="Option 2"
+          />
+        </RadioGroup>
+      ),
+    },
+    {
+      type: "Table",
+      label: "Table",
+      preview: (
+        <TableContainer sx={{ maxHeight: 100, maxWidth: 220 }}>
+          <Table size="small" sx={{ border: `1px solid ${componentColor}` }}>
+            <TableHead>
+              <TableRow>
+                <TableCell sx={{ borderColor: componentColor, fontWeight: "bold", p: 0.5, fontSize: "0.7rem" }}>
+                  H1
+                </TableCell>
+                <TableCell sx={{ borderColor: componentColor, fontWeight: "bold", p: 0.5, fontSize: "0.7rem" }}>
+                  H2
+                </TableCell>
+                <TableCell sx={{ borderColor: componentColor, fontWeight: "bold", p: 0.5, fontSize: "0.7rem" }}>
+                  H3
+                </TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              <TableRow>
+                <TableCell sx={{ borderColor: componentColor, p: 0.5, fontSize: "0.7rem" }}>
+                  C1
+                </TableCell>
+                <TableCell sx={{ borderColor: componentColor, p: 0.5, fontSize: "0.7rem" }}>
+                  C2
+                </TableCell>
+                <TableCell sx={{ borderColor: componentColor, p: 0.5, fontSize: "0.7rem" }}>
+                  C3
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </TableContainer>
+      ),
+    },
+  ];
+  
+  // Sort alphabetically by label
+  return items.sort((a, b) => a.label.localeCompare(b.label));
+};
 
 export default function ComponentsBar({
   onComponentSelect,
