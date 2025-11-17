@@ -94,6 +94,16 @@ export function useKeyboardShortcuts({
         selectedComponentIds.length > 0 &&
         (e.key === "Backspace" || e.key === "Delete")
       ) {
+        const target = e.target as HTMLElement;
+        // Don't delete components if user is editing text in an input field
+        if (
+          target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.tagName === "SELECT" ||
+          target.isContentEditable
+        ) {
+          return;
+        }
         e.preventDefault();
         onDeleteSelected();
       }

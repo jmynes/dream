@@ -502,6 +502,13 @@ export default function Canvas({
         onBrushMouseMove={handleBrushMouseMove}
         onBrushMouseLeave={handleBrushMouseLeave}
         onComponentMouseDown={handleComponentMouseDown}
+        onComponentUpdate={(componentId, props) => {
+          onComponentsChange(
+            components.map((c) =>
+              c.id === componentId ? { ...c, props: { ...c.props, ...props } } : c
+            )
+          );
+        }}
         onOverlayClick={handleOverlayClick}
       />
 

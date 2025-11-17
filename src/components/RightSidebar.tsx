@@ -31,6 +31,23 @@ interface ComponentItem {
   preview: React.ReactNode;
 }
 
+// Helper function to determine if a color is dark (for text contrast)
+const isDarkColor = (color: string): boolean => {
+  // Convert hex to RGB
+  const hex = color.replace("#", "");
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+  // Calculate luminance
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance < 0.5;
+};
+
+// Helper to get text color for filled components
+const getTextColorForFilled = (bgColor: string): string => {
+  return isDarkColor(bgColor) ? "#ffffff" : "#000000";
+};
+
 const getComponentItems = (componentColor: string): ComponentItem[] => [
   {
     type: "Button",
@@ -105,7 +122,9 @@ const getComponentItems = (componentColor: string): ComponentItem[] => [
     label: "Paper",
     preview: (
       <Paper sx={{ p: 2, minWidth: 120, textAlign: "center", backgroundColor: componentColor }}>
-        <Typography variant="body2">Paper</Typography>
+        <Typography variant="body2" sx={{ color: getTextColorForFilled(componentColor) }}>
+          Paper
+        </Typography>
       </Paper>
     ),
   },

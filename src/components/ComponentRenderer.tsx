@@ -13,11 +13,13 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import { useState, useRef, useEffect } from "react";
 import type { CanvasComponent } from "../types/component";
 
 interface ComponentRendererProps {
   component: CanvasComponent;
   onMouseDown: (e: React.MouseEvent, componentId: string) => void;
+  onComponentUpdate?: (componentId: string, props: Partial<CanvasComponent["props"]>) => void;
   isDragging?: boolean;
   isSelected?: boolean;
 }
@@ -25,13 +27,56 @@ interface ComponentRendererProps {
 export default function ComponentRenderer({
   component,
   onMouseDown,
+  onComponentUpdate,
   isDragging = false,
   isSelected = false,
 }: ComponentRendererProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
   const handleMouseDown = (e: React.MouseEvent) => {
     e.stopPropagation();
     onMouseDown(e, component.id);
   };
+
+  const handleDoubleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    // Only allow editing for components that have text
+    const hasText = ["Button", "Card", "Typography", "Avatar", "Paper", "Box"].includes(component.type);
+    if (hasText && onComponentUpdate) {
+      const currentText = (component.props?.text as string) || "";
+      setEditValue(currentText);
+      setIsEditing(true);
+    }
+  };
+
+  const handleBlur = () => {
+    if (onComponentUpdate && isEditing) {
+      onComponentUpdate(component.id, { text: editValue });
+      setIsEditing(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (onComponentUpdate) {
+        onComponentUpdate(component.id, { text: editValue });
+        setIsEditing(false);
+      }
+    } else if (e.key === "Escape") {
+      setIsEditing(false);
+      setEditValue((component.props?.text as string) || "");
+    }
+  };
+
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [isEditing]);
 
   const componentWidth = component.width;
   const componentHeight = component.height;
@@ -360,10 +405,61 @@ export default function ComponentRenderer({
     }
   };
 
+  const renderEditableInput = () => {
+    if (!isEditing) return null;
+    
+    const componentColor = component.color || "#1976d2";
+    const isFilled = ["Button", "Paper", "Avatar", "Chip"].includes(component.type);
+    const textColor = isFilled ? getTextColorForFilled(componentColor) : componentColor;
+    
+    return (
+      <Box
+        sx={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 20,
+          backgroundColor: isFilled ? componentColor : "transparent",
+        }}
+      >
+        <input
+          ref={inputRef}
+          type="text"
+          value={editValue}
+          onChange={(e) => setEditValue(e.target.value)}
+          onBlur={handleBlur}
+          onKeyDown={handleKeyDown}
+          style={{
+            background: "transparent",
+            border: "2px solid #1976d2",
+            borderRadius: "4px",
+            padding: "4px 8px",
+            color: textColor,
+            fontSize: "14px",
+            width: "80%",
+            textAlign: "center",
+            outline: "none",
+          }}
+          onClick={(e) => e.stopPropagation()}
+        />
+      </Box>
+    );
+  };
+
   return (
     // biome-ignore lint/a11y/noStaticElementInteractions: Draggable container wrapper
-    <div style={containerStyle} onMouseDown={handleMouseDown}>
+    <div
+      style={containerStyle}
+      onMouseDown={handleMouseDown}
+      onDoubleClick={handleDoubleClick}
+    >
       {renderComponent()}
+      {renderEditableInput()}
       {isSelected && (
         <>
           {/* Width resize handle (right edge) */}
