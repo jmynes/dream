@@ -90,7 +90,15 @@ const getComponentItems = (componentColor: string): ComponentItem[] => [
   {
     type: "Divider",
     label: "Divider",
-    preview: <Divider sx={{ width: 120 }} />,
+    preview: (
+      <Divider
+        sx={{
+          width: 120,
+          borderColor: componentColor,
+          borderTopWidth: "2px",
+        }}
+      />
+    ),
   },
   {
     type: "Paper",

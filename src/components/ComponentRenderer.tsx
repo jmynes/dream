@@ -250,6 +250,10 @@ export default function ComponentRenderer({
           </Box>
         );
       case "Divider":
+        const isVertical =
+          componentHeight &&
+          componentWidth &&
+          componentHeight > componentWidth;
         return (
           <Box
             sx={{
@@ -261,14 +265,14 @@ export default function ComponentRenderer({
           >
             <Divider
               {...(component.props as object)}
-              orientation={
-                componentHeight &&
-                componentWidth &&
-                componentHeight > componentWidth
-                  ? "vertical"
-                  : "horizontal"
-              }
-              sx={{ width: "100%" }}
+              orientation={isVertical ? "vertical" : "horizontal"}
+              sx={{
+                width: "100%",
+                borderColor: componentColor,
+                ...(isVertical
+                  ? { borderLeftWidth: "2px" }
+                  : { borderTopWidth: "2px" }),
+              }}
             />
           </Box>
         );
