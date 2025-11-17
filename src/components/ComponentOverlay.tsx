@@ -138,10 +138,13 @@ export default function ComponentOverlay({
       }}
       onMouseLeave={() => {
         onBrushMouseLeave();
-        onSelectionBoxClear();
-        if (isLassoDrawing) {
-          onLassoFinish();
+        // Don't clear selection box on mouse leave - let it persist until mouseup
+        // Only clear if we're not actively selecting
+        if (!selectionBoxStart) {
+          onSelectionBoxClear();
         }
+        // Don't finish lasso on mouse leave - let it persist until mouseup
+        // Lasso will be finished by global mouseup listener
       }}
     >
       {components.map((component) => (

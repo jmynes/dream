@@ -384,6 +384,24 @@ export default function Canvas({
     getPointFromEvent: getPointFromEventFn,
   });
 
+  // Global mouse up listener to finish selection box and lasso if mouse released outside canvas
+  useEffect(() => {
+    const handleGlobalMouseUp = () => {
+      if (selectionBoxStart !== null) {
+        finishSelectionBox();
+      }
+      if (isLassoDrawing) {
+        handleLassoFinish();
+      }
+    };
+
+    document.addEventListener("mouseup", handleGlobalMouseUp);
+
+    return () => {
+      document.removeEventListener("mouseup", handleGlobalMouseUp);
+    };
+  }, [selectionBoxStart, finishSelectionBox, isLassoDrawing, handleLassoFinish]);
+
   // Clear pending recognition when magic wand is disabled
   useEffect(() => {
     if (
