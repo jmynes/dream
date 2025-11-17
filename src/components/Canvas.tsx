@@ -63,6 +63,9 @@ export default function Canvas({
   const [selectedComponentIds, setSelectedComponentIds] = useState<string[]>(
     [],
   );
+  const [copiedComponents, setCopiedComponents] = useState<CanvasComponent[]>(
+    [],
+  );
 
   // Canvas lifecycle management
   const { actualWidth, actualHeight } = useCanvasLifecycle({
@@ -422,6 +425,9 @@ export default function Canvas({
     pendingRecognition,
     recognitionFailed,
     hasDrawing,
+    gridCellWidth,
+    gridCellHeight,
+    snapToGrid,
     onSelectAll: () => {
       if (components.length > 0) {
         setSelectedComponentIds(components.map((c) => c.id));
@@ -435,6 +441,66 @@ export default function Canvas({
     },
     onDeselectAll: () => {
       setSelectedComponentIds([]);
+    },
+    onMoveSelected: (deltaX, deltaY) => {
+      if (selectedComponentIds.length === 0) return;
+      
+      const updatedComponents = components.map((comp) => {
+        if (selectedComponentIds.includes(comp.id)) {
+          let newX = comp.x + deltaX;
+          let newY = comp.y + deltaY;
+          
+          // Snap to grid if enabled
+          if (snapToGrid) {
+            newX = Math.round(newX / gridCellWidth) * gridCellWidth;
+            newY = Math.round(newY / gridCellHeight) * gridCellHeight;
+          }
+          
+          return {
+            ...comp,
+            x: newX,
+            y: newY,
+          };
+        }
+        return comp;
+      });
+      
+      onComponentsChange(updatedComponents);
+    },
+    onCopySelected: () => {
+      if (selectedComponentIds.length === 0) return;
+      const selectedComps = components.filter((c) =>
+        selectedComponentIds.includes(c.id),
+      );
+      setCopiedComponents(selectedComps);
+    },
+    onPaste: () => {
+      if (copiedComponents.length === 0) return;
+      
+      // Create new components with offset positions and new IDs
+      const offsetX = snapToGrid ? gridCellWidth : 10;
+      const offsetY = snapToGrid ? gridCellHeight : 10;
+      
+      const newComponents = copiedComponents.map((comp, index) => {
+        let newX = comp.x + offsetX;
+        let newY = comp.y + offsetY;
+        
+        if (snapToGrid) {
+          newX = Math.round(newX / gridCellWidth) * gridCellWidth;
+          newY = Math.round(newY / gridCellHeight) * gridCellHeight;
+        }
+        
+        return {
+          ...comp,
+          id: `component-${Date.now()}-${index}-${Math.random().toString(36).substring(2, 9)}`,
+          x: newX,
+          y: newY,
+        };
+      });
+      
+      const newComponentIds = newComponents.map((c) => c.id);
+      onComponentsChange([...components, ...newComponents]);
+      setSelectedComponentIds(newComponentIds);
     },
     onRecognizePath: handleRecognizePath,
     onSubmitRecognition: handleSubmitRecognition,
