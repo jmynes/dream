@@ -204,46 +204,6 @@ function App() {
 				}}
 			>
 				<Toolbar
-					penColor={penColor}
-					onPenColorChange={setPenColor}
-					penSize={penSize}
-					onPenSizeChange={setPenSize}
-					isDrawing={isDrawing}
-					onDrawingToggle={(drawing) => {
-						setIsDrawing(drawing);
-						if (drawing) {
-							setSelectedComponentType(null);
-							setIsEraser(false);
-							setIsThinkingPen(false);
-						}
-					}}
-					snapToGrid={snapToGrid}
-					onSnapToGridToggle={setSnapToGrid}
-					isEraser={isEraser}
-					onEraserToggle={(eraser) => {
-						setIsEraser(eraser);
-						if (eraser) {
-							setIsDrawing(false);
-							setIsThinkingPen(false);
-							setSelectedComponentType(null);
-						}
-					}}
-					isThinkingPen={isThinkingPen}
-					onThinkingPenToggle={(thinkingPen) => {
-						setIsThinkingPen(thinkingPen);
-						if (thinkingPen) {
-							setIsDrawing(false);
-							setIsEraser(false);
-							setSelectedComponentType(null);
-						}
-					}}
-					onCursorMode={() => {
-						setIsDrawing(false);
-						setIsEraser(false);
-						setIsThinkingPen(false);
-						setSelectedComponentType(null);
-					}}
-					isCursorMode={!isDrawing && !isEraser && !isThinkingPen}
 					onDeleteEverything={handleDeleteEverything}
 					onUndo={handleUndo}
 					onRedo={handleRedo}
@@ -261,8 +221,46 @@ function App() {
 					}}
 				>
 					<Sidebar
-						onComponentSelect={handleComponentSelect}
-						selectedComponentType={selectedComponentType}
+						penColor={penColor}
+						onPenColorChange={setPenColor}
+						penSize={penSize}
+						onPenSizeChange={setPenSize}
+						isDrawing={isDrawing}
+						onDrawingToggle={(drawing) => {
+							setIsDrawing(drawing);
+							if (drawing) {
+								setSelectedComponentType(null);
+								setIsEraser(false);
+								setIsThinkingPen(false);
+							}
+						}}
+						snapToGrid={snapToGrid}
+						onSnapToGridToggle={setSnapToGrid}
+						isEraser={isEraser}
+						onEraserToggle={(eraser) => {
+							setIsEraser(eraser);
+							if (eraser) {
+								setIsDrawing(false);
+								setIsThinkingPen(false);
+								setSelectedComponentType(null);
+							}
+						}}
+						isThinkingPen={isThinkingPen}
+						onThinkingPenToggle={(thinkingPen) => {
+							setIsThinkingPen(thinkingPen);
+							if (thinkingPen) {
+								setIsDrawing(false);
+								setIsEraser(false);
+								setSelectedComponentType(null);
+							}
+						}}
+						onCursorMode={() => {
+							setIsDrawing(false);
+							setIsEraser(false);
+							setIsThinkingPen(false);
+							setSelectedComponentType(null);
+						}}
+						isCursorMode={!isDrawing && !isEraser && !isThinkingPen}
 					/>
 					<Box sx={{ flex: 1, overflow: "hidden", display: "flex" }}>
 					<Canvas
@@ -281,7 +279,10 @@ function App() {
 						snapToGrid={snapToGrid}
 					/>
 					</Box>
-					<RightSidebar />
+					<RightSidebar
+						onComponentSelect={handleComponentSelect}
+						selectedComponentType={selectedComponentType}
+					/>
 				</Box>
 				<Footer />
 			</Box>

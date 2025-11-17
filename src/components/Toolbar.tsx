@@ -1,30 +1,12 @@
 import {
 	Delete as DeleteIcon,
-	GridOn as GridIcon,
-	Palette as ColorIcon,
-	Edit as PenIcon,
-	AutoFixHigh as ThinkingPenIcon,
 	Undo as UndoIcon,
 	Redo as RedoIcon,
-	NearMe as CursorIcon,
 } from "@mui/icons-material";
-import { Box, IconButton, Slider, Tooltip, Typography } from "@mui/material";
+import { Box, Button, IconButton, Menu, MenuItem, Tooltip } from "@mui/material";
+import { useState } from "react";
 
 interface ToolbarProps {
-	penColor: string;
-	onPenColorChange: (color: string) => void;
-	penSize: number;
-	onPenSizeChange: (size: number) => void;
-	isDrawing: boolean;
-	onDrawingToggle: (drawing: boolean) => void;
-	snapToGrid: boolean;
-	onSnapToGridToggle: (snap: boolean) => void;
-	isEraser: boolean;
-	onEraserToggle: (eraser: boolean) => void;
-	isThinkingPen: boolean;
-	onThinkingPenToggle: (thinkingPen: boolean) => void;
-	onCursorMode: () => void;
-	isCursorMode: boolean;
 	onDeleteEverything: () => void;
 	onUndo: () => void;
 	onRedo: () => void;
@@ -33,107 +15,166 @@ interface ToolbarProps {
 }
 
 export default function Toolbar({
-	penColor,
-	onPenColorChange,
-	penSize,
-	onPenSizeChange,
-	isDrawing,
-	onDrawingToggle,
-	snapToGrid,
-	onSnapToGridToggle,
-	isEraser,
-	onEraserToggle,
-	isThinkingPen,
-	onThinkingPenToggle,
-	onCursorMode,
-	isCursorMode,
 	onDeleteEverything,
 	onUndo,
 	onRedo,
 	canUndo,
 	canRedo,
 }: ToolbarProps) {
+	const [fileMenuAnchor, setFileMenuAnchor] = useState<null | HTMLElement>(null);
+	const [optionsMenuAnchor, setOptionsMenuAnchor] = useState<null | HTMLElement>(null);
+	const [helpMenuAnchor, setHelpMenuAnchor] = useState<null | HTMLElement>(null);
+
+	const handleMenuOpen = (
+		setter: (anchor: HTMLElement | null) => void,
+		event: React.MouseEvent<HTMLElement>,
+	) => {
+		setter(event.currentTarget);
+	};
+
+	const handleMenuClose = (setter: (anchor: HTMLElement | null) => void) => {
+		setter(null);
+	};
+
 	return (
 		<Box
 			sx={{
 				display: "flex",
 				alignItems: "center",
-				gap: 2,
-				padding: 2,
 				borderBottom: "1px solid #e0e0e0",
-				backgroundColor: "#f5f5f5",
+				backgroundColor: "#f0f0f0",
+				fontSize: "13px",
 			}}
 		>
-			<Tooltip title="Cursor Mode - Select and move components">
-				<IconButton
-					color={isCursorMode ? "primary" : "default"}
-					onClick={onCursorMode}
-				>
-					<CursorIcon />
-				</IconButton>
-			</Tooltip>
+			<Button
+				sx={{
+					padding: "4px 12px",
+					minWidth: "auto",
+					fontSize: "13px",
+					textTransform: "none",
+					color: "#000",
+					borderRadius: 0,
+					"&:hover": {
+						backgroundColor: "#e0e0e0",
+					},
+				}}
+				onClick={(e) => handleMenuOpen(setFileMenuAnchor, e)}
+			>
+				File
+			</Button>
+			<Menu
+				anchorEl={fileMenuAnchor}
+				open={Boolean(fileMenuAnchor)}
+				onClose={() => handleMenuClose(setFileMenuAnchor)}
+				anchorOrigin={{
+					vertical: "bottom",
+					horizontal: "left",
+				}}
+				transformOrigin={{
+					vertical: "top",
+					horizontal: "left",
+				}}
+			>
+				<MenuItem onClick={() => handleMenuClose(setFileMenuAnchor)}>
+					New
+				</MenuItem>
+				<MenuItem onClick={() => handleMenuClose(setFileMenuAnchor)}>
+					Open...
+				</MenuItem>
+				<MenuItem onClick={() => handleMenuClose(setFileMenuAnchor)}>
+					Save
+				</MenuItem>
+				<MenuItem onClick={() => handleMenuClose(setFileMenuAnchor)}>
+					Save As...
+				</MenuItem>
+				<MenuItem onClick={() => handleMenuClose(setFileMenuAnchor)}>
+					Exit
+				</MenuItem>
+			</Menu>
 
-			<Tooltip title="Pen Tool">
-				<IconButton
-					color={isDrawing ? "primary" : "default"}
-					onClick={() => {
-						onDrawingToggle(!isDrawing);
-						if (!isDrawing) {
-							onEraserToggle(false);
-							onThinkingPenToggle(false);
-						}
-					}}
-				>
-					<PenIcon />
-				</IconButton>
-			</Tooltip>
+			<Button
+				sx={{
+					padding: "4px 12px",
+					minWidth: "auto",
+					fontSize: "13px",
+					textTransform: "none",
+					color: "#000",
+					borderRadius: 0,
+					"&:hover": {
+						backgroundColor: "#e0e0e0",
+					},
+				}}
+				onClick={(e) => handleMenuOpen(setOptionsMenuAnchor, e)}
+			>
+				Options
+			</Button>
+			<Menu
+				anchorEl={optionsMenuAnchor}
+				open={Boolean(optionsMenuAnchor)}
+				onClose={() => handleMenuClose(setOptionsMenuAnchor)}
+				anchorOrigin={{
+					vertical: "bottom",
+					horizontal: "left",
+				}}
+				transformOrigin={{
+					vertical: "top",
+					horizontal: "left",
+				}}
+			>
+				<MenuItem onClick={() => handleMenuClose(setOptionsMenuAnchor)}>
+					Preferences...
+				</MenuItem>
+				<MenuItem onClick={() => handleMenuClose(setOptionsMenuAnchor)}>
+					Settings...
+				</MenuItem>
+			</Menu>
 
-			<Tooltip title="Eraser Tool">
-				<IconButton
-					color={isEraser ? "primary" : "default"}
-					onClick={() => {
-						onEraserToggle(!isEraser);
-						if (!isEraser) {
-							onDrawingToggle(false);
-							onThinkingPenToggle(false);
-						}
-					}}
-				>
-					<i className="fas fa-eraser" style={{ fontSize: "1.25rem" }} />
-				</IconButton>
-			</Tooltip>
+			<Button
+				sx={{
+					padding: "4px 12px",
+					minWidth: "auto",
+					fontSize: "13px",
+					textTransform: "none",
+					color: "#000",
+					borderRadius: 0,
+					"&:hover": {
+						backgroundColor: "#e0e0e0",
+					},
+				}}
+				onClick={(e) => handleMenuOpen(setHelpMenuAnchor, e)}
+			>
+				Help
+			</Button>
+			<Menu
+				anchorEl={helpMenuAnchor}
+				open={Boolean(helpMenuAnchor)}
+				onClose={() => handleMenuClose(setHelpMenuAnchor)}
+				anchorOrigin={{
+					vertical: "bottom",
+					horizontal: "left",
+				}}
+				transformOrigin={{
+					vertical: "top",
+					horizontal: "left",
+				}}
+			>
+				<MenuItem onClick={() => handleMenuClose(setHelpMenuAnchor)}>
+					About
+				</MenuItem>
+				<MenuItem onClick={() => handleMenuClose(setHelpMenuAnchor)}>
+					Documentation
+				</MenuItem>
+			</Menu>
 
-			<Tooltip title="Thinking Pen - Draw shapes to create components">
-				<IconButton
-					color={isThinkingPen ? "primary" : "default"}
-					onClick={() => {
-						onThinkingPenToggle(!isThinkingPen);
-						if (!isThinkingPen) {
-							onDrawingToggle(false);
-							onEraserToggle(false);
-						}
-					}}
-				>
-					<ThinkingPenIcon />
-				</IconButton>
-			</Tooltip>
-
-			<Tooltip title="Snap to Grid">
-				<IconButton
-					color={snapToGrid ? "primary" : "default"}
-					onClick={() => onSnapToGridToggle(!snapToGrid)}
-				>
-					<GridIcon />
-				</IconButton>
-			</Tooltip>
-
-			<Box sx={{ width: 1, borderRight: "1px solid #e0e0e0", mx: 1 }} />
+			<Box sx={{ flex: 1 }} />
 
 			<Tooltip title="Undo (Ctrl+Z)">
 				<IconButton
 					disabled={!canUndo}
 					onClick={onUndo}
 					color="default"
+					size="small"
+					sx={{ marginLeft: 1 }}
 				>
 					<UndoIcon />
 				</IconButton>
@@ -144,12 +185,11 @@ export default function Toolbar({
 					disabled={!canRedo}
 					onClick={onRedo}
 					color="default"
+					size="small"
 				>
 					<RedoIcon />
 				</IconButton>
 			</Tooltip>
-
-			<Box sx={{ flex: 1 }} />
 
 			<Tooltip title="Delete Everything">
 				<IconButton
@@ -163,42 +203,12 @@ export default function Toolbar({
 							onDeleteEverything();
 						}
 					}}
+					size="small"
+					sx={{ marginRight: 1 }}
 				>
 					<DeleteIcon />
 				</IconButton>
 			</Tooltip>
-
-			<Box
-				sx={{ display: "flex", alignItems: "center", gap: 1, minWidth: 200 }}
-			>
-				<Typography variant="body2" sx={{ minWidth: 60 }}>
-					Size: {penSize}px
-				</Typography>
-				<Slider
-					value={penSize}
-					onChange={(_, value) => onPenSizeChange(value as number)}
-					min={1}
-					max={20}
-					step={1}
-					sx={{ width: 120 }}
-				/>
-			</Box>
-
-			<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-				<ColorIcon sx={{ color: penColor }} />
-				<input
-					type="color"
-					value={penColor}
-					onChange={(e) => onPenColorChange(e.target.value)}
-					style={{
-						width: 40,
-						height: 40,
-						border: "1px solid #ccc",
-						borderRadius: 4,
-						cursor: "pointer",
-					}}
-				/>
-			</Box>
 		</Box>
 	);
 }

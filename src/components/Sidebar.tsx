@@ -1,123 +1,44 @@
-import { Add as AddIcon } from "@mui/icons-material";
 import {
-	Avatar,
-	Box,
-	Button,
-	Card,
-	CardContent,
-	Checkbox,
-	Chip,
-	Divider,
-	List,
-	ListItem,
-	ListItemButton,
-	Paper,
-	Slider,
-	Switch,
-	TextField,
-	Typography,
-} from "@mui/material";
-import type { ComponentType } from "../types/component";
+	GridOn as GridIcon,
+	Palette as ColorIcon,
+	Edit as PenIcon,
+	AutoFixHigh as ThinkingPenIcon,
+	NearMe as CursorIcon,
+} from "@mui/icons-material";
+import { Box, IconButton, Paper, Slider, Tooltip, Typography } from "@mui/material";
 
 interface SidebarProps {
-	onComponentSelect: (type: ComponentType) => void;
-	selectedComponentType: ComponentType | null;
+	penColor: string;
+	onPenColorChange: (color: string) => void;
+	penSize: number;
+	onPenSizeChange: (size: number) => void;
+	isDrawing: boolean;
+	onDrawingToggle: (drawing: boolean) => void;
+	snapToGrid: boolean;
+	onSnapToGridToggle: (snap: boolean) => void;
+	isEraser: boolean;
+	onEraserToggle: (eraser: boolean) => void;
+	isThinkingPen: boolean;
+	onThinkingPenToggle: (thinkingPen: boolean) => void;
+	onCursorMode: () => void;
+	isCursorMode: boolean;
 }
-
-interface ComponentItem {
-	type: ComponentType;
-	label: string;
-	preview: React.ReactNode;
-}
-
-const componentItems: ComponentItem[] = [
-	{
-		type: "Button",
-		label: "Button",
-		preview: <Button variant="contained">Button</Button>,
-	},
-	{
-		type: "TextField",
-		label: "Text Field",
-		preview: <TextField label="Text Field" size="small" />,
-	},
-	{
-		type: "Card",
-		label: "Card",
-		preview: (
-			<Card sx={{ minWidth: 120 }}>
-				<CardContent>
-					<Typography variant="body2">Card</Typography>
-				</CardContent>
-			</Card>
-		),
-	},
-	{
-		type: "Typography",
-		label: "Typography",
-		preview: <Typography variant="body1">Typography</Typography>,
-	},
-	{
-		type: "Checkbox",
-		label: "Checkbox",
-		preview: <Checkbox defaultChecked />,
-	},
-	{
-		type: "Switch",
-		label: "Switch",
-		preview: <Switch defaultChecked />,
-	},
-	{
-		type: "Slider",
-		label: "Slider",
-		preview: <Slider defaultValue={50} sx={{ width: 120 }} />,
-	},
-	{
-		type: "Chip",
-		label: "Chip",
-		preview: <Chip label="Chip" />,
-	},
-	{
-		type: "Avatar",
-		label: "Avatar",
-		preview: <Avatar>A</Avatar>,
-	},
-	{
-		type: "Divider",
-		label: "Divider",
-		preview: <Divider sx={{ width: 120 }} />,
-	},
-	{
-		type: "Paper",
-		label: "Paper",
-		preview: (
-			<Paper sx={{ p: 2, minWidth: 120, textAlign: "center" }}>
-				<Typography variant="body2">Paper</Typography>
-			</Paper>
-		),
-	},
-	{
-		type: "Box",
-		label: "Box",
-		preview: (
-			<Box
-				sx={{
-					p: 2,
-					minWidth: 120,
-					border: "1px dashed",
-					borderColor: "divider",
-					textAlign: "center",
-				}}
-			>
-				<Typography variant="body2">Box</Typography>
-			</Box>
-		),
-	},
-];
 
 export default function Sidebar({
-	onComponentSelect,
-	selectedComponentType,
+	penColor,
+	onPenColorChange,
+	penSize,
+	onPenSizeChange,
+	isDrawing,
+	onDrawingToggle,
+	snapToGrid,
+	onSnapToGridToggle,
+	isEraser,
+	onEraserToggle,
+	isThinkingPen,
+	onThinkingPenToggle,
+	onCursorMode,
+	isCursorMode,
 }: SidebarProps) {
 	return (
 		<Paper
@@ -130,69 +51,119 @@ export default function Sidebar({
 			}}
 		>
 			<Typography variant="h6" gutterBottom>
-				Components
+				Tools
 			</Typography>
-			<Typography variant="caption" color="text.secondary" gutterBottom>
-				Click or drag to add to canvas
-			</Typography>
-			<List>
-				{componentItems.map((item) => (
-					<ListItem key={item.type} disablePadding sx={{ mb: 1 }}>
-						<ListItemButton
-							selected={selectedComponentType === item.type}
-							onClick={() => onComponentSelect(item.type)}
-							draggable
-							onDragStart={(e) => {
-								e.dataTransfer.setData("componentType", item.type);
-								e.dataTransfer.effectAllowed = "copy";
-							}}
-							sx={{
-								flexDirection: "column",
-								alignItems: "flex-start",
-								border: "1px solid",
-								borderColor:
-									selectedComponentType === item.type
-										? "primary.main"
-										: "divider",
-								borderRadius: 1,
-								cursor: "grab",
-								"&:hover": {
-									borderColor: "primary.main",
-								},
-								"&:active": {
-									cursor: "grabbing",
-								},
-							}}
-						>
-							<Box
-								sx={{
-									display: "flex",
-									alignItems: "center",
-									width: "100%",
-									mb: 1,
-								}}
+
+			<Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}>
+				<Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+					<Typography variant="body2" color="text.secondary">
+						Selection Tools
+					</Typography>
+					<Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+						<Tooltip title="Cursor Mode - Select and move components">
+							<IconButton
+								color={isCursorMode ? "primary" : "default"}
+								onClick={onCursorMode}
+								size="small"
 							>
-								<AddIcon sx={{ mr: 1, fontSize: 16 }} />
-								<Typography variant="body2" fontWeight="medium">
-									{item.label}
-								</Typography>
-							</Box>
-							<Box
-								sx={{
-									width: "100%",
-									display: "flex",
-									justifyContent: "center",
-									pt: 1,
-									borderTop: "1px solid",
-									borderColor: "divider",
+								<CursorIcon />
+							</IconButton>
+						</Tooltip>
+
+						<Tooltip title="Pen Tool">
+							<IconButton
+								color={isDrawing ? "primary" : "default"}
+								onClick={() => {
+									onDrawingToggle(!isDrawing);
+									if (!isDrawing) {
+										onEraserToggle(false);
+										onThinkingPenToggle(false);
+									}
 								}}
+								size="small"
 							>
-								{item.preview}
-							</Box>
-						</ListItemButton>
-					</ListItem>
-				))}
-			</List>
+								<PenIcon />
+							</IconButton>
+						</Tooltip>
+
+						<Tooltip title="Eraser Tool">
+							<IconButton
+								color={isEraser ? "primary" : "default"}
+								onClick={() => {
+									onEraserToggle(!isEraser);
+									if (!isEraser) {
+										onDrawingToggle(false);
+										onThinkingPenToggle(false);
+									}
+								}}
+								size="small"
+							>
+								<i className="fas fa-eraser" style={{ fontSize: "1.25rem" }} />
+							</IconButton>
+						</Tooltip>
+
+						<Tooltip title="Thinking Pen - Draw shapes to create components">
+							<IconButton
+								color={isThinkingPen ? "primary" : "default"}
+								onClick={() => {
+									onThinkingPenToggle(!isThinkingPen);
+									if (!isThinkingPen) {
+										onDrawingToggle(false);
+										onEraserToggle(false);
+									}
+								}}
+								size="small"
+							>
+								<ThinkingPenIcon />
+							</IconButton>
+						</Tooltip>
+
+						<Tooltip title="Snap to Grid">
+							<IconButton
+								color={snapToGrid ? "primary" : "default"}
+								onClick={() => onSnapToGridToggle(!snapToGrid)}
+								size="small"
+							>
+								<GridIcon />
+							</IconButton>
+						</Tooltip>
+					</Box>
+				</Box>
+
+				<Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+					<Typography variant="body2" color="text.secondary">
+						Brush Size: {penSize}px
+					</Typography>
+					<Slider
+						value={penSize}
+						onChange={(_, value) => onPenSizeChange(value as number)}
+						min={1}
+						max={20}
+						step={1}
+					/>
+				</Box>
+
+				<Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+					<Typography variant="body2" color="text.secondary">
+						Brush Color
+					</Typography>
+					<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+						<ColorIcon sx={{ color: penColor }} />
+						<input
+							type="color"
+							value={penColor}
+							onChange={(e) => onPenColorChange(e.target.value)}
+							style={{
+								width: 60,
+								height: 30,
+								border: "1px solid #ccc",
+								borderRadius: 4,
+								cursor: "pointer",
+							}}
+						/>
+					</Box>
+				</Box>
+			</Box>
 		</Paper>
 	);
 }
