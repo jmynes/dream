@@ -22,6 +22,7 @@ import type { ComponentType } from "../types/component";
 interface RightSidebarProps {
   onComponentSelect: (type: ComponentType) => void;
   selectedComponentType: ComponentType | null;
+  componentColor: string;
 }
 
 interface ComponentItem {
@@ -30,11 +31,15 @@ interface ComponentItem {
   preview: React.ReactNode;
 }
 
-const componentItems: ComponentItem[] = [
+const getComponentItems = (componentColor: string): ComponentItem[] => [
   {
     type: "Button",
     label: "Button",
-    preview: <Button variant="contained">Button</Button>,
+    preview: (
+      <Button variant="contained" sx={{ backgroundColor: componentColor, "&:hover": { backgroundColor: componentColor } }}>
+        Button
+      </Button>
+    ),
   },
   {
     type: "TextField",
@@ -45,7 +50,7 @@ const componentItems: ComponentItem[] = [
     type: "Card",
     label: "Card",
     preview: (
-      <Card sx={{ minWidth: 120 }}>
+      <Card sx={{ minWidth: 120, border: `2px solid ${componentColor}` }}>
         <CardContent>
           <Typography variant="body2">Card</Typography>
         </CardContent>
@@ -55,32 +60,32 @@ const componentItems: ComponentItem[] = [
   {
     type: "Typography",
     label: "Typography",
-    preview: <Typography variant="body1">Typography</Typography>,
+    preview: <Typography variant="body1" sx={{ color: componentColor }}>Typography</Typography>,
   },
   {
     type: "Checkbox",
     label: "Checkbox",
-    preview: <Checkbox defaultChecked />,
+    preview: <Checkbox defaultChecked sx={{ color: componentColor, "&.Mui-checked": { color: componentColor } }} />,
   },
   {
     type: "Switch",
     label: "Switch",
-    preview: <Switch defaultChecked />,
+    preview: <Switch defaultChecked sx={{ "& .MuiSwitch-switchBase.Mui-checked": { color: componentColor }, "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": { backgroundColor: componentColor } }} />,
   },
   {
     type: "Slider",
     label: "Slider",
-    preview: <Slider defaultValue={50} sx={{ width: 120 }} />,
+    preview: <Slider defaultValue={50} sx={{ width: 120, color: componentColor }} />,
   },
   {
     type: "Chip",
     label: "Chip",
-    preview: <Chip label="Chip" />,
+    preview: <Chip label="Chip" sx={{ backgroundColor: componentColor, color: "#fff" }} />,
   },
   {
     type: "Avatar",
     label: "Avatar",
-    preview: <Avatar>A</Avatar>,
+    preview: <Avatar sx={{ bgcolor: componentColor }}>A</Avatar>,
   },
   {
     type: "Divider",
@@ -91,7 +96,7 @@ const componentItems: ComponentItem[] = [
     type: "Paper",
     label: "Paper",
     preview: (
-      <Paper sx={{ p: 2, minWidth: 120, textAlign: "center" }}>
+      <Paper sx={{ p: 2, minWidth: 120, textAlign: "center", backgroundColor: componentColor }}>
         <Typography variant="body2">Paper</Typography>
       </Paper>
     ),
@@ -105,7 +110,8 @@ const componentItems: ComponentItem[] = [
           p: 2,
           minWidth: 120,
           border: "1px dashed",
-          borderColor: "divider",
+          borderColor: componentColor,
+          backgroundColor: `${componentColor}20`,
           textAlign: "center",
         }}
       >
@@ -118,7 +124,10 @@ const componentItems: ComponentItem[] = [
 export default function RightSidebar({
   onComponentSelect,
   selectedComponentType,
+  componentColor,
 }: RightSidebarProps) {
+  const componentItems = getComponentItems(componentColor);
+
   return (
     <Paper
       sx={{

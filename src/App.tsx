@@ -301,6 +301,7 @@ function App() {
           <RightSidebar
             onComponentSelect={handleComponentSelect}
             selectedComponentType={selectedComponentType}
+            componentColor={componentColor}
           />
         </Box>
         <Footer />

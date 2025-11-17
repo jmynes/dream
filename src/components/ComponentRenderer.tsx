@@ -124,7 +124,7 @@ export default function ComponentRenderer({
               width: "100%",
               height: "100%",
               minWidth: componentWidth || 200,
-              backgroundColor: componentColor,
+              border: `2px solid ${componentColor}`,
             }}
           >
             <CardContent sx={{ textAlign: "center", height: "100%" }}>
@@ -164,6 +164,7 @@ export default function ComponentRenderer({
             <Checkbox
               {...(component.props as object)}
               defaultChecked={component.props?.checked as boolean}
+              sx={{ color: componentColor, "&.Mui-checked": { color: componentColor } }}
             />
           </Box>
         );
@@ -181,6 +182,10 @@ export default function ComponentRenderer({
             <Switch
               {...(component.props as object)}
               defaultChecked={component.props?.checked as boolean}
+              sx={{
+                "& .MuiSwitch-switchBase.Mui-checked": { color: componentColor },
+                "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": { backgroundColor: componentColor },
+              }}
             />
           </Box>
         );
