@@ -384,6 +384,40 @@ export default function Canvas({
     getPointFromEvent: getPointFromEventFn,
   });
 
+  // Global mouse move listener to continue updating selection box when mouse leaves canvas
+  useEffect(() => {
+    if (selectionBoxStart === null || draggedComponentId !== null || resizingComponentId !== null) {
+      return;
+    }
+
+    const handleGlobalMouseMove = (e: MouseEvent) => {
+      if (selectionBoxStart === null || draggedComponentId !== null || resizingComponentId !== null) {
+        return;
+      }
+
+      // Convert global mouse position to canvas coordinates
+      const container = containerRef.current;
+      if (!container) return;
+
+      const rect = container.getBoundingClientRect();
+      let x = e.clientX - rect.left;
+      let y = e.clientY - rect.top;
+
+      // Clamp to canvas boundaries
+      x = Math.max(0, Math.min(x, actualWidth));
+      y = Math.max(0, Math.min(y, actualHeight));
+
+      // Update selection box with clamped point
+      updateSelectionBox({ x, y }, draggedComponentId, resizingComponentId);
+    };
+
+    document.addEventListener("mousemove", handleGlobalMouseMove);
+
+    return () => {
+      document.removeEventListener("mousemove", handleGlobalMouseMove);
+    };
+  }, [selectionBoxStart, draggedComponentId, resizingComponentId, actualWidth, actualHeight, updateSelectionBox]);
+
   // Global mouse up listener to finish selection box and lasso if mouse released outside canvas
   useEffect(() => {
     const handleGlobalMouseUp = () => {
