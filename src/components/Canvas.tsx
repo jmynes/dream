@@ -754,7 +754,7 @@ export default function Canvas({
         selectedComponentIds.includes(c.id),
       );
       setCopiedComponents(selectedComps);
-      setToastMessage("Component copied to clipboard");
+      setToastMessage(`${selectedComps.length} component${selectedComps.length === 1 ? '' : 's'} copied to clipboard`);
     },
     onPaste: () => {
       if (copiedComponents.length === 0) return;
@@ -956,7 +956,7 @@ export default function Canvas({
         onComponentCopy={(component) => {
           // Store component in clipboard instead of immediately pasting
           setCopiedComponents([component]);
-          setToastMessage("Component copied to clipboard");
+          setToastMessage("1 component copied to clipboard");
         }}
         onOverlayClick={handleOverlayClick}
         onContextMenu={(e) => {
