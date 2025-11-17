@@ -144,11 +144,13 @@ function App() {
       setComponents([...state.components]);
       canvasImageDataRef.current = state.canvasImageData;
       setRestoreCanvasImageData(state.canvasImageData);
-      setToastMessage("Undone");
+      setToastMessage("Action undone (Ctrl + Z / Cmd + Z)");
       // Reset the flag after a short delay to allow state updates
       setTimeout(() => {
         isUndoRedoRef.current = false;
       }, 100);
+    } else {
+      setToastMessage("Nothing to undo");
     }
   }, []);
 
@@ -164,11 +166,13 @@ function App() {
       setComponents([...state.components]);
       canvasImageDataRef.current = state.canvasImageData;
       setRestoreCanvasImageData(state.canvasImageData);
-      setToastMessage("Redone");
+      setToastMessage("Action redone (Ctrl + Y / Cmd + Y)");
       // Reset the flag after a short delay to allow state updates
       setTimeout(() => {
         isUndoRedoRef.current = false;
       }, 100);
+    } else {
+      setToastMessage("Nothing to redo");
     }
   }, []);
 
