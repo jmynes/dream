@@ -40,6 +40,37 @@ export function useSelectionBox({
     [isCursorMode, onSelectionChange],
   );
 
+  const getPreviewSelection = useCallback((): string[] => {
+    if (!selectionBoxStart || !selectionBoxEndRef.current) return [];
+    
+    const endPoint = selectionBoxEndRef.current;
+    const minX = Math.min(selectionBoxStart.x, endPoint.x);
+    const maxX = Math.max(selectionBoxStart.x, endPoint.x);
+    const minY = Math.min(selectionBoxStart.y, endPoint.y);
+    const maxY = Math.max(selectionBoxStart.y, endPoint.y);
+
+    // Only return preview if the selection box has some size
+    const hasSelectionBoxSize =
+      Math.abs(maxX - minX) > 5 || Math.abs(maxY - minY) > 5;
+
+    if (!hasSelectionBoxSize) return [];
+
+    // Find components that intersect with the selection box
+    const selectedComponents = components.filter((comp) => {
+      const compRight = comp.x + (comp.width || 100);
+      const compBottom = comp.y + (comp.height || 40);
+      // Check for intersection: component overlaps with selection box
+      return (
+        comp.x < maxX &&
+        compRight > minX &&
+        comp.y < maxY &&
+        compBottom > minY
+      );
+    });
+
+    return selectedComponents.map((c) => c.id);
+  }, [selectionBoxStart, components]);
+
   const updateSelectionBox = useCallback(
     (
       point: Point,
@@ -96,6 +127,8 @@ export function useSelectionBox({
       });
 
       // Select all components that intersect with the box
+      // Note: Selection is already updated in real-time during drag,
+      // so this just ensures final state is correct
       if (selectedComponents.length > 0) {
         onSelectionChange(selectedComponents.map((c) => c.id));
       } else {
@@ -107,6 +140,9 @@ export function useSelectionBox({
       setTimeout(() => {
         justFinishedSelectionBoxRef.current = false;
       }, 0);
+    } else {
+      // If it was just a click (no size), deselect all
+      onSelectionChange([]);
     }
 
     setSelectionBoxStart(null);
@@ -134,5 +170,6 @@ export function useSelectionBox({
     finishSelectionBox,
     clearSelectionBox,
     checkJustFinishedSelectionBox,
+    getPreviewSelection,
   };
 }

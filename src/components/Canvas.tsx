@@ -141,6 +141,7 @@ export default function Canvas({
     finishSelectionBox,
     clearSelectionBox,
     checkJustFinishedSelectionBox,
+    getPreviewSelection,
   } = useSelectionBox({
     isDrawing,
     isEraser,
@@ -149,6 +150,31 @@ export default function Canvas({
     components,
     onSelectionChange: setSelectedComponentIds,
   });
+
+  // Update selection in real-time during drag
+  useEffect(() => {
+    if (!selectionBoxStart) {
+      return;
+    }
+
+    let animationFrameId: number;
+    const updateSelection = () => {
+      const preview = getPreviewSelection();
+      // Update selection in real-time during drag
+      if (preview.length > 0 || selectionBoxStart) {
+        setSelectedComponentIds(preview);
+      }
+      animationFrameId = requestAnimationFrame(updateSelection);
+    };
+    
+    animationFrameId = requestAnimationFrame(updateSelection);
+    
+    return () => {
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+    };
+  }, [selectionBoxStart, getPreviewSelection]);
 
   // Component drag/resize hook
   const {
