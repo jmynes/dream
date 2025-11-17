@@ -4,6 +4,7 @@ import {
   Edit as PenIcon,
   AutoFixHigh as MagicWandIcon,
   NearMe as CursorIcon,
+  Web as WebIcon,
 } from "@mui/icons-material";
 import {
   Box,
@@ -14,6 +15,8 @@ import {
   Slider,
   Tooltip,
   Typography,
+  Switch,
+  FormControlLabel,
 } from "@mui/material";
 
 interface SidebarProps {
@@ -35,6 +38,15 @@ interface SidebarProps {
   isCursorMode: boolean;
   resizeMode: "relative" | "clone";
   onResizeModeChange: (mode: "relative" | "clone") => void;
+  showTitleBar: boolean;
+  onTitleBarToggle: (show: boolean) => void;
+  showUrlBar: boolean;
+  onUrlBarToggle: (show: boolean) => void;
+  showBookmarkBar: boolean;
+  onBookmarkBarToggle: (show: boolean) => void;
+  onAllBrowserUIToggle: (show: boolean) => void;
+  isMacOSStyle: boolean;
+  onMacOSStyleToggle: (isMacOS: boolean) => void;
 }
 
 export default function Sidebar({
@@ -56,6 +68,15 @@ export default function Sidebar({
   isCursorMode,
   resizeMode,
   onResizeModeChange,
+  showTitleBar,
+  onTitleBarToggle,
+  showUrlBar,
+  onUrlBarToggle,
+  showBookmarkBar,
+  onBookmarkBarToggle,
+  onAllBrowserUIToggle,
+  isMacOSStyle,
+  onMacOSStyleToggle,
 }: SidebarProps) {
   return (
     <Paper
@@ -66,6 +87,8 @@ export default function Sidebar({
         borderRadius: 1,
         overflow: "auto",
         userSelect: "none",
+        display: "flex",
+        flexDirection: "column",
       }}
     >
       <Typography variant="h6" gutterBottom>
@@ -229,6 +252,69 @@ export default function Sidebar({
             />
           </Box>
         </Box>
+      </Box>
+
+      {/* Browser UI Toggles - Moved to bottom */}
+      <Box
+        sx={{
+          p: 2,
+          mt: "auto",
+          display: "flex",
+          flexDirection: "column",
+          gap: 1,
+          border: "1px solid #e0e0e0",
+          borderRadius: 1,
+        }}
+      >
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+          <WebIcon />
+          <Typography variant="h6">Browser UI</Typography>
+          <Switch
+            checked={showTitleBar && showUrlBar && showBookmarkBar}
+            onChange={(e) => onAllBrowserUIToggle(e.target.checked)}
+            size="small"
+          />
+        </Box>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={showTitleBar}
+              onChange={(e) => onTitleBarToggle(e.target.checked)}
+              size="small"
+            />
+          }
+          label="Title Bar"
+        />
+        <FormControlLabel
+          control={
+            <Switch
+              checked={showUrlBar}
+              onChange={(e) => onUrlBarToggle(e.target.checked)}
+              size="small"
+            />
+          }
+          label="URL Bar"
+        />
+        <FormControlLabel
+          control={
+            <Switch
+              checked={showBookmarkBar}
+              onChange={(e) => onBookmarkBarToggle(e.target.checked)}
+              size="small"
+            />
+          }
+          label="Bookmark Bar"
+        />
+        <FormControlLabel
+          control={
+            <Switch
+              checked={isMacOSStyle}
+              onChange={(e) => onMacOSStyleToggle(e.target.checked)}
+              size="small"
+            />
+          }
+          label="macOS Style"
+        />
       </Box>
     </Paper>
   );

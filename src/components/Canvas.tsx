@@ -6,6 +6,7 @@ import GridOverlay from "./GridOverlay";
 import BrushPreview from "./BrushPreview";
 import SelectionBox from "./SelectionBox";
 import ComponentOverlay from "./ComponentOverlay";
+import BrowserUI from "./BrowserUI";
 import {
   getPointFromEvent,
   snapToGridPoint,
@@ -38,6 +39,10 @@ interface CanvasProps {
   resizeMode?: "relative" | "clone";
   onCanvasStateChange?: (imageData: string | null) => void;
   restoreCanvasImageData?: string | null;
+  showTitleBar?: boolean;
+  showUrlBar?: boolean;
+  showBookmarkBar?: boolean;
+  isMacOSStyle?: boolean;
 }
 
 export default function Canvas({
@@ -57,6 +62,10 @@ export default function Canvas({
   resizeMode = "relative",
   onCanvasStateChange,
   restoreCanvasImageData,
+  showTitleBar = false,
+  showUrlBar = false,
+  showBookmarkBar = false,
+  isMacOSStyle = false,
 }: CanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -456,6 +465,14 @@ export default function Canvas({
             newY = Math.round(newY / gridCellHeight) * gridCellHeight;
           }
           
+          // Get component dimensions
+          const compWidth = comp.width || 100;
+          const compHeight = comp.height || 40;
+          
+          // Clamp to canvas boundaries
+          newX = Math.max(0, Math.min(newX, actualWidth - compWidth));
+          newY = Math.max(0, Math.min(newY, actualHeight - compHeight));
+          
           return {
             ...comp,
             x: newX,
@@ -560,6 +577,13 @@ export default function Canvas({
               : "none",
           cursor,
         }}
+      />
+
+      <BrowserUI
+        showTitleBar={showTitleBar}
+        showUrlBar={showUrlBar}
+        showBookmarkBar={showBookmarkBar}
+        isMacOSStyle={isMacOSStyle}
       />
 
       <GridOverlay

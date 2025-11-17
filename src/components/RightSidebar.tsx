@@ -162,17 +162,22 @@ export default function RightSidebar({
         height: "100%",
         padding: 2,
         borderRadius: 1,
-        overflow: "auto",
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
       }}
     >
-      <Typography variant="h6" gutterBottom>
-        Components
-      </Typography>
-      <Typography variant="caption" color="text.secondary" gutterBottom>
-        Click or drag to add to canvas
-      </Typography>
-      <List>
-        {componentItems.map((item) => (
+      <Box sx={{ flexShrink: 0, mb: 2 }}>
+        <Typography variant="h6" gutterBottom sx={{ userSelect: "none" }}>
+          Components
+        </Typography>
+        <Typography variant="caption" color="text.secondary" gutterBottom sx={{ userSelect: "none" }}>
+          Click or drag to add to canvas
+        </Typography>
+      </Box>
+      <Box sx={{ flex: 1, overflow: "auto" }}>
+        <List>
+          {componentItems.map((item) => (
           <ListItem key={item.type} disablePadding sx={{ mb: 1 }}>
             <ListItemButton
               selected={selectedComponentType === item.type}
@@ -229,7 +234,8 @@ export default function RightSidebar({
             </ListItemButton>
           </ListItem>
         ))}
-      </List>
+        </List>
+      </Box>
     </Paper>
   );
 }

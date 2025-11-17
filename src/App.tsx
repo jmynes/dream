@@ -26,6 +26,10 @@ function App() {
   const [resizeMode, setResizeMode] = useState<"relative" | "clone">(
     "relative",
   );
+  const [showTitleBar, setShowTitleBar] = useState(false);
+  const [showUrlBar, setShowUrlBar] = useState(false);
+  const [showBookmarkBar, setShowBookmarkBar] = useState(false);
+  const [isMacOSStyle, setIsMacOSStyle] = useState(false);
   const [components, setComponents] = useState<CanvasComponent[]>([]);
   const [selectedComponentType, setSelectedComponentType] =
     useState<ComponentType | null>(null);
@@ -277,6 +281,19 @@ function App() {
             isCursorMode={!isDrawing && !isEraser && !isMagicWand}
             resizeMode={resizeMode}
             onResizeModeChange={setResizeMode}
+            showTitleBar={showTitleBar}
+            onTitleBarToggle={setShowTitleBar}
+            showUrlBar={showUrlBar}
+            onUrlBarToggle={setShowUrlBar}
+            showBookmarkBar={showBookmarkBar}
+            onBookmarkBarToggle={setShowBookmarkBar}
+            onAllBrowserUIToggle={(show) => {
+              setShowTitleBar(show);
+              setShowUrlBar(show);
+              setShowBookmarkBar(show);
+            }}
+            isMacOSStyle={isMacOSStyle}
+            onMacOSStyleToggle={setIsMacOSStyle}
           />
           <Box sx={{ flex: 1, overflow: "hidden", display: "flex" }}>
             <Canvas
@@ -294,6 +311,10 @@ function App() {
               selectedComponentType={selectedComponentType}
               onComponentPlaced={handleComponentPlaced}
               snapToGrid={snapToGrid}
+              showTitleBar={showTitleBar}
+              showUrlBar={showUrlBar}
+              showBookmarkBar={showBookmarkBar}
+              isMacOSStyle={isMacOSStyle}
               resizeMode={resizeMode}
             />
           </Box>
