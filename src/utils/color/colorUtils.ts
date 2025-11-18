@@ -54,4 +54,3 @@ export function isDarkColor(color: string): boolean {
 export function getTextColorForFilled(bgColor: string): string {
   return isDarkColor(bgColor) ? "#ffffff" : "#000000";
 }
-

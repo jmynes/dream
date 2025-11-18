@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from "react";
-import type { Point } from "../../utils/canvas/canvasUtils";
 import type { CanvasComponent } from "../../types/component";
+import type { Point } from "../../utils/canvas/canvasUtils";
 
 interface UseSelectionBoxProps {
   isDrawing: boolean;
@@ -51,7 +51,7 @@ export function useSelectionBox({
 
   const getPreviewSelection = useCallback((): string[] => {
     if (!selectionBoxStart || !selectionBoxEndRef.current) return [];
-    
+
     const endPoint = selectionBoxEndRef.current;
     const minX = Math.min(selectionBoxStart.x, endPoint.x);
     const maxX = Math.max(selectionBoxStart.x, endPoint.x);
@@ -70,10 +70,7 @@ export function useSelectionBox({
       const compBottom = comp.y + (comp.height || 40);
       // Check for intersection: component overlaps with selection box
       return (
-        comp.x < maxX &&
-        compRight > minX &&
-        comp.y < maxY &&
-        compBottom > minY
+        comp.x < maxX && compRight > minX && comp.y < maxY && compBottom > minY
       );
     });
 
@@ -105,7 +102,7 @@ export function useSelectionBox({
     // Use ref value for final calculation (most up-to-date)
     const endPoint = selectionBoxEndRef.current;
     if (!selectionBoxStart || !endPoint) return;
-    
+
     // Sync state with ref value for final render
     setSelectionBoxEnd(endPoint);
 

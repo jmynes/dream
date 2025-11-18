@@ -1,7 +1,7 @@
-import { Box, Avatar } from "@mui/material";
+import { Avatar, Box } from "@mui/material";
+import { useColorUtils } from "../../contexts/ColorUtilsContext";
 import type { RendererProps } from "./rendererTypes";
 import { inlineInputStyle } from "./rendererUtils";
-import { useColorUtils } from "../../contexts/ColorUtilsContext";
 
 interface AvatarRendererProps extends RendererProps {
   componentWidth?: number;
@@ -24,7 +24,7 @@ export default function AvatarRenderer({
   const { getTextColorForFilled } = useColorUtils();
   // Use CSS variable for live color updates, fallback to prop
   const bgColor = `var(--live-component-color, ${componentColor})`;
-  
+
   return (
     <Box
       sx={{
@@ -62,4 +62,3 @@ export default function AvatarRenderer({
     </Box>
   );
 }
-

@@ -32,9 +32,9 @@ export default function CheckboxRenderer({
           <Checkbox
             {...(component.props as object)}
             defaultChecked={component.props?.checked as boolean}
-            sx={{ 
+            sx={{
               color: checkboxColor,
-              "&.Mui-checked": { 
+              "&.Mui-checked": {
                 color: checkboxColor,
               },
               "& .MuiSvgIcon-root": {
@@ -62,7 +62,10 @@ export default function CheckboxRenderer({
               }}
             />
           ) : (
+            // biome-ignore lint/a11y/useSemanticElements: Using span for inline editable text that doesn't look like an input
             <span
+              role="textbox"
+              tabIndex={0}
               data-field="label"
               onDoubleClick={onDoubleClick}
             >
@@ -74,4 +77,3 @@ export default function CheckboxRenderer({
     </Box>
   );
 }
-

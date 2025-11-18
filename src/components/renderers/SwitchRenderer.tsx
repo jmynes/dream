@@ -1,6 +1,6 @@
 import { Box, Switch } from "@mui/material";
-import type { RendererProps } from "./rendererTypes";
 import { useColorUtils } from "../../contexts/ColorUtilsContext";
+import type { RendererProps } from "./rendererTypes";
 
 export default function SwitchRenderer({
   component,
@@ -9,7 +9,7 @@ export default function SwitchRenderer({
   const { isDarkColor } = useColorUtils();
   // Use CSS variable for live color updates, fallback to prop
   const switchColor = `var(--live-component-color, ${componentColor})`;
-  
+
   return (
     <Box
       sx={{
@@ -25,20 +25,23 @@ export default function SwitchRenderer({
         defaultChecked={component.props?.checked as boolean}
         sx={{
           "& .MuiSwitch-switchBase.Mui-checked": { color: switchColor },
-          "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": { 
+          "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
             backgroundColor: switchColor,
-            ...(isDarkColor(componentColor) ? {} : {
-              boxShadow: "0 0 0 1px rgba(0, 0, 0, 0.2)",
-            }),
+            ...(isDarkColor(componentColor)
+              ? {}
+              : {
+                  boxShadow: "0 0 0 1px rgba(0, 0, 0, 0.2)",
+                }),
           },
           "& .MuiSwitch-thumb": {
-            ...(isDarkColor(componentColor) ? {} : {
-              boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
-            }),
+            ...(isDarkColor(componentColor)
+              ? {}
+              : {
+                  boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
+                }),
           },
         }}
       />
     </Box>
   );
 }
-

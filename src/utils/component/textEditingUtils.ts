@@ -19,7 +19,7 @@ export const TEXT_EDITABLE_TYPES = [
  * Check if component type supports text editing
  */
 export function canEditText(componentType: string): boolean {
-  return TEXT_EDITABLE_TYPES.includes(componentType as any);
+  return (TEXT_EDITABLE_TYPES as readonly string[]).includes(componentType);
 }
 
 /**
@@ -107,4 +107,3 @@ export function getUpdateProps(
 
   return { text: value };
 }
-

@@ -19,7 +19,15 @@ export default function TypographyRenderer({
   const textColor = `var(--live-component-color, ${componentColor})`;
 
   return (
-    <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", width: "100%", height: "100%" }}>
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        width: "100%",
+        height: "100%",
+      }}
+    >
       <Typography
         variant="body1"
         {...(component.props as object)}
@@ -49,4 +57,3 @@ export default function TypographyRenderer({
     </Box>
   );
 }
-

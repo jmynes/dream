@@ -60,11 +60,7 @@ export default function BrushPreview({
         width: penSize,
         height: penSize,
         border: `${borderWidth}px solid`,
-        borderColor: isEraser
-          ? "#f44336"
-          : isMagicWand
-            ? "#9c27b0"
-            : "#1976d2",
+        borderColor: isEraser ? "#f44336" : isMagicWand ? "#9c27b0" : "#1976d2",
         borderRadius: "50%",
         pointerEvents: "none",
         zIndex: 3,

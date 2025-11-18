@@ -1,4 +1,12 @@
-import { Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
+import {
+  Box,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+} from "@mui/material";
 import type { RendererProps } from "./rendererTypes";
 import { inlineInputStyle } from "./rendererUtils";
 
@@ -113,11 +121,22 @@ export default function TableRenderer({
         justifyContent: "center",
       }}
     >
-      <Table size="small" sx={{ border: `1px solid ${borderColor}`, tableLayout: "fixed", width: "100%" }}>
+      <Table
+        size="small"
+        sx={{
+          border: `1px solid ${borderColor}`,
+          tableLayout: "fixed",
+          width: "100%",
+        }}
+      >
         <TableHead>
           <TableRow>
             <TableCell
-              sx={{ borderColor: borderColor, fontWeight: "bold", textAlign: "center" }}
+              sx={{
+                borderColor: borderColor,
+                fontWeight: "bold",
+                textAlign: "center",
+              }}
               data-field="header1"
               onDoubleClick={(e) => handleCellDoubleClick("header1", e)}
             >
@@ -135,7 +154,11 @@ export default function TableRenderer({
               />
             </TableCell>
             <TableCell
-              sx={{ borderColor: borderColor, fontWeight: "bold", textAlign: "center" }}
+              sx={{
+                borderColor: borderColor,
+                fontWeight: "bold",
+                textAlign: "center",
+              }}
               data-field="header2"
               onDoubleClick={(e) => handleCellDoubleClick("header2", e)}
             >
@@ -153,7 +176,11 @@ export default function TableRenderer({
               />
             </TableCell>
             <TableCell
-              sx={{ borderColor: borderColor, fontWeight: "bold", textAlign: "center" }}
+              sx={{
+                borderColor: borderColor,
+                fontWeight: "bold",
+                textAlign: "center",
+              }}
               data-field="header3"
               onDoubleClick={(e) => handleCellDoubleClick("header3", e)}
             >
@@ -284,4 +311,3 @@ export default function TableRenderer({
     </TableContainer>
   );
 }
-

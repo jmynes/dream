@@ -1,5 +1,8 @@
-import { useState, useRef, useCallback, useEffect } from "react";
-import { colorResultToHex, type ColorResult } from "../../utils/color/colorUtils";
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  type ColorResult,
+  colorResultToHex,
+} from "../../utils/color/colorUtils";
 
 interface UseColorPickerOptions {
   color: string;
@@ -39,10 +42,13 @@ export function useColorPicker({
     }
   }, [color]);
 
-  const handlePickerOpen = useCallback((event: React.MouseEvent<HTMLElement>) => {
-    setPickerAnchor(event.currentTarget);
-    setPickerColor(color);
-  }, [color]);
+  const handlePickerOpen = useCallback(
+    (event: React.MouseEvent<HTMLElement>) => {
+      setPickerAnchor(event.currentTarget);
+      setPickerColor(color);
+    },
+    [color],
+  );
 
   const handlePickerClose = useCallback(() => {
     setPickerAnchor(null);
@@ -148,4 +154,3 @@ export function useColorPicker({
     handleColorChangeComplete,
   };
 }
-

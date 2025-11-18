@@ -7,7 +7,11 @@ interface SelectionBoxProps {
   endRef?: React.MutableRefObject<Point | null>;
 }
 
-export default function SelectionBox({ start, end, endRef }: SelectionBoxProps) {
+export default function SelectionBox({
+  start,
+  end,
+  endRef,
+}: SelectionBoxProps) {
   const boxRef = useRef<HTMLDivElement>(null);
   const animationFrameRef = useRef<number | null>(null);
   const startRef = useRef<Point | null>(start);
@@ -58,9 +62,9 @@ export default function SelectionBox({ start, end, endRef }: SelectionBoxProps) 
 
         animationFrameRef.current = requestAnimationFrame(animate);
       };
-      
+
       animationFrameRef.current = requestAnimationFrame(animate);
-      
+
       return () => {
         isActiveRef.current = false;
         if (animationFrameRef.current !== null) {

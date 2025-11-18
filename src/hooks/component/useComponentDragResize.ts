@@ -1,6 +1,6 @@
-import { useCallback, useState, useRef, useEffect } from "react";
-import type { Point } from "../../utils/canvas/canvasUtils";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { CanvasComponent } from "../../types/component";
+import type { Point } from "../../utils/canvas/canvasUtils";
 
 interface UseComponentDragResizeProps {
   components: CanvasComponent[];
@@ -40,8 +40,12 @@ export function useComponentDragResize({
   const [resizeStartHeight, setResizeStartHeight] = useState<number | null>(
     null,
   );
-  const [resizeStartComponentX, setResizeStartComponentX] = useState<number | null>(null);
-  const [resizeStartComponentY, setResizeStartComponentY] = useState<number | null>(null);
+  const [resizeStartComponentX, setResizeStartComponentX] = useState<
+    number | null
+  >(null);
+  const [resizeStartComponentY, setResizeStartComponentY] = useState<
+    number | null
+  >(null);
   const [resizeDirection, setResizeDirection] = useState<
     "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw" | null
   >(null);
@@ -159,7 +163,10 @@ export function useComponentDragResize({
       const componentHeight = component.height || 40; // Default height
 
       // Check if clicking on a resize handle
-      if (resizeDirection && ["n", "s", "e", "w", "ne", "nw", "se", "sw"].includes(resizeDirection)) {
+      if (
+        resizeDirection &&
+        ["n", "s", "e", "w", "ne", "nw", "se", "sw"].includes(resizeDirection)
+      ) {
         setResizingComponentId(componentId);
         setResizeStartX(point.x);
         setResizeStartY(point.y);
@@ -167,7 +174,9 @@ export function useComponentDragResize({
         setResizeStartHeight(componentHeight);
         setResizeStartComponentX(component.x);
         setResizeStartComponentY(component.y);
-        setResizeDirection(resizeDirection as "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw");
+        setResizeDirection(
+          resizeDirection as "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw",
+        );
         // Store initial states of all selected components for multi-resize
         const initialStates = new Map<
           string,
@@ -280,19 +289,30 @@ export function useComponentDragResize({
         }
       }
     },
-    [components, selectedComponentIds, onComponentsChange, snapToGridPoint],
+    [components, selectedComponentIds, onComponentsChange],
   );
 
   const handleContainerMouseMove = useCallback(
     (point: Point) => {
       // Handle resizing
-      if (resizingComponentId && resizeDirection && resizeStartX !== null && resizeStartY !== null && resizeStartWidth !== null && resizeStartHeight !== null && resizeStartComponentX !== null && resizeStartComponentY !== null) {
-        const resizingComponent = components.find((c) => c.id === resizingComponentId);
+      if (
+        resizingComponentId &&
+        resizeDirection &&
+        resizeStartX !== null &&
+        resizeStartY !== null &&
+        resizeStartWidth !== null &&
+        resizeStartHeight !== null &&
+        resizeStartComponentX !== null &&
+        resizeStartComponentY !== null
+      ) {
+        const resizingComponent = components.find(
+          (c) => c.id === resizingComponentId,
+        );
         if (!resizingComponent) return;
 
         const deltaX = point.x - resizeStartX;
         const deltaY = point.y - resizeStartY;
-        
+
         let newWidth = resizeStartWidth;
         let newHeight = resizeStartHeight;
         let newX = resizeStartComponentX;
@@ -323,18 +343,18 @@ export function useComponentDragResize({
         let snappedHeight = newHeight;
         let snappedX = newX;
         let snappedY = newY;
-        
+
         if (snapToGrid) {
           // Ensure minimum size is at least one grid cell
           const minWidth = Math.max(gridCellWidth, newWidth);
           const minHeight = Math.max(gridCellHeight, newHeight);
-          
+
           // Calculate number of grid cells, ensuring at least 1
           const numColumns = Math.max(1, Math.round(minWidth / gridCellWidth));
           snappedWidth = numColumns * gridCellWidth;
           const numRows = Math.max(1, Math.round(minHeight / gridCellHeight));
           snappedHeight = numRows * gridCellHeight;
-          
+
           // Snap position to grid
           snappedX = Math.round(newX / gridCellWidth) * gridCellWidth;
           snappedY = Math.round(newY / gridCellHeight) * gridCellHeight;
@@ -353,59 +373,113 @@ export function useComponentDragResize({
             if (resizeMode === "match") {
               // In match mode, all selected components match the resized component's dimensions
               // Clamp dimensions and position to canvas boundaries
-              const clampedWidth = Math.min(snappedWidth, canvasWidth - snappedX);
-              const clampedHeight = Math.min(snappedHeight, canvasHeight - snappedY);
-              const clampedX = Math.max(0, Math.min(snappedX, canvasWidth - clampedWidth));
-              const clampedY = Math.max(0, Math.min(snappedY, canvasHeight - clampedHeight));
-              
+              const clampedWidth = Math.min(
+                snappedWidth,
+                canvasWidth - snappedX,
+              );
+              const clampedHeight = Math.min(
+                snappedHeight,
+                canvasHeight - snappedY,
+              );
+              const clampedX = Math.max(
+                0,
+                Math.min(snappedX, canvasWidth - clampedWidth),
+              );
+              const clampedY = Math.max(
+                0,
+                Math.min(snappedY, canvasHeight - clampedHeight),
+              );
+
               return {
                 ...comp,
                 width: clampedWidth,
                 height: clampedHeight,
-                x: comp.id === resizingComponentId ? clampedX : Math.max(0, Math.min(comp.x, canvasWidth - (comp.width || 100))),
-                y: comp.id === resizingComponentId ? clampedY : Math.max(0, Math.min(comp.y, canvasHeight - (comp.height || 40))),
+                x:
+                  comp.id === resizingComponentId
+                    ? clampedX
+                    : Math.max(
+                        0,
+                        Math.min(comp.x, canvasWidth - (comp.width || 100)),
+                      ),
+                y:
+                  comp.id === resizingComponentId
+                    ? clampedY
+                    : Math.max(
+                        0,
+                        Math.min(comp.y, canvasHeight - (comp.height || 40)),
+                      ),
               };
             } else {
               // Relative mode: calculate scale factor based on the resized component
-              const newCompWidth = Math.max(50, initialState.width * widthScaleFactor);
-              const newCompHeight = Math.max(30, initialState.height * heightScaleFactor);
-              
+              const newCompWidth = Math.max(
+                50,
+                initialState.width * widthScaleFactor,
+              );
+              const newCompHeight = Math.max(
+                30,
+                initialState.height * heightScaleFactor,
+              );
+
               let snappedCompWidth = newCompWidth;
               let snappedCompHeight = newCompHeight;
-              
+
               if (snapToGrid) {
                 // Ensure minimum size is at least one grid cell
                 const minCompWidth = Math.max(gridCellWidth, newCompWidth);
                 const minCompHeight = Math.max(gridCellHeight, newCompHeight);
-                
+
                 // Calculate number of grid cells, ensuring at least 1
-                const numColumns = Math.max(1, Math.round(minCompWidth / gridCellWidth));
+                const numColumns = Math.max(
+                  1,
+                  Math.round(minCompWidth / gridCellWidth),
+                );
                 snappedCompWidth = numColumns * gridCellWidth;
-                const numRows = Math.max(1, Math.round(minCompHeight / gridCellHeight));
+                const numRows = Math.max(
+                  1,
+                  Math.round(minCompHeight / gridCellHeight),
+                );
                 snappedCompHeight = numRows * gridCellHeight;
               }
-              
+
               // Calculate position adjustments
               let newCompX = initialState.x;
               let newCompY = initialState.y;
-              
+
               if (resizeDirection.includes("w")) {
                 // When resizing from left, adjust x position
-                newCompX = initialState.x + (initialState.width - snappedCompWidth);
+                newCompX =
+                  initialState.x + (initialState.width - snappedCompWidth);
               }
               if (resizeDirection.includes("n")) {
                 // When resizing from top, adjust y position
-                newCompY = initialState.y + (initialState.height - snappedCompHeight);
+                newCompY =
+                  initialState.y + (initialState.height - snappedCompHeight);
               }
 
               // Clamp dimensions and position to canvas boundaries
-              const finalX = snapToGrid ? Math.round(newCompX / gridCellWidth) * gridCellWidth : newCompX;
-              const finalY = snapToGrid ? Math.round(newCompY / gridCellHeight) * gridCellHeight : newCompY;
-              const clampedCompWidth = Math.min(snappedCompWidth, canvasWidth - finalX);
-              const clampedCompHeight = Math.min(snappedCompHeight, canvasHeight - finalY);
-              const clampedCompX = Math.max(0, Math.min(finalX, canvasWidth - clampedCompWidth));
-              const clampedCompY = Math.max(0, Math.min(finalY, canvasHeight - clampedCompHeight));
-              
+              const finalX = snapToGrid
+                ? Math.round(newCompX / gridCellWidth) * gridCellWidth
+                : newCompX;
+              const finalY = snapToGrid
+                ? Math.round(newCompY / gridCellHeight) * gridCellHeight
+                : newCompY;
+              const clampedCompWidth = Math.min(
+                snappedCompWidth,
+                canvasWidth - finalX,
+              );
+              const clampedCompHeight = Math.min(
+                snappedCompHeight,
+                canvasHeight - finalY,
+              );
+              const clampedCompX = Math.max(
+                0,
+                Math.min(finalX, canvasWidth - clampedCompWidth),
+              );
+              const clampedCompY = Math.max(
+                0,
+                Math.min(finalY, canvasHeight - clampedCompHeight),
+              );
+
               return {
                 ...comp,
                 width: clampedCompWidth,
@@ -453,13 +527,19 @@ export function useComponentDragResize({
             y: initialState.y + deltaY,
           };
           const snappedNewPoint = snapToGridPoint(newPoint);
-          
+
           // Clamp position to canvas boundaries
           const compWidth = comp.width || 100;
           const compHeight = comp.height || 40;
-          const clampedX = Math.max(0, Math.min(snappedNewPoint.x, canvasWidth - compWidth));
-          const clampedY = Math.max(0, Math.min(snappedNewPoint.y, canvasHeight - compHeight));
-          
+          const clampedX = Math.max(
+            0,
+            Math.min(snappedNewPoint.x, canvasWidth - compWidth),
+          );
+          const clampedY = Math.max(
+            0,
+            Math.min(snappedNewPoint.y, canvasHeight - compHeight),
+          );
+
           return {
             ...comp,
             x: clampedX,

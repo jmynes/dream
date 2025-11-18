@@ -89,7 +89,13 @@ export function getComponentPreview({
 
     case "Card":
       return (
-        <Card sx={{ minWidth: 120, border: `2px solid ${liveColor}`, display: "flex" }}>
+        <Card
+          sx={{
+            minWidth: 120,
+            border: `2px solid ${liveColor}`,
+            display: "flex",
+          }}
+        >
           <CardContent
             sx={{
               textAlign: "center",
@@ -163,9 +169,17 @@ export function getComponentPreview({
     case "Paper":
       return (
         <Paper
-          sx={{ p: 2, minWidth: 120, textAlign: "center", backgroundColor: liveColor }}
+          sx={{
+            p: 2,
+            minWidth: 120,
+            textAlign: "center",
+            backgroundColor: liveColor,
+          }}
         >
-          <Typography variant="body2" sx={{ color: getTextColorForFilled(componentColor) }}>
+          <Typography
+            variant="body2"
+            sx={{ color: getTextColorForFilled(componentColor) }}
+          >
             Paper
           </Typography>
         </Paper>
@@ -398,4 +412,3 @@ export function getComponentItems(componentColor: string): ComponentItem[] {
   // Sort alphabetically by label
   return items.sort((a, b) => a.label.localeCompare(b.label));
 }
-

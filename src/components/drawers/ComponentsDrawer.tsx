@@ -1,4 +1,5 @@
 import { Add as AddIcon } from "@mui/icons-material";
+import SearchIcon from "@mui/icons-material/Search";
 import {
   Box,
   Divider,
@@ -10,10 +11,9 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import SearchIcon from "@mui/icons-material/Search";
-import type { ComponentType } from "../../types/component";
-import { useMemo, useState, useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useColorUtils } from "../../contexts/ColorUtilsContext";
+import type { ComponentType } from "../../types/component";
 import { getComponentItems } from "../../utils/component/componentPreviewUtils";
 
 interface ComponentsDrawerProps {
@@ -32,7 +32,10 @@ const fuzzyMatch = (query: string, target: string): boolean => {
   const normalizedQuery = query.toLowerCase();
   const normalizedTarget = target.toLowerCase();
 
-  while (queryIndex < normalizedQuery.length && targetIndex < normalizedTarget.length) {
+  while (
+    queryIndex < normalizedQuery.length &&
+    targetIndex < normalizedTarget.length
+  ) {
     if (normalizedQuery[queryIndex] === normalizedTarget[targetIndex]) {
       queryIndex += 1;
     }
@@ -63,7 +66,10 @@ export default function ComponentsDrawer({
   // Set base color CSS variable when componentColor changes
   useEffect(() => {
     if (containerRef.current) {
-      containerRef.current.style.setProperty("--drawer-component-color", componentColor);
+      containerRef.current.style.setProperty(
+        "--drawer-component-color",
+        componentColor,
+      );
     }
   }, [componentColor]);
 
@@ -95,7 +101,12 @@ export default function ComponentsDrawer({
         <Typography variant="h6" gutterBottom sx={{ userSelect: "none" }}>
           Components
         </Typography>
-        <Typography variant="caption" color="text.secondary" gutterBottom sx={{ userSelect: "none" }}>
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          gutterBottom
+          sx={{ userSelect: "none" }}
+        >
           Click or drag to add to canvas
         </Typography>
         <TextField

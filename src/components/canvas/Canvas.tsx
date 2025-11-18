@@ -1,28 +1,28 @@
 import { Box, Button, Paper, Snackbar } from "@mui/material";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { CanvasComponent, ComponentType } from "../../types/component";
-import RecognitionUI from "../overlay/RecognitionUI";
-import GridOverlay from "./GridOverlay";
-import BrushPreview from "./BrushPreview";
-import SelectionBox from "./SelectionBox";
-import ComponentOverlay from "../overlay/ComponentOverlay";
-import LassoPath from "./LassoPath";
-import BrowserUI from "../ui/BrowserUI";
-import CanvasContextMenu from "./CanvasContextMenu";
-import {
-  getPointFromEvent,
-  snapToGridPoint,
-  type Point,
-} from "../../utils/canvas/canvasUtils";
-import { createComponentAtPoint } from "../../utils/component/componentPlacement";
-import { useCanvasLifecycle } from "../../hooks/canvas/useCanvasLifecycle";
-import { useGrid } from "../../hooks/canvas/useGrid";
 import { useBrushPreview } from "../../hooks/canvas/useBrushPreview";
 import { useCanvasDrawing } from "../../hooks/canvas/useCanvasDrawing";
+import { useCanvasLifecycle } from "../../hooks/canvas/useCanvasLifecycle";
+import { useGrid } from "../../hooks/canvas/useGrid";
+import { useKeyboardShortcuts } from "../../hooks/canvas/useKeyboardShortcuts";
+import { useMagicWand } from "../../hooks/canvas/useMagicWand";
 import { useSelectionBox } from "../../hooks/canvas/useSelectionBox";
 import { useComponentDragResize } from "../../hooks/component/useComponentDragResize";
-import { useMagicWand } from "../../hooks/canvas/useMagicWand";
-import { useKeyboardShortcuts } from "../../hooks/canvas/useKeyboardShortcuts";
+import type { CanvasComponent, ComponentType } from "../../types/component";
+import {
+  getPointFromEvent,
+  type Point,
+  snapToGridPoint,
+} from "../../utils/canvas/canvasUtils";
+import { createComponentAtPoint } from "../../utils/component/componentPlacement";
+import ComponentOverlay from "../overlay/ComponentOverlay";
+import RecognitionUI from "../overlay/RecognitionUI";
+import BrowserUI from "../ui/BrowserUI";
+import BrushPreview from "./BrushPreview";
+import CanvasContextMenu from "./CanvasContextMenu";
+import GridOverlay from "./GridOverlay";
+import LassoPath from "./LassoPath";
+import SelectionBox from "./SelectionBox";
 
 const isPointInPolygon = (point: Point, polygon: Point[]): boolean => {
   let inside = false;
@@ -34,8 +34,7 @@ const isPointInPolygon = (point: Point, polygon: Point[]): boolean => {
 
     const intersect =
       yi > point.y !== yj > point.y &&
-      point.x <
-        ((xj - xi) * (point.y - yi)) / (yj - yi + Number.EPSILON) + xi;
+      point.x < ((xj - xi) * (point.y - yi)) / (yj - yi + Number.EPSILON) + xi;
 
     if (intersect) {
       inside = !inside;
@@ -122,7 +121,10 @@ export default function Canvas({
   const lassoPathRef = useRef<Point[]>([]);
   const [isLassoDrawing, setIsLassoDrawing] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [contextMenuAnchor, setContextMenuAnchor] = useState<{ mouseX: number; mouseY: number } | null>(null);
+  const [contextMenuAnchor, setContextMenuAnchor] = useState<{
+    mouseX: number;
+    mouseY: number;
+  } | null>(null);
 
   const resetLasso = useCallback(() => {
     setIsLassoDrawing(false);
@@ -138,7 +140,10 @@ export default function Canvas({
 
   // Helper: Update a component by ID (defined early as it's used in useEffect)
   const updateComponent = useCallback(
-    (componentId: string, updater: (comp: CanvasComponent) => CanvasComponent) => {
+    (
+      componentId: string,
+      updater: (comp: CanvasComponent) => CanvasComponent,
+    ) => {
       onComponentsChange(
         components.map((c) => (c.id === componentId ? updater(c) : c)),
       );
@@ -149,9 +154,12 @@ export default function Canvas({
   // Update selected components' colors when componentColor changes or when timestamp changes
   // The timestamp allows us to force updates even when the same color is selected
   const lastAppliedTimestampRef = useRef<number>(componentColorTimestamp);
-  
+
   useEffect(() => {
-    if (selectedComponentIds.length > 0 && componentColorTimestamp > lastAppliedTimestampRef.current) {
+    if (
+      selectedComponentIds.length > 0 &&
+      componentColorTimestamp > lastAppliedTimestampRef.current
+    ) {
       // Batch update all selected components in a single state update
       const updatedComponents = components.map((comp) => {
         if (selectedComponentIds.includes(comp.id)) {
@@ -162,8 +170,13 @@ export default function Canvas({
       onComponentsChange(updatedComponents);
       lastAppliedTimestampRef.current = componentColorTimestamp;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [componentColor, componentColorTimestamp, selectedComponentIds]); // Run when componentColor or timestamp changes
+  }, [
+    componentColor,
+    componentColorTimestamp,
+    selectedComponentIds,
+    components,
+    onComponentsChange,
+  ]); // Run when componentColor or timestamp changes
 
   // Canvas lifecycle management
   const { actualWidth, actualHeight } = useCanvasLifecycle({
@@ -476,9 +489,9 @@ export default function Canvas({
       }
       animationFrameId = requestAnimationFrame(updateSelection);
     };
-    
+
     animationFrameId = requestAnimationFrame(updateSelection);
-    
+
     return () => {
       if (animationFrameId) {
         cancelAnimationFrame(animationFrameId);
@@ -508,26 +521,31 @@ export default function Canvas({
   });
 
   // Brush preview hook
-  const {
-    brushPosition,
-    handleBrushMouseMove,
-    handleBrushMouseLeave,
-  } = useBrushPreview({
-    isDrawing,
-    isEraser,
-    isMagicWand,
-    selectedComponentType,
-    getPointFromEvent: getPointFromEventFn,
-  });
+  const { brushPosition, handleBrushMouseMove, handleBrushMouseLeave } =
+    useBrushPreview({
+      isDrawing,
+      isEraser,
+      isMagicWand,
+      selectedComponentType,
+      getPointFromEvent: getPointFromEventFn,
+    });
 
   // Global mouse move listener to continue updating selection box when mouse leaves canvas
   useEffect(() => {
-    if (selectionBoxStart === null || draggedComponentId !== null || resizingComponentId !== null) {
+    if (
+      selectionBoxStart === null ||
+      draggedComponentId !== null ||
+      resizingComponentId !== null
+    ) {
       return;
     }
 
     const handleGlobalMouseMove = (e: MouseEvent) => {
-      if (selectionBoxStart === null || draggedComponentId !== null || resizingComponentId !== null) {
+      if (
+        selectionBoxStart === null ||
+        draggedComponentId !== null ||
+        resizingComponentId !== null
+      ) {
         return;
       }
 
@@ -541,16 +559,30 @@ export default function Canvas({
     return () => {
       document.removeEventListener("mousemove", handleGlobalMouseMove);
     };
-  }, [selectionBoxStart, draggedComponentId, resizingComponentId, getClampedCanvasPoint, updateSelectionBox]);
+  }, [
+    selectionBoxStart,
+    draggedComponentId,
+    resizingComponentId,
+    getClampedCanvasPoint,
+    updateSelectionBox,
+  ]);
 
   // Global mouse move listener to continue updating lasso when mouse leaves canvas
   useEffect(() => {
-    if (!isLassoDrawing || draggedComponentId !== null || resizingComponentId !== null) {
+    if (
+      !isLassoDrawing ||
+      draggedComponentId !== null ||
+      resizingComponentId !== null
+    ) {
       return;
     }
 
     const handleGlobalMouseMove = (e: MouseEvent) => {
-      if (!isLassoDrawing || draggedComponentId !== null || resizingComponentId !== null) {
+      if (
+        !isLassoDrawing ||
+        draggedComponentId !== null ||
+        resizingComponentId !== null
+      ) {
         return;
       }
 
@@ -564,7 +596,13 @@ export default function Canvas({
     return () => {
       document.removeEventListener("mousemove", handleGlobalMouseMove);
     };
-  }, [isLassoDrawing, draggedComponentId, resizingComponentId, getClampedCanvasPoint, handleLassoUpdate]);
+  }, [
+    isLassoDrawing,
+    draggedComponentId,
+    resizingComponentId,
+    getClampedCanvasPoint,
+    handleLassoUpdate,
+  ]);
 
   // Global mouse up listener to finish selection box and lasso if mouse released outside canvas
   useEffect(() => {
@@ -582,7 +620,12 @@ export default function Canvas({
     return () => {
       document.removeEventListener("mouseup", handleGlobalMouseUp);
     };
-  }, [selectionBoxStart, finishSelectionBox, isLassoDrawing, handleLassoFinish]);
+  }, [
+    selectionBoxStart,
+    finishSelectionBox,
+    isLassoDrawing,
+    handleLassoFinish,
+  ]);
 
   // Clear pending recognition when magic wand is disabled
   useEffect(() => {
@@ -647,7 +690,13 @@ export default function Canvas({
       onComponentsChange([...components, newComponent]);
       onComponentPlaced();
     },
-    [selectedComponentType, createComponent, components, onComponentsChange, onComponentPlaced],
+    [
+      selectedComponentType,
+      createComponent,
+      components,
+      onComponentsChange,
+      onComponentPlaced,
+    ],
   );
 
   const handleContainerClick = useCallback(
@@ -706,7 +755,12 @@ export default function Canvas({
         resizeDirection,
       );
     },
-    [getPointFromEventFn, handleComponentMouseDownBase, isEraser, isTextSelectMode],
+    [
+      getPointFromEventFn,
+      handleComponentMouseDownBase,
+      isEraser,
+      isTextSelectMode,
+    ],
   );
 
   // Container mouse handlers
@@ -764,7 +818,13 @@ export default function Canvas({
       onComponentsChange([...components, newComponent]);
       onComponentPlaced();
     },
-    [getPointFromEventFn, createComponent, components, onComponentsChange, onComponentPlaced],
+    [
+      getPointFromEventFn,
+      createComponent,
+      components,
+      onComponentsChange,
+      onComponentPlaced,
+    ],
   );
 
   // Keyboard shortcuts hook
@@ -790,22 +850,27 @@ export default function Canvas({
     },
     onMoveSelected: (deltaX, deltaY) => {
       if (selectedComponentIds.length === 0) return;
-      
+
       const updatedComponents = components.map((comp) => {
         if (!selectedComponentIds.includes(comp.id)) {
           return comp;
         }
-        
+
         const compWidth = comp.width || 100;
         const compHeight = comp.height || 40;
         let newPoint = { x: comp.x + deltaX, y: comp.y + deltaY };
-        
+
         newPoint = snapPointToGrid(newPoint);
-        newPoint = clampComponentPosition(newPoint.x, newPoint.y, compWidth, compHeight);
-        
+        newPoint = clampComponentPosition(
+          newPoint.x,
+          newPoint.y,
+          compWidth,
+          compHeight,
+        );
+
         return { ...comp, x: newPoint.x, y: newPoint.y };
       });
-      
+
       onComponentsChange(updatedComponents);
     },
     onCopySelected: () => {
@@ -814,7 +879,9 @@ export default function Canvas({
         selectedComponentIds.includes(c.id),
       );
       setCopiedComponents(selectedComps);
-      setToastMessage(`${selectedComps.length} component${selectedComps.length === 1 ? '' : 's'} copied to clipboard`);
+      setToastMessage(
+        `${selectedComps.length} component${selectedComps.length === 1 ? "" : "s"} copied to clipboard`,
+      );
     },
     onPaste: () => {
       pasteComponents(copiedComponents);
@@ -853,7 +920,10 @@ export default function Canvas({
       onContextMenu={(e) => {
         // Only show context menu if right-clicking on empty space (not on components)
         // Browser UI will naturally intercept clicks due to higher z-index and pointerEvents
-        if (e.target === e.currentTarget || (e.target as HTMLElement).tagName === "CANVAS") {
+        if (
+          e.target === e.currentTarget ||
+          (e.target as HTMLElement).tagName === "CANVAS"
+        ) {
           e.preventDefault();
           setContextMenuAnchor({
             mouseX: e.clientX,
@@ -937,7 +1007,11 @@ export default function Canvas({
         penSize={penSize}
       />
 
-      <SelectionBox start={selectionBoxStart} end={selectionBoxEnd} endRef={selectionBoxEndRef} />
+      <SelectionBox
+        start={selectionBoxStart}
+        end={selectionBoxEnd}
+        endRef={selectionBoxEndRef}
+      />
       <LassoPath path={lassoPath} isActive={isLassoDrawing} />
 
       <ComponentOverlay
@@ -978,9 +1052,7 @@ export default function Canvas({
           updateComponent(componentId, (c) => ({ ...c, color }));
         }}
         onComponentDelete={(componentId) => {
-          onComponentsChange(
-            components.filter((c) => c.id !== componentId)
-          );
+          onComponentsChange(components.filter((c) => c.id !== componentId));
         }}
         onComponentCopy={(component) => {
           // Store component in clipboard instead of immediately pasting

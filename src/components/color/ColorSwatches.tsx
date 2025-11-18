@@ -1,8 +1,8 @@
-import { Box, Collapse, IconButton, Tooltip, Typography } from "@mui/material";
 import {
-  ExpandMore as ExpandMoreIcon,
   ExpandLess as ExpandLessIcon,
+  ExpandMore as ExpandMoreIcon,
 } from "@mui/icons-material";
+import { Box, Collapse, IconButton, Tooltip, Typography } from "@mui/material";
 import { useState } from "react";
 import { swatchColors } from "../../utils/color/swatchColors";
 
@@ -98,4 +98,3 @@ export default function ColorSwatches({
     </>
   );
 }
-

@@ -1,4 +1,21 @@
-import { useState, useRef, useCallback } from "react";
+import { useCallback, useRef, useState } from "react";
+
+// EyeDropper API types (not yet in all TypeScript libs)
+interface EyeDropperResult {
+  sRGBHex: string;
+}
+
+interface EyeDropperOptions {
+  signal?: AbortSignal;
+}
+
+interface EyeDropper {
+  open(options?: EyeDropperOptions): Promise<EyeDropperResult>;
+}
+
+interface WindowWithEyeDropper extends Window {
+  EyeDropper?: new () => EyeDropper;
+}
 
 /**
  * Hook for managing eyedropper tool functionality
@@ -9,8 +26,11 @@ export function useEyedropper(onColorChange: (color: string) => void) {
 
   const handleEyedropperClick = useCallback(async () => {
     // Check if EyeDropper API is available
-    if (!("EyeDropper" in window)) {
-      alert("EyeDropper API is not supported in this browser. Try clicking on the canvas to sample colors manually.");
+    const windowWithEyeDropper = window as WindowWithEyeDropper;
+    if (!windowWithEyeDropper.EyeDropper) {
+      alert(
+        "EyeDropper API is not supported in this browser. Try clicking on the canvas to sample colors manually.",
+      );
       return;
     }
 
@@ -18,14 +38,14 @@ export function useEyedropper(onColorChange: (color: string) => void) {
     abortControllerRef.current = new AbortController();
 
     try {
-      const eyeDropper = new (window as any).EyeDropper();
+      const eyeDropper = new windowWithEyeDropper.EyeDropper();
       const result = await eyeDropper.open({
         signal: abortControllerRef.current.signal,
       });
       onColorChange(result.sRGBHex);
-    } catch (error: any) {
+    } catch (error: unknown) {
       // User cancelled or error occurred
-      if (error.name !== "AbortError") {
+      if (error instanceof Error && error.name !== "AbortError") {
         console.error("Eyedropper error:", error);
       }
     } finally {
@@ -39,4 +59,3 @@ export function useEyedropper(onColorChange: (color: string) => void) {
     handleEyedropperClick,
   };
 }
-

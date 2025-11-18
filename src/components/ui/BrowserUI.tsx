@@ -1,12 +1,12 @@
-import { Box } from "@mui/material";
 import {
-  Close as CloseIcon,
-  Remove as MinimizeIcon,
-  CropFree as MaximizeIcon,
   ArrowBack as ArrowBackIcon,
   ArrowForward as ArrowForwardIcon,
+  Close as CloseIcon,
+  CropFree as MaximizeIcon,
+  Remove as MinimizeIcon,
   Refresh as RefreshIcon,
 } from "@mui/icons-material";
+import { Box } from "@mui/material";
 
 interface BrowserUIProps {
   showTitleBar: boolean;
@@ -282,4 +282,3 @@ export default function BrowserUI({
     </Box>
   );
 }
-

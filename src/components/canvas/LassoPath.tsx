@@ -19,6 +19,8 @@ export default function LassoPath({ path, isActive }: LassoPathProps) {
 
   return (
     <svg
+      role="img"
+      aria-label="Lasso selection path"
       style={{
         position: "absolute",
         top: 0,
@@ -39,4 +41,3 @@ export default function LassoPath({ path, isActive }: LassoPathProps) {
     </svg>
   );
 }
-

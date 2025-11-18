@@ -108,8 +108,7 @@ export function detectSquare(path: Point[]): boolean {
   const startPoint = path[0];
   const endPoint = path[path.length - 1];
   const distanceFromEnd = Math.sqrt(
-    Math.pow(endPoint.x - startPoint.x, 2) +
-      Math.pow(endPoint.y - startPoint.y, 2),
+    (endPoint.x - startPoint.x) ** 2 + (endPoint.y - startPoint.y) ** 2,
   );
 
   // If start and end are close, it's likely a closed shape (box)
@@ -210,8 +209,7 @@ export function recognizeShape(path: Point[]): ComponentType | null {
       const startPoint = path[0];
       const endPoint = path[path.length - 1];
       const distanceFromEnd = Math.sqrt(
-        Math.pow(endPoint.x - startPoint.x, 2) +
-          Math.pow(endPoint.y - startPoint.y, 2),
+        (endPoint.x - startPoint.x) ** 2 + (endPoint.y - startPoint.y) ** 2,
       );
 
       // Circle should be closed (start and end are close)

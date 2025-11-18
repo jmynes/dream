@@ -1,6 +1,5 @@
 import { useCallback, useRef, useState } from "react";
-import type { ComponentType } from "../../types/component";
-import type { CanvasComponent } from "../../types/component";
+import type { CanvasComponent, ComponentType } from "../../types/component";
 import type { Point } from "../../utils/canvas/canvasUtils";
 import { recognizeShape } from "../../utils/canvas/shapeRecognition";
 
@@ -41,28 +40,36 @@ export function useMagicWand({
     height: number;
   } | null>(null);
 
-  const addPathPoint = useCallback((point: Point) => {
-    // Update ref immediately (no re-render)
-    if (magicWandPathRef.current.length === 0) {
-      // Save canvas state before starting to draw
-      const canvas = canvasRef.current;
-      if (canvas) {
-        const ctx = canvas.getContext("2d");
-        if (ctx) {
-          savedCanvasStateRef.current = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const addPathPoint = useCallback(
+    (point: Point) => {
+      // Update ref immediately (no re-render)
+      if (magicWandPathRef.current.length === 0) {
+        // Save canvas state before starting to draw
+        const canvas = canvasRef.current;
+        if (canvas) {
+          const ctx = canvas.getContext("2d");
+          if (ctx) {
+            savedCanvasStateRef.current = ctx.getImageData(
+              0,
+              0,
+              canvas.width,
+              canvas.height,
+            );
+          }
         }
+        magicWandPathRef.current = [point];
+        // Only update state when transitioning from no drawing to drawing
+        if (!hasDrawingRef.current) {
+          hasDrawingRef.current = true;
+          setHasDrawing(true);
+        }
+      } else {
+        magicWandPathRef.current.push(point);
+        // No state update needed - already drawing
       }
-      magicWandPathRef.current = [point];
-      // Only update state when transitioning from no drawing to drawing
-      if (!hasDrawingRef.current) {
-        hasDrawingRef.current = true;
-        setHasDrawing(true);
-      }
-    } else {
-      magicWandPathRef.current.push(point);
-      // No state update needed - already drawing
-    }
-  }, [canvasRef]);
+    },
+    [canvasRef],
+  );
 
   const handleRecognizePath = useCallback(() => {
     if (magicWandPathRef.current.length === 0) return;

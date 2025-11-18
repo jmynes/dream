@@ -5,8 +5,8 @@ import type { CanvasComponent } from "../../types/component";
 export interface RendererProps {
   component: CanvasComponent;
   componentColor: string;
-  widthProps: { sx: { width: string } } | {};
-  heightProps: { sx: { height: string } } | {};
+  widthProps: { sx: { width: string } } | Record<string, never>;
+  heightProps: { sx: { height: string } } | Record<string, never>;
   centeredAlignment: { sx: { textAlign: "center" } };
   isEditing: boolean;
   editingField: string;
@@ -18,4 +18,3 @@ export interface RendererProps {
   onDoubleClick?: (e: React.MouseEvent) => void;
   textWidthRef?: React.MutableRefObject<number>;
 }
-

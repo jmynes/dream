@@ -145,4 +145,3 @@ export function useCanvasLifecycle({
 
   return { actualWidth, actualHeight };
 }
-

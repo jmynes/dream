@@ -1,7 +1,7 @@
 import { Paper, Typography } from "@mui/material";
+import { useColorUtils } from "../../contexts/ColorUtilsContext";
 import type { RendererProps } from "./rendererTypes";
 import { inlineInputStyle } from "./rendererUtils";
-import { useColorUtils } from "../../contexts/ColorUtilsContext";
 
 export default function PaperRenderer({
   component,
@@ -18,7 +18,7 @@ export default function PaperRenderer({
   const { getTextColorForFilled } = useColorUtils();
   // Use CSS variable for live color updates, fallback to prop
   const bgColor = `var(--live-component-color, ${componentColor})`;
-  
+
   return (
     <Paper
       sx={{
@@ -58,4 +58,3 @@ export default function PaperRenderer({
     </Paper>
   );
 }
-

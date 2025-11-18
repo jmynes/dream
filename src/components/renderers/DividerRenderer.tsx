@@ -13,9 +13,7 @@ export default function DividerRenderer({
   componentHeight,
 }: DividerRendererProps) {
   const isVertical =
-    componentHeight &&
-    componentWidth &&
-    componentHeight > componentWidth;
+    componentHeight && componentWidth && componentHeight > componentWidth;
 
   // Use CSS variable for live color updates, fallback to prop
   const borderColor = `var(--live-component-color, ${componentColor})`;
@@ -43,4 +41,3 @@ export default function DividerRenderer({
     </Box>
   );
 }
-

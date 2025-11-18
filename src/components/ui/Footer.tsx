@@ -1,19 +1,19 @@
+import { Help as HelpIcon } from "@mui/icons-material";
 import {
   Box,
   Dialog,
   DialogContent,
   DialogTitle,
   IconButton,
-  Typography,
+  Link,
   Table,
   TableBody,
   TableCell,
   TableRow,
-  Link,
   Tooltip,
+  Typography,
 } from "@mui/material";
-import { Help as HelpIcon } from "@mui/icons-material";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export default function Footer() {
   const [open, setOpen] = useState(false);
@@ -26,8 +26,14 @@ export default function Footer() {
     { keys: "Ctrl/Cmd + C", description: "Copy selected components" },
     { keys: "Ctrl/Cmd + V", description: "Paste components" },
     { keys: "Delete / Backspace", description: "Delete selected components" },
-    { keys: "Arrow Keys", description: "Move selected components (1 grid cell)" },
-    { keys: "Middle Mouse Button", description: "Reset tools to default cursor" },
+    {
+      keys: "Arrow Keys",
+      description: "Move selected components (1 grid cell)",
+    },
+    {
+      keys: "Middle Mouse Button",
+      description: "Reset tools to default cursor",
+    },
     { keys: "Escape", description: "Deselect all / Cancel recognition" },
     { keys: "Enter", description: "Submit shape recognition" },
     { keys: "Ctrl/Cmd + Z", description: "Undo" },
@@ -93,11 +99,7 @@ export default function Footer() {
                 alignItems: "center",
               }}
             >
-              <IconButton
-                size="small"
-                sx={{ padding: 0.5 }}
-                component="span"
-              >
+              <IconButton size="small" sx={{ padding: 0.5 }} component="span">
                 <i className="fab fa-github" style={{ fontSize: "1.2rem" }} />
               </IconButton>
             </Link>
@@ -114,10 +116,10 @@ export default function Footer() {
         </Box>
       </Box>
 
-      <Dialog 
-        open={open} 
-        onClose={() => setOpen(false)} 
-        maxWidth="sm" 
+      <Dialog
+        open={open}
+        onClose={() => setOpen(false)}
+        maxWidth="sm"
         fullWidth
         sx={{
           zIndex: 2100, // Higher than BrowserUI (2000) to ensure it's on top

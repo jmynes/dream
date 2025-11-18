@@ -1,7 +1,7 @@
 import { Box } from "@mui/material";
 import type { CanvasComponent } from "../../types/component";
-import ComponentRenderer from "../ComponentRenderer";
 import type { Point } from "../../utils/canvas/canvasUtils";
+import ComponentRenderer from "../ComponentRenderer";
 
 interface ComponentOverlayProps {
   components: CanvasComponent[];
@@ -28,8 +28,15 @@ interface ComponentOverlayProps {
   onLassoStart: (point: Point) => void;
   onLassoUpdate: (point: Point) => void;
   onLassoFinish: () => void;
-  onComponentMouseDown: (e: React.MouseEvent, componentId: string, resizeDirection?: string) => void;
-  onComponentUpdate?: (componentId: string, props: Partial<CanvasComponent["props"]>) => void;
+  onComponentMouseDown: (
+    e: React.MouseEvent,
+    componentId: string,
+    resizeDirection?: string,
+  ) => void;
+  onComponentUpdate?: (
+    componentId: string,
+    props: Partial<CanvasComponent["props"]>,
+  ) => void;
   onComponentColorChange?: (componentId: string, color: string) => void;
   onComponentDelete?: (componentId: string) => void;
   onComponentCopy?: (component: CanvasComponent) => void;
@@ -120,10 +127,7 @@ export default function ComponentOverlay({
           const point = getPointFromEvent(e);
           onLassoUpdate(point);
         }
-        if (
-          (isDrawing || isEraser || isMagicWand) &&
-          !selectedComponentType
-        ) {
+        if ((isDrawing || isEraser || isMagicWand) && !selectedComponentType) {
           onBrushMouseMove(e);
         }
       }}
@@ -174,4 +178,3 @@ export default function ComponentOverlay({
     </Box>
   );
 }
-

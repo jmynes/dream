@@ -43,4 +43,3 @@ export const resizeHandleBaseStyle: React.CSSProperties = {
   cursor: "pointer",
   zIndex: 1001,
 };
-

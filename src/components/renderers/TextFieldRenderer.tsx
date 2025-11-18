@@ -19,7 +19,9 @@ export default function TextFieldRenderer({
       {...(component.props as object)}
       {...widthProps}
       value={
-        isEditing && editingField === "value" ? editValue : (component.props?.value as string) || ""
+        isEditing && editingField === "value"
+          ? editValue
+          : (component.props?.value as string) || ""
       }
       sx={{
         ...("sx" in widthProps ? widthProps.sx : {}),
@@ -33,4 +35,3 @@ export default function TextFieldRenderer({
     />
   );
 }
-

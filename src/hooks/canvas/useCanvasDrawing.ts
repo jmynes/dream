@@ -27,7 +27,7 @@ export function useCanvasDrawing({
   const lastPointRef = useRef<Point | null>(null);
   // Keep state for external consumers if needed, but update refs for performance
   const [isDraggingPen, setIsDraggingPen] = useState(false);
-  
+
   // Batch drawing operations using requestAnimationFrame
   const pendingDrawRef = useRef<{ from: Point; to: Point } | null>(null);
   const drawAnimationFrameRef = useRef<number | null>(null);
@@ -135,7 +135,7 @@ export function useCanvasDrawing({
       // Batch drawing operations using requestAnimationFrame for smooth 60fps updates
       const now = performance.now();
       const timeSinceLastDraw = now - lastDrawTimeRef.current;
-      
+
       // Draw immediately if enough time has passed (throttle to ~60fps)
       // This ensures smooth drawing while preventing excessive canvas operations
       if (timeSinceLastDraw >= 16) {
@@ -149,26 +149,26 @@ export function useCanvasDrawing({
           }
           pendingDrawRef.current = null;
         }
-        
+
         // Cancel any pending animation frame since we're drawing now
         if (drawAnimationFrameRef.current !== null) {
           cancelAnimationFrame(drawAnimationFrameRef.current);
           drawAnimationFrameRef.current = null;
         }
-        
+
         // Draw current line immediately
         if (isDrawing || isEraser) {
           drawLine(lastPoint, point);
         } else if (isMagicWand) {
           drawLine(lastPoint, point);
         }
-        
+
         lastDrawTimeRef.current = now;
       } else {
         // Schedule draw for next frame, but update the pending point
         // to ensure we always draw to the latest point
         pendingDrawRef.current = { from: lastPoint, to: point };
-        
+
         if (drawAnimationFrameRef.current === null) {
           drawAnimationFrameRef.current = requestAnimationFrame(() => {
             processPendingDraw();
@@ -201,13 +201,13 @@ export function useCanvasDrawing({
       }
       pendingDrawRef.current = null;
     }
-    
+
     // Cancel any pending animation frame
     if (drawAnimationFrameRef.current !== null) {
       cancelAnimationFrame(drawAnimationFrameRef.current);
       drawAnimationFrameRef.current = null;
     }
-    
+
     // Reset refs immediately (no re-render)
     isDraggingPenRef.current = false;
     lastPointRef.current = null;

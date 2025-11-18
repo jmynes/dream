@@ -1,5 +1,8 @@
+import {
+  ContentPaste as PasteIcon,
+  SelectAll as SelectAllIcon,
+} from "@mui/icons-material";
 import { Menu, MenuItem } from "@mui/material";
-import { ContentPaste as PasteIcon, SelectAll as SelectAllIcon } from "@mui/icons-material";
 import type { CanvasComponent } from "../../types/component";
 
 interface CanvasContextMenuProps {
@@ -50,4 +53,3 @@ export default function CanvasContextMenu({
     </Menu>
   );
 }
-

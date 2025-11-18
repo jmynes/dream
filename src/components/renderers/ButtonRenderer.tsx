@@ -1,7 +1,7 @@
 import { Button } from "@mui/material";
+import { useColorUtils } from "../../contexts/ColorUtilsContext";
 import type { RendererProps } from "./rendererTypes";
 import { inlineInputStyle } from "./rendererUtils";
-import { useColorUtils } from "../../contexts/ColorUtilsContext";
 
 export default function ButtonRenderer({
   component,
@@ -58,4 +58,3 @@ export default function ButtonRenderer({
     </Button>
   );
 }
-

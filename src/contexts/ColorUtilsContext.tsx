@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useRef, useCallback } from "react";
+import { createContext, useCallback, useContext, useMemo, useRef } from "react";
 
 interface ColorUtilsContextValue {
   isDarkColor: (color: string) => boolean;
@@ -17,43 +17,45 @@ const textColorCache = new Map<string, string>();
 // Helper function to determine if a color is dark (for text contrast)
 const isDarkColorImpl = (color: string): boolean => {
   // Check cache first
-  if (colorCache.has(color)) {
-    return colorCache.get(color)!;
+  const cached = colorCache.get(color);
+  if (cached !== undefined) {
+    return cached;
   }
-  
+
   // Handle 8-digit hex (with alpha) - extract RGB part
   let hex = color.replace("#", "");
   if (hex.length === 8) {
     hex = hex.substring(0, 6);
   }
-  
+
   // Convert hex to RGB
   const r = parseInt(hex.substring(0, 2), 16) || 0;
   const g = parseInt(hex.substring(2, 4), 16) || 0;
   const b = parseInt(hex.substring(4, 6), 16) || 0;
-  
+
   // Calculate luminance
   const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
   const isDark = luminance < 0.5;
-  
+
   // Cache result
   colorCache.set(color, isDark);
-  
+
   return isDark;
 };
 
 // Helper to get text color for filled components
 const getTextColorForFilledImpl = (bgColor: string): string => {
   // Check cache first
-  if (textColorCache.has(bgColor)) {
-    return textColorCache.get(bgColor)!;
+  const cached = textColorCache.get(bgColor);
+  if (cached !== undefined) {
+    return cached;
   }
-  
+
   const textColor = isDarkColorImpl(bgColor) ? "#ffffff" : "#000000";
-  
+
   // Cache result
   textColorCache.set(bgColor, textColor);
-  
+
   return textColor;
 };
 
@@ -75,7 +77,7 @@ export function ColorUtilsProvider({ children }: ColorUtilsProviderProps) {
   const updateElementCache = useCallback((selectedIds: string[]) => {
     const cache = elementCacheRef.current;
     const newCache = new Map<string, HTMLElement>();
-    
+
     // Update cache with current selected IDs
     selectedIds.forEach((id) => {
       // Check if element is already cached and still in DOM
@@ -92,7 +94,7 @@ export function ColorUtilsProvider({ children }: ColorUtilsProviderProps) {
         }
       }
     });
-    
+
     elementCacheRef.current = newCache;
   }, []);
 
@@ -100,10 +102,10 @@ export function ColorUtilsProvider({ children }: ColorUtilsProviderProps) {
   const setLiveComponentColor = useCallback(
     (color: string | null, selectedIds: string[]) => {
       liveColorRef.current = color;
-      const idsChanged = 
+      const idsChanged =
         selectedIdsRef.current.length !== selectedIds.length ||
         selectedIdsRef.current.some((id, i) => id !== selectedIds[i]);
-      
+
       if (idsChanged) {
         selectedIdsRef.current = selectedIds;
         updateElementCache(selectedIds);
@@ -117,7 +119,7 @@ export function ColorUtilsProvider({ children }: ColorUtilsProviderProps) {
       // Schedule DOM update on next frame
       animationFrameRef.current = requestAnimationFrame(() => {
         const cache = elementCacheRef.current;
-        
+
         if (color === null) {
           // Clear live color - remove CSS variable from all cached elements
           cache.forEach((element) => {
@@ -145,7 +147,7 @@ export function ColorUtilsProvider({ children }: ColorUtilsProviderProps) {
     // Schedule DOM update on next frame
     drawerAnimationFrameRef.current = requestAnimationFrame(() => {
       const container = drawerContainerRef.current;
-      
+
       if (container) {
         if (color === null) {
           // Clear live color - remove CSS variable
@@ -189,4 +191,3 @@ export function useColorUtils() {
   }
   return context;
 }
-

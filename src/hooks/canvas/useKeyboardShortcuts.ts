@@ -125,7 +125,11 @@ export function useKeyboardShortcuts({
       // Handle Escape key to cancel recognition or deselect components
       if (e.key === "Escape") {
         e.preventDefault();
-        if (pendingRecognition || recognitionFailed || (isMagicWand && hasDrawing)) {
+        if (
+          pendingRecognition ||
+          recognitionFailed ||
+          (isMagicWand && hasDrawing)
+        ) {
           onCancelRecognition();
           return;
         }
@@ -216,4 +220,3 @@ export function useKeyboardShortcuts({
     onCancelRecognition,
   ]);
 }
-

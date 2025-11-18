@@ -1,41 +1,34 @@
 import {
-  Box,
-  Popover,
-  SpeedDial,
-  SpeedDialAction,
-} from "@mui/material";
-import {
   ContentCopy as CopyIcon,
   Delete as DeleteIcon,
   EditNote as EditNoteIcon,
   Palette as PaletteIcon,
 } from "@mui/icons-material";
-import { useState, useRef, useEffect, memo, useCallback } from "react";
-import type { CanvasComponent } from "../types/component";
+import { Box, Popover, SpeedDial, SpeedDialAction } from "@mui/material";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { ChromePicker } from "react-color";
-import { colorResultToHex, type ColorResult } from "../utils/color/colorUtils";
-
-import ButtonRenderer from "./renderers/ButtonRenderer";
-import TextFieldRenderer from "./renderers/TextFieldRenderer";
-import CardRenderer from "./renderers/CardRenderer";
-import TypographyRenderer from "./renderers/TypographyRenderer";
-import CheckboxRenderer from "./renderers/CheckboxRenderer";
-import SwitchRenderer from "./renderers/SwitchRenderer";
-import SliderRenderer from "./renderers/SliderRenderer";
-import ChipRenderer from "./renderers/ChipRenderer";
-import AvatarRenderer from "./renderers/AvatarRenderer";
-import DividerRenderer from "./renderers/DividerRenderer";
-import PaperRenderer from "./renderers/PaperRenderer";
-import BoxRenderer from "./renderers/BoxRenderer";
-import RadioRenderer from "./renderers/RadioRenderer";
-import TableRenderer from "./renderers/TableRenderer";
-import { resizeHandleBaseStyle } from "./renderers/rendererUtils";
-
+import type { CanvasComponent } from "../types/component";
+import { type ColorResult, colorResultToHex } from "../utils/color/colorUtils";
 import {
   canEditText,
   getComponentTextInfo,
   getUpdateProps,
 } from "../utils/component/textEditingUtils";
+import AvatarRenderer from "./renderers/AvatarRenderer";
+import BoxRenderer from "./renderers/BoxRenderer";
+import ButtonRenderer from "./renderers/ButtonRenderer";
+import CardRenderer from "./renderers/CardRenderer";
+import CheckboxRenderer from "./renderers/CheckboxRenderer";
+import ChipRenderer from "./renderers/ChipRenderer";
+import DividerRenderer from "./renderers/DividerRenderer";
+import PaperRenderer from "./renderers/PaperRenderer";
+import RadioRenderer from "./renderers/RadioRenderer";
+import { resizeHandleBaseStyle } from "./renderers/rendererUtils";
+import SliderRenderer from "./renderers/SliderRenderer";
+import SwitchRenderer from "./renderers/SwitchRenderer";
+import TableRenderer from "./renderers/TableRenderer";
+import TextFieldRenderer from "./renderers/TextFieldRenderer";
+import TypographyRenderer from "./renderers/TypographyRenderer";
 
 // Helper: Create SpeedDialAction mouse handlers
 const createSpeedDialMouseHandlers = () => ({
@@ -56,8 +49,15 @@ const getTooltipElements = () => {
 
 interface ComponentRendererProps {
   component: CanvasComponent;
-  onMouseDown: (e: React.MouseEvent, componentId: string, resizeDirection?: string) => void;
-  onComponentUpdate?: (componentId: string, props: Partial<CanvasComponent["props"]>) => void;
+  onMouseDown: (
+    e: React.MouseEvent,
+    componentId: string,
+    resizeDirection?: string,
+  ) => void;
+  onComponentUpdate?: (
+    componentId: string,
+    props: Partial<CanvasComponent["props"]>,
+  ) => void;
   onComponentColorChange?: (componentId: string, color: string) => void;
   onComponentDelete?: (componentId: string) => void;
   onComponentCopy?: (component: CanvasComponent) => void;
@@ -91,8 +91,14 @@ function ComponentRenderer({
     sliderValueRef.current,
   );
   const [speedDialOpen, setSpeedDialOpen] = useState(false);
-  const [speedDialAnchor, setSpeedDialAnchor] = useState<{ x: number; y: number } | null>(null);
-  const [colorPickerAnchor, setColorPickerAnchor] = useState<{ x: number; y: number } | null>(null);
+  const [speedDialAnchor, setSpeedDialAnchor] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
+  const [colorPickerAnchor, setColorPickerAnchor] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
   const componentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -135,13 +141,13 @@ function ComponentRenderer({
       isInteractingWithSliderRef.current = true;
       return;
     }
-    
+
     // Don't start dragging if we're currently interacting with slider
     if (isInteractingWithSliderRef.current) {
       e.stopPropagation();
       return;
     }
-    
+
     e.stopPropagation();
     const resizeDirection = (e.target as HTMLElement)?.dataset?.resize;
     onMouseDown(e, component.id, resizeDirection);
@@ -163,27 +169,34 @@ function ComponentRenderer({
     setSpeedDialOpen(true);
   };
 
-  const handleSpeedDialClose = (event: React.SyntheticEvent<Element, Event>, reason?: string) => {
+  const handleSpeedDialClose = (
+    event: React.SyntheticEvent<Element, Event>,
+    reason?: string,
+  ) => {
     // Don't close if the reason is mouseLeave and the mouse is over a tooltip
     if (reason === "mouseLeave") {
-      const relatedTarget = (event.nativeEvent as MouseEvent).relatedTarget as HTMLElement | null;
-      
+      const relatedTarget = (event.nativeEvent as MouseEvent)
+        .relatedTarget as HTMLElement | null;
+
       // Check if we're moving to a tooltip or tooltip-related element
       if (relatedTarget) {
-        const isMovingToTooltip = 
+        const isMovingToTooltip =
           relatedTarget.closest(".MuiTooltip-root") !== null ||
           relatedTarget.closest(".MuiTooltip-popper") !== null ||
           relatedTarget.closest(".MuiTooltip-tooltip") !== null ||
           relatedTarget.classList.contains("MuiTooltip-tooltip") ||
-          relatedTarget.closest(".MuiSpeedDialAction-staticTooltipLabel") !== null ||
-          relatedTarget.classList.contains("MuiSpeedDialAction-staticTooltipLabel");
-        
+          relatedTarget.closest(".MuiSpeedDialAction-staticTooltipLabel") !==
+            null ||
+          relatedTarget.classList.contains(
+            "MuiSpeedDialAction-staticTooltipLabel",
+          );
+
         if (isMovingToTooltip) {
           return; // Don't close
         }
       }
     }
-    
+
     setSpeedDialOpen(false);
     setSpeedDialAnchor(null);
   };
@@ -239,24 +252,27 @@ function ComponentRenderer({
     setColorPickerAnchor(null);
   };
 
-  const handleColorChange = useCallback((colorResult: ColorResult) => {
-    if (onComponentColorChange) {
-      const hexColor = colorResultToHex(colorResult);
-      onComponentColorChange(component.id, hexColor);
-    }
-  }, [onComponentColorChange, component.id]);
-  
+  const handleColorChange = useCallback(
+    (colorResult: ColorResult) => {
+      if (onComponentColorChange) {
+        const hexColor = colorResultToHex(colorResult);
+        onComponentColorChange(component.id, hexColor);
+      }
+    },
+    [onComponentColorChange, component.id],
+  );
+
   const handleSliderMouseDown = (e: React.MouseEvent) => {
     // Stop all propagation for slider interactions
     e.stopPropagation();
     isInteractingWithSliderRef.current = true;
   };
-  
+
   const handleSliderMouseMove = (e: React.MouseEvent) => {
     // Stop propagation during slider dragging
     e.stopPropagation();
   };
-  
+
   const handleSliderMouseUp = (e: React.MouseEvent) => {
     // Stop propagation when releasing slider
     e.stopPropagation();
@@ -265,7 +281,7 @@ function ComponentRenderer({
       isInteractingWithSliderRef.current = false;
     }, 100);
   };
-  
+
   const handleSliderChange = (
     _event: Event | React.SyntheticEvent<Element, Event>,
     value: number | number[],
@@ -315,8 +331,7 @@ function ComponentRenderer({
           tempSpan.style.fontSize = computedStyle.fontSize;
           tempSpan.style.fontFamily = computedStyle.fontFamily;
           tempSpan.style.fontWeight = computedStyle.fontWeight;
-          tempSpan.textContent =
-            (component.props?.label as string) || "Chip";
+          tempSpan.textContent = (component.props?.label as string) || "Chip";
           document.body.appendChild(tempSpan);
           textWidthRef.current = tempSpan.offsetWidth;
           document.body.removeChild(tempSpan);
@@ -384,22 +399,25 @@ function ComponentRenderer({
   }, [isEditing]);
 
   // Helper function to check if element is within SpeedDial area
-  const isWithinSpeedDialArea = (target: HTMLElement | null): boolean => {
-    if (!target) return false;
-    return (
-      target.closest(".MuiSpeedDial-root") !== null ||
-      target.closest(".MuiPopover-root") !== null ||
-      target.closest(".MuiTooltip-root") !== null ||
-      target.closest(".MuiTooltip-popper") !== null ||
-      target.closest("[role='tooltip']") !== null ||
-      target.classList.contains("MuiTooltip-tooltip") ||
-      target.closest(".MuiTooltip-tooltip") !== null ||
-      target.classList.contains("MuiSpeedDialAction-staticTooltipLabel") ||
-      target.closest(".MuiSpeedDialAction-staticTooltipLabel") !== null ||
-      target.closest(".MuiSpeedDialAction-fab") !== null ||
-      target.closest(".MuiFab-root") !== null
-    );
-  };
+  const isWithinSpeedDialArea = useCallback(
+    (target: HTMLElement | null): boolean => {
+      if (!target) return false;
+      return (
+        target.closest(".MuiSpeedDial-root") !== null ||
+        target.closest(".MuiPopover-root") !== null ||
+        target.closest(".MuiTooltip-root") !== null ||
+        target.closest(".MuiTooltip-popper") !== null ||
+        target.closest("[role='tooltip']") !== null ||
+        target.classList.contains("MuiTooltip-tooltip") ||
+        target.closest(".MuiTooltip-tooltip") !== null ||
+        target.classList.contains("MuiSpeedDialAction-staticTooltipLabel") ||
+        target.closest(".MuiSpeedDialAction-staticTooltipLabel") !== null ||
+        target.closest(".MuiSpeedDialAction-fab") !== null ||
+        target.closest(".MuiFab-root") !== null
+      );
+    },
+    [],
+  );
 
   // Close SpeedDial when clicking outside or pressing escape
   useEffect(() => {
@@ -436,7 +454,7 @@ function ComponentRenderer({
       document.addEventListener("click", handleClickOutside, true);
       document.addEventListener("contextmenu", handleClickOutside, true);
       document.addEventListener("keydown", handleEscape, true);
-      
+
       // Attach to tooltip elements if they exist
       const tooltipElements = getTooltipElements();
       tooltipElements.forEach((el) => {
@@ -457,7 +475,7 @@ function ComponentRenderer({
         el.removeEventListener("mouseleave", handleTooltipMouseLeave);
       });
     };
-  }, [speedDialOpen]);
+  }, [speedDialOpen, isWithinSpeedDialArea]);
 
   const componentWidth = component.width;
   const componentHeight = component.height;
@@ -582,11 +600,18 @@ function ComponentRenderer({
       case "TextField":
         return <TextFieldRenderer {...rendererProps} />;
       case "Card":
-        return <CardRenderer {...rendererProps} componentWidth={componentWidth} />;
+        return (
+          <CardRenderer {...rendererProps} componentWidth={componentWidth} />
+        );
       case "Typography":
         return <TypographyRenderer {...rendererProps} />;
       case "Checkbox":
-        return <CheckboxRenderer {...rendererProps} onDoubleClick={handleCheckboxDoubleClick} />;
+        return (
+          <CheckboxRenderer
+            {...rendererProps}
+            onDoubleClick={handleCheckboxDoubleClick}
+          />
+        );
       case "Switch":
         return <SwitchRenderer {...rendererProps} />;
       case "Slider":
@@ -642,10 +667,10 @@ function ComponentRenderer({
     }
   };
 
-
   return (
     <>
       {/* biome-ignore lint/a11y/noStaticElementInteractions: Draggable container wrapper */}
+      {/* biome-ignore lint/a11y/useKeyWithClickEvents: Keyboard events handled at parent level for draggable components */}
       <div
         ref={componentRef}
         data-component-id={component.id}
@@ -661,22 +686,54 @@ function ComponentRenderer({
           <>
             {/* Corner handles */}
             {/* biome-ignore lint/a11y/noStaticElementInteractions: Resize handle */}
-            <div style={topLeftHandleStyle} onMouseDown={handleMouseDown} data-resize="nw" />
+            <div
+              style={topLeftHandleStyle}
+              onMouseDown={handleMouseDown}
+              data-resize="nw"
+            />
             {/* biome-ignore lint/a11y/noStaticElementInteractions: Resize handle */}
-            <div style={topRightHandleStyle} onMouseDown={handleMouseDown} data-resize="ne" />
+            <div
+              style={topRightHandleStyle}
+              onMouseDown={handleMouseDown}
+              data-resize="ne"
+            />
             {/* biome-ignore lint/a11y/noStaticElementInteractions: Resize handle */}
-            <div style={bottomLeftHandleStyle} onMouseDown={handleMouseDown} data-resize="sw" />
+            <div
+              style={bottomLeftHandleStyle}
+              onMouseDown={handleMouseDown}
+              data-resize="sw"
+            />
             {/* biome-ignore lint/a11y/noStaticElementInteractions: Resize handle */}
-            <div style={bottomRightHandleStyle} onMouseDown={handleMouseDown} data-resize="se" />
+            <div
+              style={bottomRightHandleStyle}
+              onMouseDown={handleMouseDown}
+              data-resize="se"
+            />
             {/* Edge handles */}
             {/* biome-ignore lint/a11y/noStaticElementInteractions: Resize handle */}
-            <div style={topHandleStyle} onMouseDown={handleMouseDown} data-resize="n" />
+            <div
+              style={topHandleStyle}
+              onMouseDown={handleMouseDown}
+              data-resize="n"
+            />
             {/* biome-ignore lint/a11y/noStaticElementInteractions: Resize handle */}
-            <div style={rightHandleStyle} onMouseDown={handleMouseDown} data-resize="e" />
+            <div
+              style={rightHandleStyle}
+              onMouseDown={handleMouseDown}
+              data-resize="e"
+            />
             {/* biome-ignore lint/a11y/noStaticElementInteractions: Resize handle */}
-            <div style={bottomHandleStyle} onMouseDown={handleMouseDown} data-resize="s" />
+            <div
+              style={bottomHandleStyle}
+              onMouseDown={handleMouseDown}
+              data-resize="s"
+            />
             {/* biome-ignore lint/a11y/noStaticElementInteractions: Resize handle */}
-            <div style={leftHandleStyle} onMouseDown={handleMouseDown} data-resize="w" />
+            <div
+              style={leftHandleStyle}
+              onMouseDown={handleMouseDown}
+              data-resize="w"
+            />
           </>
         )}
       </div>
@@ -721,7 +778,10 @@ function ComponentRenderer({
               // Only close on backdrop click, not on mouse leave or escape (handled separately)
               const reasonStr = String(reason);
               if (reasonStr === "backdropClick" || reasonStr === "toggle") {
-                handleSpeedDialClose(event as React.SyntheticEvent<Element, Event>, reasonStr);
+                handleSpeedDialClose(
+                  event as React.SyntheticEvent<Element, Event>,
+                  reasonStr,
+                );
               }
             }}
             onClick={(e) => e.stopPropagation()}
@@ -805,7 +865,15 @@ function ComponentRenderer({
         onClick={(e) => e.stopPropagation()}
       >
         <Box sx={{ p: 2 }}>
-          <Box sx={{ "& > div": { boxShadow: "none !important", border: "1px solid #e0e0e0", borderRadius: "4px" } }}>
+          <Box
+            sx={{
+              "& > div": {
+                boxShadow: "none !important",
+                border: "1px solid #e0e0e0",
+                borderRadius: "4px",
+              },
+            }}
+          >
             <ChromePicker
               color={component.color || "#1976d2"}
               onChange={handleColorChange}
@@ -823,7 +891,7 @@ function ComponentRenderer({
 export default memo(ComponentRenderer, (prevProps, nextProps) => {
   const prev = prevProps.component;
   const next = nextProps.component;
-  
+
   // Deep comparison of component data (object references change on array updates)
   if (
     prev.id !== next.id ||
@@ -836,7 +904,7 @@ export default memo(ComponentRenderer, (prevProps, nextProps) => {
   ) {
     return false; // Component data changed, need to re-render
   }
-  
+
   // Compare props object (shallow check for common props)
   // Only check if references are different to avoid expensive deep comparison
   if (prev.props !== next.props) {
@@ -848,13 +916,13 @@ export default memo(ComponentRenderer, (prevProps, nextProps) => {
       return false; // Props changed
     }
     // Check key props that commonly change
-    for (const key of ['text', 'label', 'value', 'checked', 'selected']) {
+    for (const key of ["text", "label", "value", "checked", "selected"]) {
       if (prev.props?.[key] !== next.props?.[key]) {
         return false; // Props changed
       }
     }
   }
-  
+
   // Check if selection/dragging state changed
   if (
     prevProps.isDragging !== nextProps.isDragging ||
@@ -863,7 +931,7 @@ export default memo(ComponentRenderer, (prevProps, nextProps) => {
   ) {
     return false; // State changed, need to re-render
   }
-  
+
   // Props are equal, skip re-render
   return true;
 });

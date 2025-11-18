@@ -21,7 +21,7 @@ export default function BoxRenderer({
   const baseColor = `var(--live-component-color, ${componentColor})`;
   // Use color-mix for modern browsers, with fallback
   const bgColor = `color-mix(in srgb, ${baseColor} 12.5%, transparent)`;
-  
+
   return (
     <Box
       sx={{
@@ -56,4 +56,3 @@ export default function BoxRenderer({
     </Box>
   );
 }
-

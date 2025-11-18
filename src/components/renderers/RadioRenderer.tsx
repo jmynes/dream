@@ -1,6 +1,6 @@
-import { Box, Radio, RadioGroup, FormControlLabel } from "@mui/material";
-import type { RendererProps } from "./rendererTypes";
+import { Box, FormControlLabel, Radio, RadioGroup } from "@mui/material";
 import { useColorUtils } from "../../contexts/ColorUtilsContext";
+import type { RendererProps } from "./rendererTypes";
 
 interface RadioRendererProps extends RendererProps {
   onRadioDoubleClick: (field: string, currentText: string) => void;
@@ -21,7 +21,7 @@ export default function RadioRenderer({
   const { isDarkColor } = useColorUtils();
   // Use CSS variable for live color updates, fallback to prop
   const radioColor = `var(--live-component-color, ${componentColor})`;
-  
+
   const inlineInputStyle = {
     background: "transparent",
     border: "none",
@@ -48,7 +48,7 @@ export default function RadioRenderer({
     >
       <RadioGroup
         {...(component.props as object)}
-        defaultValue={component.props?.value as string || "option1"}
+        defaultValue={(component.props?.value as string) || "option1"}
         row
       >
         <FormControlLabel
@@ -77,11 +77,15 @@ export default function RadioRenderer({
                 style={inlineInputStyle}
               />
             ) : (
+              // biome-ignore lint/a11y/useSemanticElements: Using span for inline editable text that doesn't look like an input
               <span
+                role="textbox"
+                tabIndex={0}
                 data-field="radio1"
                 onDoubleClick={(e) => {
                   e.stopPropagation();
-                  const currentText = (component.props?.label as string) || "Option 1";
+                  const currentText =
+                    (component.props?.label as string) || "Option 1";
                   onRadioDoubleClick("radio1", currentText);
                 }}
               >
@@ -116,11 +120,15 @@ export default function RadioRenderer({
                 style={inlineInputStyle}
               />
             ) : (
+              // biome-ignore lint/a11y/useSemanticElements: Using span for inline editable text that doesn't look like an input
               <span
+                role="textbox"
+                tabIndex={0}
                 data-field="radio2"
                 onDoubleClick={(e) => {
                   e.stopPropagation();
-                  const currentText = (component.props?.label2 as string) || "Option 2";
+                  const currentText =
+                    (component.props?.label2 as string) || "Option 2";
                   onRadioDoubleClick("radio2", currentText);
                 }}
               >
@@ -133,4 +141,3 @@ export default function RadioRenderer({
     </Box>
   );
 }
-

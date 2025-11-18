@@ -1,27 +1,26 @@
 import {
-  GridOn as GridIcon,
-  Edit as PenIcon,
-  AutoFixHigh as MagicWandIcon,
   NearMe as CursorIcon,
+  Gesture as GestureIcon,
+  GridOn as GridIcon,
+  AutoFixHigh as MagicWandIcon,
+  Edit as PenIcon,
   TextFields as TextIcon,
   Web as WebIcon,
-  Gesture as GestureIcon,
 } from "@mui/icons-material";
 import {
   Box,
   Button,
   ButtonGroup,
+  FormControlLabel,
   IconButton,
   Paper,
   Slider,
+  Switch,
   Tooltip,
   Typography,
-  Switch,
-  FormControlLabel,
 } from "@mui/material";
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import ColorSection from "../color/ColorSection";
-
 
 interface ToolsDrawerProps {
   penColor: string;
@@ -99,7 +98,7 @@ export default function ToolsDrawer({
   selectedComponentIds = [],
 }: ToolsDrawerProps) {
   const tooltipSlotProps = { tooltip: { sx: { fontSize: "0.85rem" } } };
-  
+
   // Brush size slider refs/state for performant updates
   const [displayPenSize, setDisplayPenSize] = useState(penSize);
   const penSizeRefLocal = useRef(penSize);
@@ -132,7 +131,7 @@ export default function ToolsDrawer({
   const handlePenSizeChangeCommitted = () => {
     onPenSizeChange(penSizeRefLocal.current);
   };
-  
+
   return (
     <Paper
       sx={{

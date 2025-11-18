@@ -21,4 +21,3 @@ export function useGrid({ width, height }: UseGridProps) {
 
   return { gridCellWidth, gridCellHeight };
 }
-

@@ -3,9 +3,9 @@ import CssBaseline from "@mui/material/CssBaseline";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Canvas from "./components/canvas/Canvas";
-import Footer from "./components/ui/Footer";
 import ComponentsDrawer from "./components/drawers/ComponentsDrawer";
 import ToolsDrawer from "./components/drawers/ToolsDrawer";
+import Footer from "./components/ui/Footer";
 import MenuBar from "./components/ui/MenuBar";
 import { ColorUtilsProvider } from "./contexts/ColorUtilsContext";
 import type { CanvasComponent, ComponentType } from "./types/component";
@@ -148,7 +148,9 @@ function App() {
   const [components, setComponents] = useState<CanvasComponent[]>([]);
   const [selectedComponentType, setSelectedComponentType] =
     useState<ComponentType | null>(null);
-  const [selectedComponentIds, setSelectedComponentIds] = useState<string[]>([]);
+  const [selectedComponentIds, setSelectedComponentIds] = useState<string[]>(
+    [],
+  );
   const [clearCanvasKey, setClearCanvasKey] = useState(0);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -337,159 +339,91 @@ function App() {
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          height: "100vh",
-          overflow: "hidden",
-        }}
-      >
-        <MenuBar
-          onDeleteEverything={handleDeleteEverything}
-          onUndo={handleUndo}
-          onRedo={handleRedo}
-          canUndo={historyIndex > 0}
-          canRedo={historyIndex < history.length - 1}
-        />
-
-        <Box
           sx={{
-            flex: 1,
             display: "flex",
-            gap: 2,
-            p: 2,
+            flexDirection: "column",
+            height: "100vh",
             overflow: "hidden",
           }}
         >
-          <ToolsDrawer
-            penColor={penColor}
-            onPenColorChange={setPenColor}
-            componentColor={componentColor}
-            onComponentColorChange={(color, timestamp) => {
-              setComponentColor(color);
-              if (timestamp !== undefined) {
-                setComponentColorTimestamp(timestamp);
-              }
-            }}
-            canvasColor={canvasColor}
-            onCanvasColorChange={setCanvasColor}
-            penSize={penSize}
-            onPenSizeChange={setPenSize}
-            isDrawing={isDrawing}
-            onDrawingToggle={(drawing) => {
-              setIsDrawing(drawing);
-              if (drawing) {
-                setSelectedComponentType(null);
-                setIsEraser(false);
-                setIsMagicWand(false);
-                setIsLasso(false);
-                setIsTextSelectMode(false);
-              }
-            }}
-            snapToGrid={snapToGrid}
-            onSnapToGridToggle={setSnapToGrid}
-            isEraser={isEraser}
-            onEraserToggle={(eraser) => {
-              setIsEraser(eraser);
-              if (eraser) {
-                setIsDrawing(false);
-                setIsMagicWand(false);
-                setIsLasso(false);
-                setSelectedComponentType(null);
-                setIsTextSelectMode(false);
-              }
-            }}
-            isMagicWand={isMagicWand}
-            onMagicWandToggle={(magicWand) => {
-              setIsMagicWand(magicWand);
-              if (magicWand) {
-                setIsDrawing(false);
-                setIsEraser(false);
-                setIsLasso(false);
-                setSelectedComponentType(null);
-                setIsTextSelectMode(false);
-              }
-            }}
-            isLasso={isLasso}
-            onLassoToggle={(lasso) => {
-              setIsLasso(lasso);
-              if (lasso) {
-                setIsDrawing(false);
-                setIsEraser(false);
-                setIsMagicWand(false);
-                setSelectedComponentType(null);
-                setIsTextSelectMode(false);
-              }
-            }}
-            onCursorMode={() => {
-              setIsDrawing(false);
-              setIsEraser(false);
-              setIsMagicWand(false);
-              setIsLasso(false);
-              setSelectedComponentType(null);
-              setIsTextSelectMode(false);
-            }}
-            isCursorMode={
-              !isDrawing &&
-              !isEraser &&
-              !isMagicWand &&
-              !isLasso &&
-              !isTextSelectMode &&
-              !selectedComponentType
-            }
-            isTextSelectMode={isTextSelectMode}
-            onTextSelectToggle={(next) => {
-              setIsTextSelectMode(next);
-              if (next) {
-                setIsDrawing(false);
-                setIsEraser(false);
-                setIsMagicWand(false);
-                setIsLasso(false);
-                setSelectedComponentType(null);
-              }
-            }}
-            resizeMode={resizeMode}
-            onResizeModeChange={setResizeMode}
-            showTitleBar={showTitleBar}
-            onTitleBarToggle={setShowTitleBar}
-            showUrlBar={showUrlBar}
-            onUrlBarToggle={setShowUrlBar}
-            showBookmarkBar={showBookmarkBar}
-            onBookmarkBarToggle={setShowBookmarkBar}
-            isBrowserUIEnabled={isBrowserUIEnabled}
-            onBrowserUIEnabledToggle={setIsBrowserUIEnabled}
-            isMacOSStyle={isMacOSStyle}
-            onMacOSStyleToggle={setIsMacOSStyle}
-            selectedComponentIds={selectedComponentIds}
+          <MenuBar
+            onDeleteEverything={handleDeleteEverything}
+            onUndo={handleUndo}
+            onRedo={handleRedo}
+            canUndo={historyIndex > 0}
+            canRedo={historyIndex < history.length - 1}
           />
-          <Box sx={{ flex: 1, overflow: "hidden", display: "flex" }}>
-            <Canvas
-              key={clearCanvasKey}
+
+          <Box
+            sx={{
+              flex: 1,
+              display: "flex",
+              gap: 2,
+              p: 2,
+              overflow: "hidden",
+            }}
+          >
+            <ToolsDrawer
               penColor={penColor}
+              onPenColorChange={setPenColor}
               componentColor={componentColor}
-              componentColorTimestamp={componentColorTimestamp}
-              penSize={penSize}
-              isDrawing={isDrawing}
-              isEraser={isEraser}
-              isMagicWand={isMagicWand}
-              isLasso={isLasso}
-              components={components}
-              onComponentsChange={handleComponentsChange}
-              onCanvasStateChange={handleCanvasStateChange}
-              restoreCanvasImageData={restoreCanvasImageData}
-              selectedComponentType={selectedComponentType}
-              onComponentPlaced={handleComponentPlaced}
-              snapToGrid={snapToGrid}
-              showTitleBar={showTitleBar}
-              showUrlBar={showUrlBar}
-              showBookmarkBar={showBookmarkBar}
-              isBrowserUIEnabled={isBrowserUIEnabled}
-              isMacOSStyle={isMacOSStyle}
+              onComponentColorChange={(color, timestamp) => {
+                setComponentColor(color);
+                if (timestamp !== undefined) {
+                  setComponentColorTimestamp(timestamp);
+                }
+              }}
               canvasColor={canvasColor}
-              resizeMode={resizeMode}
-              isTextSelectMode={isTextSelectMode}
-              onSelectedComponentIdsChange={setSelectedComponentIds}
-              onResetTools={() => {
+              onCanvasColorChange={setCanvasColor}
+              penSize={penSize}
+              onPenSizeChange={setPenSize}
+              isDrawing={isDrawing}
+              onDrawingToggle={(drawing) => {
+                setIsDrawing(drawing);
+                if (drawing) {
+                  setSelectedComponentType(null);
+                  setIsEraser(false);
+                  setIsMagicWand(false);
+                  setIsLasso(false);
+                  setIsTextSelectMode(false);
+                }
+              }}
+              snapToGrid={snapToGrid}
+              onSnapToGridToggle={setSnapToGrid}
+              isEraser={isEraser}
+              onEraserToggle={(eraser) => {
+                setIsEraser(eraser);
+                if (eraser) {
+                  setIsDrawing(false);
+                  setIsMagicWand(false);
+                  setIsLasso(false);
+                  setSelectedComponentType(null);
+                  setIsTextSelectMode(false);
+                }
+              }}
+              isMagicWand={isMagicWand}
+              onMagicWandToggle={(magicWand) => {
+                setIsMagicWand(magicWand);
+                if (magicWand) {
+                  setIsDrawing(false);
+                  setIsEraser(false);
+                  setIsLasso(false);
+                  setSelectedComponentType(null);
+                  setIsTextSelectMode(false);
+                }
+              }}
+              isLasso={isLasso}
+              onLassoToggle={(lasso) => {
+                setIsLasso(lasso);
+                if (lasso) {
+                  setIsDrawing(false);
+                  setIsEraser(false);
+                  setIsMagicWand(false);
+                  setSelectedComponentType(null);
+                  setIsTextSelectMode(false);
+                }
+              }}
+              onCursorMode={() => {
                 setIsDrawing(false);
                 setIsEraser(false);
                 setIsMagicWand(false);
@@ -497,24 +431,92 @@ function App() {
                 setSelectedComponentType(null);
                 setIsTextSelectMode(false);
               }}
+              isCursorMode={
+                !isDrawing &&
+                !isEraser &&
+                !isMagicWand &&
+                !isLasso &&
+                !isTextSelectMode &&
+                !selectedComponentType
+              }
+              isTextSelectMode={isTextSelectMode}
+              onTextSelectToggle={(next) => {
+                setIsTextSelectMode(next);
+                if (next) {
+                  setIsDrawing(false);
+                  setIsEraser(false);
+                  setIsMagicWand(false);
+                  setIsLasso(false);
+                  setSelectedComponentType(null);
+                }
+              }}
+              resizeMode={resizeMode}
+              onResizeModeChange={setResizeMode}
+              showTitleBar={showTitleBar}
+              onTitleBarToggle={setShowTitleBar}
+              showUrlBar={showUrlBar}
+              onUrlBarToggle={setShowUrlBar}
+              showBookmarkBar={showBookmarkBar}
+              onBookmarkBarToggle={setShowBookmarkBar}
+              isBrowserUIEnabled={isBrowserUIEnabled}
+              onBrowserUIEnabledToggle={setIsBrowserUIEnabled}
+              isMacOSStyle={isMacOSStyle}
+              onMacOSStyleToggle={setIsMacOSStyle}
+              selectedComponentIds={selectedComponentIds}
+            />
+            <Box sx={{ flex: 1, overflow: "hidden", display: "flex" }}>
+              <Canvas
+                key={clearCanvasKey}
+                penColor={penColor}
+                componentColor={componentColor}
+                componentColorTimestamp={componentColorTimestamp}
+                penSize={penSize}
+                isDrawing={isDrawing}
+                isEraser={isEraser}
+                isMagicWand={isMagicWand}
+                isLasso={isLasso}
+                components={components}
+                onComponentsChange={handleComponentsChange}
+                onCanvasStateChange={handleCanvasStateChange}
+                restoreCanvasImageData={restoreCanvasImageData}
+                selectedComponentType={selectedComponentType}
+                onComponentPlaced={handleComponentPlaced}
+                snapToGrid={snapToGrid}
+                showTitleBar={showTitleBar}
+                showUrlBar={showUrlBar}
+                showBookmarkBar={showBookmarkBar}
+                isBrowserUIEnabled={isBrowserUIEnabled}
+                isMacOSStyle={isMacOSStyle}
+                canvasColor={canvasColor}
+                resizeMode={resizeMode}
+                isTextSelectMode={isTextSelectMode}
+                onSelectedComponentIdsChange={setSelectedComponentIds}
+                onResetTools={() => {
+                  setIsDrawing(false);
+                  setIsEraser(false);
+                  setIsMagicWand(false);
+                  setIsLasso(false);
+                  setSelectedComponentType(null);
+                  setIsTextSelectMode(false);
+                }}
+              />
+            </Box>
+            <ComponentsDrawer
+              onComponentSelect={handleComponentSelect}
+              selectedComponentType={selectedComponentType}
+              componentColor={componentColor}
             />
           </Box>
-          <ComponentsDrawer
-            onComponentSelect={handleComponentSelect}
-            selectedComponentType={selectedComponentType}
-            componentColor={componentColor}
-          />
+          <Footer />
         </Box>
-        <Footer />
-      </Box>
-      {/* Toast notification */}
-      <Snackbar
-        open={toastMessage !== null}
-        autoHideDuration={3000}
-        onClose={() => setToastMessage(null)}
-        message={toastMessage}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      />
+        {/* Toast notification */}
+        <Snackbar
+          open={toastMessage !== null}
+          autoHideDuration={3000}
+          onClose={() => setToastMessage(null)}
+          message={toastMessage}
+          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        />
       </ThemeProvider>
     </ColorUtilsProvider>
   );

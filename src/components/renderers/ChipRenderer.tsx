@@ -1,6 +1,6 @@
 import { Box, Chip } from "@mui/material";
-import type { RendererProps } from "./rendererTypes";
 import { useColorUtils } from "../../contexts/ColorUtilsContext";
+import type { RendererProps } from "./rendererTypes";
 
 interface ChipRendererProps extends RendererProps {
   textWidthRef?: React.MutableRefObject<number>;
@@ -21,7 +21,7 @@ export default function ChipRenderer({
   const { getTextColorForFilled } = useColorUtils();
   // Use CSS variable for live color updates, fallback to prop
   const bgColor = `var(--live-component-color, ${componentColor})`;
-  
+
   return (
     <Box
       sx={{
@@ -54,9 +54,15 @@ export default function ChipRenderer({
                 fontFamily: "inherit",
                 padding: 0,
                 margin: 0,
-                width: isEditing && textWidthRef?.current && textWidthRef.current > 0 ? `${textWidthRef.current}px` : "auto",
+                width:
+                  isEditing && textWidthRef?.current && textWidthRef.current > 0
+                    ? `${textWidthRef.current}px`
+                    : "auto",
                 minWidth: 0,
-                maxWidth: isEditing && textWidthRef?.current && textWidthRef.current > 0 ? `${textWidthRef.current * 2}px` : "none",
+                maxWidth:
+                  isEditing && textWidthRef?.current && textWidthRef.current > 0
+                    ? `${textWidthRef.current * 2}px`
+                    : "none",
               }}
             />
           ) : (
@@ -69,14 +75,18 @@ export default function ChipRenderer({
           "& .MuiChip-label": {
             color: `${getTextColorForFilled(componentColor)} !important`,
           },
-          ...(isEditing && editingField === "label" && textWidthRef?.current && textWidthRef.current > 0 ? {
-            width: `${textWidthRef.current + 40}px`,
-            minWidth: `${textWidthRef.current + 40}px`,
-            maxWidth: `${textWidthRef.current * 3 + 40}px`,
-          } : {}),
+          ...(isEditing &&
+          editingField === "label" &&
+          textWidthRef?.current &&
+          textWidthRef.current > 0
+            ? {
+                width: `${textWidthRef.current + 40}px`,
+                minWidth: `${textWidthRef.current + 40}px`,
+                maxWidth: `${textWidthRef.current * 3 + 40}px`,
+              }
+            : {}),
         }}
       />
     </Box>
   );
 }
-

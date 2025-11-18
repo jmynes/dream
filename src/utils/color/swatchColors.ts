@@ -34,4 +34,3 @@ export const swatchColors: SwatchColor[] = [
   { hex: "#F5F5F5", name: "Grey 100" },
   { hex: "#FFFFFF", name: "White" },
 ];
-

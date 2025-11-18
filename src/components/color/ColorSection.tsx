@@ -1,4 +1,8 @@
-import { ChromePicker } from "react-color";
+import {
+  Palette as ColorIcon,
+  Colorize as EyedropperIcon,
+  Refresh as RefreshIcon,
+} from "@mui/icons-material";
 import {
   Box,
   Button,
@@ -7,12 +11,8 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import {
-  Colorize as EyedropperIcon,
-  Palette as ColorIcon,
-  Refresh as RefreshIcon,
-} from "@mui/icons-material";
 import { useCallback } from "react";
+import { ChromePicker } from "react-color";
 import { useColorUtils } from "../../contexts/ColorUtilsContext";
 import { useColorPicker } from "../../hooks/color/useColorPicker";
 import { useEyedropper } from "../../hooks/color/useEyedropper";
@@ -54,19 +54,24 @@ export default function ColorSection({
     onColorChange,
   });
 
-  const { isActive: isEyedropperActive, handleEyedropperClick } =
-    useEyedropper(
-      useCallback(
-        (hex: string) => {
-          onColorChange(hex, label === "Component Color" ? Date.now() : undefined);
-        },
-        [onColorChange, label],
-      ),
-    );
+  const { isActive: isEyedropperActive, handleEyedropperClick } = useEyedropper(
+    useCallback(
+      (hex: string) => {
+        onColorChange(
+          hex,
+          label === "Component Color" ? Date.now() : undefined,
+        );
+      },
+      [onColorChange, label],
+    ),
+  );
 
   const handleSwatchClick = useCallback(
     (swatchHex: string) => {
-      onColorChange(swatchHex, label === "Component Color" ? Date.now() : undefined);
+      onColorChange(
+        swatchHex,
+        label === "Component Color" ? Date.now() : undefined,
+      );
     },
     [onColorChange, label],
   );
@@ -104,7 +109,15 @@ export default function ColorSection({
           }}
         >
           <Box sx={{ p: 2 }}>
-            <Box sx={{ "& > div": { boxShadow: "none !important", border: "1px solid #e0e0e0", borderRadius: "4px" } }}>
+            <Box
+              sx={{
+                "& > div": {
+                  boxShadow: "none !important",
+                  border: "1px solid #e0e0e0",
+                  borderRadius: "4px",
+                },
+              }}
+            >
               <ChromePicker
                 color={pickerColor}
                 onChange={handleColorChange}
@@ -113,7 +126,7 @@ export default function ColorSection({
             </Box>
           </Box>
         </Popover>
-        
+
         <Tooltip title="Eyedropper Tool" slotProps={tooltipSlotProps}>
           <IconButton
             size="small"
@@ -130,7 +143,12 @@ export default function ColorSection({
           <Tooltip title={resetTooltip} slotProps={tooltipSlotProps}>
             <IconButton
               size="small"
-              onClick={() => onColorChange(defaultColor, label === "Component Color" ? Date.now() : undefined)}
+              onClick={() =>
+                onColorChange(
+                  defaultColor,
+                  label === "Component Color" ? Date.now() : undefined,
+                )
+              }
               sx={{ padding: 0.5 }}
             >
               <RefreshIcon fontSize="small" />
@@ -143,4 +161,3 @@ export default function ColorSection({
     </Box>
   );
 }
-
