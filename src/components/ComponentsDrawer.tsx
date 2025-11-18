@@ -122,6 +122,7 @@ const getComponentItems = (componentColor: string): ComponentItem[] => {
             backgroundColor: liveColor, 
             "&:hover": { backgroundColor: liveColor },
             color: getTextColorForFilled(componentColor),
+            textTransform: "none",
           }}
         >
           Button
@@ -132,9 +133,20 @@ const getComponentItems = (componentColor: string): ComponentItem[] => {
       type: "Card",
       label: "Card",
       preview: (
-        <Card sx={{ minWidth: 120, border: `2px solid ${liveColor}` }}>
-          <CardContent>
-            <Typography variant="body2">Card</Typography>
+        <Card sx={{ minWidth: 120, border: `2px solid ${liveColor}`, display: "flex" }}>
+          <CardContent sx={{ 
+            textAlign: "center",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "100%",
+            minHeight: 60,
+            p: 2,
+            "&:last-child": {
+              pb: 2,
+            },
+          }}>
+            <Typography variant="body2" sx={{ width: "100%" }}>Card</Typography>
           </CardContent>
         </Card>
       ),
@@ -310,26 +322,26 @@ const getComponentItems = (componentColor: string): ComponentItem[] => {
           <Table size="small" sx={{ border: `1px solid ${liveColor}` }}>
             <TableHead>
               <TableRow>
-                <TableCell sx={{ borderColor: liveColor, fontWeight: "bold", p: 0.5, fontSize: "0.7rem", textAlign: "center" }}>
+                <TableCell sx={{ borderColor: liveColor, fontWeight: "bold", p: 0.5, fontSize: "0.7rem", textAlign: "center", verticalAlign: "middle" }}>
                   H1
                 </TableCell>
-                <TableCell sx={{ borderColor: liveColor, fontWeight: "bold", p: 0.5, fontSize: "0.7rem", textAlign: "center" }}>
+                <TableCell sx={{ borderColor: liveColor, fontWeight: "bold", p: 0.5, fontSize: "0.7rem", textAlign: "center", verticalAlign: "middle" }}>
                   H2
                 </TableCell>
-                <TableCell sx={{ borderColor: liveColor, fontWeight: "bold", p: 0.5, fontSize: "0.7rem", textAlign: "center" }}>
+                <TableCell sx={{ borderColor: liveColor, fontWeight: "bold", p: 0.5, fontSize: "0.7rem", textAlign: "center", verticalAlign: "middle" }}>
                   H3
                 </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               <TableRow>
-                <TableCell sx={{ borderColor: liveColor, p: 0.5, fontSize: "0.7rem", textAlign: "center" }}>
+                <TableCell sx={{ borderColor: liveColor, p: 0.5, fontSize: "0.7rem", textAlign: "center", verticalAlign: "middle" }}>
                   C1
                 </TableCell>
-                <TableCell sx={{ borderColor: liveColor, p: 0.5, fontSize: "0.7rem", textAlign: "center" }}>
+                <TableCell sx={{ borderColor: liveColor, p: 0.5, fontSize: "0.7rem", textAlign: "center", verticalAlign: "middle" }}>
                   C2
                 </TableCell>
-                <TableCell sx={{ borderColor: liveColor, p: 0.5, fontSize: "0.7rem", textAlign: "center" }}>
+                <TableCell sx={{ borderColor: liveColor, p: 0.5, fontSize: "0.7rem", textAlign: "center", verticalAlign: "middle" }}>
                   C3
                 </TableCell>
               </TableRow>
