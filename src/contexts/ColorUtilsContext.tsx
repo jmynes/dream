@@ -4,6 +4,8 @@ interface ColorUtilsContextValue {
   isDarkColor: (color: string) => boolean;
   getTextColorForFilled: (bgColor: string) => string;
   setLiveComponentColor: (color: string | null, selectedIds: string[]) => void;
+  setLiveDrawerColor: (color: string | null) => void;
+  registerDrawerContainer: (element: HTMLElement | null) => void;
 }
 
 const ColorUtilsContext = createContext<ColorUtilsContextValue | null>(null);
@@ -65,6 +67,9 @@ export function ColorUtilsProvider({ children }: ColorUtilsProviderProps) {
   const animationFrameRef = useRef<number | null>(null);
   // Cache element references to avoid repeated DOM queries
   const elementCacheRef = useRef<Map<string, HTMLElement>>(new Map());
+  // Ref for drawer container element
+  const drawerContainerRef = useRef<HTMLElement | null>(null);
+  const drawerAnimationFrameRef = useRef<number | null>(null);
 
   // Update element cache when selected IDs change
   const updateElementCache = useCallback((selectedIds: string[]) => {
@@ -130,13 +135,44 @@ export function ColorUtilsProvider({ children }: ColorUtilsProviderProps) {
     [updateElementCache],
   );
 
+  // Update live color for drawer previews using CSS custom properties
+  const setLiveDrawerColor = useCallback((color: string | null) => {
+    // Cancel any pending animation frame
+    if (drawerAnimationFrameRef.current !== null) {
+      cancelAnimationFrame(drawerAnimationFrameRef.current);
+    }
+
+    // Schedule DOM update on next frame
+    drawerAnimationFrameRef.current = requestAnimationFrame(() => {
+      const container = drawerContainerRef.current;
+      
+      if (container) {
+        if (color === null) {
+          // Clear live color - remove CSS variable
+          container.style.removeProperty("--drawer-component-color");
+        } else {
+          // Set live color via CSS custom property
+          container.style.setProperty("--drawer-component-color", color);
+        }
+      }
+      drawerAnimationFrameRef.current = null;
+    });
+  }, []);
+
+  // Expose function to register drawer container
+  const registerDrawerContainer = useCallback((element: HTMLElement | null) => {
+    drawerContainerRef.current = element;
+  }, []);
+
   const value = useMemo(
     () => ({
       isDarkColor: isDarkColorImpl,
       getTextColorForFilled: getTextColorForFilledImpl,
       setLiveComponentColor,
+      setLiveDrawerColor,
+      registerDrawerContainer,
     }),
-    [setLiveComponentColor],
+    [setLiveComponentColor, setLiveDrawerColor, registerDrawerContainer],
   );
 
   return (

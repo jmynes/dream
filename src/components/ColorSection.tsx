@@ -98,7 +98,7 @@ export default function ColorSection({
   const [swatchesExpanded, setSwatchesExpanded] = useState(false);
   const eyedropperAbortRef = useRef<AbortController | null>(null);
   const tooltipSlotProps = { tooltip: { sx: { fontSize: "0.85rem" } } };
-  const { setLiveComponentColor } = useColorUtils();
+  const { setLiveComponentColor, setLiveDrawerColor } = useColorUtils();
   const isDraggingRef = useRef(false);
   const liveColorRef = useRef<string | null>(null);
 
@@ -113,6 +113,7 @@ export default function ColorSection({
       isDraggingRef.current = false;
       liveColorRef.current = null;
       setLiveComponentColor(null, selectedComponentIds);
+      setLiveDrawerColor(null);
     }
   };
 
@@ -129,12 +130,13 @@ export default function ColorSection({
         liveColorRef.current = hexColor;
         // Update live color via CSS custom properties (no re-renders)
         setLiveComponentColor(hexColor, selectedComponentIds);
+        setLiveDrawerColor(hexColor);
       } else {
         // For other colors, update immediately
         onColorChange(hexColor, label === "Component Color" ? Date.now() : undefined);
       }
     },
-    [onColorChange, label, selectedComponentIds, setLiveComponentColor],
+    [onColorChange, label, selectedComponentIds, setLiveComponentColor, setLiveDrawerColor],
   );
 
   const handleColorChangeComplete = useCallback(
@@ -150,13 +152,14 @@ export default function ColorSection({
         liveColorRef.current = null;
         // Clear live color and commit actual change
         setLiveComponentColor(null, selectedComponentIds);
+        setLiveDrawerColor(null);
         onColorChange(hexColor, Date.now());
       } else {
         // For other colors, just update
         onColorChange(hexColor, label === "Component Color" ? Date.now() : undefined);
       }
     },
-    [onColorChange, label, selectedComponentIds, setLiveComponentColor],
+    [onColorChange, label, selectedComponentIds, setLiveComponentColor, setLiveDrawerColor],
   );
 
   const handleEyedropperClick = useCallback(async () => {

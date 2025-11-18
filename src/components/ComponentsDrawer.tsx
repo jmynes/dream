@@ -29,7 +29,8 @@ import {
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import type { ComponentType } from "../types/component";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
+import { useColorUtils } from "../contexts/ColorUtilsContext";
 
 interface ComponentsDrawerProps {
   onComponentSelect: (type: ComponentType) => void;
@@ -80,12 +81,18 @@ const getTextColorForFilled = (bgColor: string): string => {
   return isDarkColor(bgColor) ? "#ffffff" : "#000000";
 };
 
+// Helper to create CSS variable reference for live color updates
+const getLiveColor = (componentColor: string) => `var(--drawer-component-color, ${componentColor})`;
+
 const getComponentItems = (componentColor: string): ComponentItem[] => {
+  // Use CSS variable for live color updates in drawer previews
+  const liveColor = getLiveColor(componentColor);
+  
   const items: ComponentItem[] = [
     {
       type: "Avatar",
       label: "Avatar",
-      preview: <Avatar sx={{ bgcolor: componentColor, color: `${getTextColorForFilled(componentColor)} !important` }}>A</Avatar>,
+      preview: <Avatar sx={{ bgcolor: liveColor, color: `${getTextColorForFilled(componentColor)} !important` }}>A</Avatar>,
     },
     {
       type: "Box",
@@ -96,8 +103,8 @@ const getComponentItems = (componentColor: string): ComponentItem[] => {
             p: 2,
             minWidth: 120,
             border: "1px dashed",
-            borderColor: componentColor,
-            backgroundColor: `${componentColor}20`,
+            borderColor: liveColor,
+            backgroundColor: `color-mix(in srgb, ${liveColor} 12.5%, transparent)`,
             textAlign: "center",
           }}
         >
@@ -112,8 +119,8 @@ const getComponentItems = (componentColor: string): ComponentItem[] => {
         <Button 
           variant="contained" 
           sx={{ 
-            backgroundColor: componentColor, 
-            "&:hover": { backgroundColor: componentColor },
+            backgroundColor: liveColor, 
+            "&:hover": { backgroundColor: liveColor },
             color: getTextColorForFilled(componentColor),
           }}
         >
@@ -125,7 +132,7 @@ const getComponentItems = (componentColor: string): ComponentItem[] => {
       type: "Card",
       label: "Card",
       preview: (
-        <Card sx={{ minWidth: 120, border: `2px solid ${componentColor}` }}>
+        <Card sx={{ minWidth: 120, border: `2px solid ${liveColor}` }}>
           <CardContent>
             <Typography variant="body2">Card</Typography>
           </CardContent>
@@ -141,15 +148,15 @@ const getComponentItems = (componentColor: string): ComponentItem[] => {
             <Checkbox 
               defaultChecked 
               sx={{ 
-                color: componentColor,
+                color: liveColor,
                 "&.Mui-checked": { 
-                  color: componentColor,
+                  color: liveColor,
                 },
                 "& .MuiSvgIcon-root": {
-                  color: componentColor,
+                  color: liveColor,
                 },
                 "&.Mui-checked .MuiSvgIcon-root": {
-                  color: componentColor,
+                  color: liveColor,
                 },
               }} 
             />
@@ -165,7 +172,7 @@ const getComponentItems = (componentColor: string): ComponentItem[] => {
         <Chip
           label="Chip"
           sx={{
-            backgroundColor: componentColor,
+            backgroundColor: liveColor,
             color: `${getTextColorForFilled(componentColor)} !important`,
             "& .MuiChip-label": {
               color: `${getTextColorForFilled(componentColor)} !important`,
@@ -181,7 +188,7 @@ const getComponentItems = (componentColor: string): ComponentItem[] => {
         <Divider
           sx={{
             width: 120,
-            borderColor: componentColor,
+            borderColor: liveColor,
             borderTopWidth: "2px",
           }}
         />
@@ -191,7 +198,7 @@ const getComponentItems = (componentColor: string): ComponentItem[] => {
       type: "Paper",
       label: "Paper",
       preview: (
-        <Paper sx={{ p: 2, minWidth: 120, textAlign: "center", backgroundColor: componentColor }}>
+        <Paper sx={{ p: 2, minWidth: 120, textAlign: "center", backgroundColor: liveColor }}>
           <Typography variant="body2" sx={{ color: getTextColorForFilled(componentColor) }}>
             Paper
           </Typography>
@@ -206,7 +213,7 @@ const getComponentItems = (componentColor: string): ComponentItem[] => {
           defaultValue={50} 
           sx={{ 
             width: 120, 
-            color: componentColor,
+            color: liveColor,
             "& .MuiSlider-thumb": {
               ...(isDarkColor(componentColor) ? {} : {
                 boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
@@ -233,9 +240,9 @@ const getComponentItems = (componentColor: string): ComponentItem[] => {
         <Switch 
           defaultChecked 
           sx={{ 
-            "& .MuiSwitch-switchBase.Mui-checked": { color: componentColor }, 
+            "& .MuiSwitch-switchBase.Mui-checked": { color: liveColor }, 
             "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": { 
-              backgroundColor: componentColor,
+              backgroundColor: liveColor,
               ...(isDarkColor(componentColor) ? {} : {
                 boxShadow: "0 0 0 1px rgba(0, 0, 0, 0.2)",
               }),
@@ -257,7 +264,7 @@ const getComponentItems = (componentColor: string): ComponentItem[] => {
     {
       type: "Typography",
       label: "Typography",
-      preview: <Typography variant="body1" sx={{ color: componentColor }}>Typography</Typography>,
+      preview: <Typography variant="body1" sx={{ color: liveColor }}>Typography</Typography>,
     },
     {
       type: "Radio",
@@ -269,9 +276,9 @@ const getComponentItems = (componentColor: string): ComponentItem[] => {
             control={
               <Radio
                 sx={{
-                  color: isDarkColor(componentColor) ? componentColor : "#000000",
+                  color: isDarkColor(componentColor) ? liveColor : "#000000",
                   "&.Mui-checked": {
-                    color: componentColor,
+                    color: liveColor,
                   },
                 }}
               />
@@ -283,9 +290,9 @@ const getComponentItems = (componentColor: string): ComponentItem[] => {
             control={
               <Radio
                 sx={{
-                  color: isDarkColor(componentColor) ? componentColor : "#000000",
+                  color: isDarkColor(componentColor) ? liveColor : "#000000",
                   "&.Mui-checked": {
-                    color: componentColor,
+                    color: liveColor,
                   },
                 }}
               />
@@ -300,29 +307,29 @@ const getComponentItems = (componentColor: string): ComponentItem[] => {
       label: "Table",
       preview: (
         <TableContainer sx={{ maxHeight: 100, maxWidth: 220 }}>
-          <Table size="small" sx={{ border: `1px solid ${componentColor}` }}>
+          <Table size="small" sx={{ border: `1px solid ${liveColor}` }}>
             <TableHead>
               <TableRow>
-                <TableCell sx={{ borderColor: componentColor, fontWeight: "bold", p: 0.5, fontSize: "0.7rem" }}>
+                <TableCell sx={{ borderColor: liveColor, fontWeight: "bold", p: 0.5, fontSize: "0.7rem" }}>
                   H1
                 </TableCell>
-                <TableCell sx={{ borderColor: componentColor, fontWeight: "bold", p: 0.5, fontSize: "0.7rem" }}>
+                <TableCell sx={{ borderColor: liveColor, fontWeight: "bold", p: 0.5, fontSize: "0.7rem" }}>
                   H2
                 </TableCell>
-                <TableCell sx={{ borderColor: componentColor, fontWeight: "bold", p: 0.5, fontSize: "0.7rem" }}>
+                <TableCell sx={{ borderColor: liveColor, fontWeight: "bold", p: 0.5, fontSize: "0.7rem" }}>
                   H3
                 </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               <TableRow>
-                <TableCell sx={{ borderColor: componentColor, p: 0.5, fontSize: "0.7rem" }}>
+                <TableCell sx={{ borderColor: liveColor, p: 0.5, fontSize: "0.7rem" }}>
                   C1
                 </TableCell>
-                <TableCell sx={{ borderColor: componentColor, p: 0.5, fontSize: "0.7rem" }}>
+                <TableCell sx={{ borderColor: liveColor, p: 0.5, fontSize: "0.7rem" }}>
                   C2
                 </TableCell>
-                <TableCell sx={{ borderColor: componentColor, p: 0.5, fontSize: "0.7rem" }}>
+                <TableCell sx={{ borderColor: liveColor, p: 0.5, fontSize: "0.7rem" }}>
                   C3
                 </TableCell>
               </TableRow>
@@ -344,6 +351,23 @@ export default function ComponentsDrawer({
 }: ComponentsDrawerProps) {
   const componentItems = getComponentItems(componentColor);
   const [searchQuery, setSearchQuery] = useState("");
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { registerDrawerContainer } = useColorUtils();
+
+  // Register drawer container for live color updates
+  useEffect(() => {
+    registerDrawerContainer(containerRef.current);
+    return () => {
+      registerDrawerContainer(null);
+    };
+  }, [registerDrawerContainer]);
+
+  // Set base color CSS variable when componentColor changes
+  useEffect(() => {
+    if (containerRef.current) {
+      containerRef.current.style.setProperty("--drawer-component-color", componentColor);
+    }
+  }, [componentColor]);
 
   const filteredItems = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
@@ -358,6 +382,7 @@ export default function ComponentsDrawer({
 
   return (
     <Paper
+      ref={containerRef}
       sx={{
         width: 250,
         height: "100%",
