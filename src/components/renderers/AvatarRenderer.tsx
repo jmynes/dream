@@ -38,7 +38,7 @@ export default function AvatarRenderer({
           width: Math.min(componentWidth || 40, componentHeight || 40),
           height: Math.min(componentWidth || 40, componentHeight || 40),
           bgcolor: componentColor,
-          color: getTextColorForFilled(componentColor),
+          color: `${getTextColorForFilled(componentColor)} !important`,
         }}
       >
         {isEditing && editingField === "text" ? (

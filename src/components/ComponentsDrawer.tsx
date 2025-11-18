@@ -85,7 +85,7 @@ const getComponentItems = (componentColor: string): ComponentItem[] => {
     {
       type: "Avatar",
       label: "Avatar",
-      preview: <Avatar sx={{ bgcolor: componentColor }}>A</Avatar>,
+      preview: <Avatar sx={{ bgcolor: componentColor, color: `${getTextColorForFilled(componentColor)} !important` }}>A</Avatar>,
     },
     {
       type: "Box",
@@ -161,7 +161,18 @@ const getComponentItems = (componentColor: string): ComponentItem[] => {
     {
       type: "Chip",
       label: "Chip",
-      preview: <Chip label="Chip" sx={{ backgroundColor: componentColor, color: "#fff" }} />,
+      preview: (
+        <Chip
+          label="Chip"
+          sx={{
+            backgroundColor: componentColor,
+            color: `${getTextColorForFilled(componentColor)} !important`,
+            "& .MuiChip-label": {
+              color: `${getTextColorForFilled(componentColor)} !important`,
+            },
+          }}
+        />
+      ),
     },
     {
       type: "Divider",

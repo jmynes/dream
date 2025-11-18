@@ -46,7 +46,7 @@ export default function ChipRenderer({
                 background: "transparent",
                 border: "none",
                 outline: "none",
-                color: "inherit",
+                color: getTextColorForFilled(componentColor),
                 fontSize: "inherit",
                 fontFamily: "inherit",
                 padding: 0,
@@ -62,7 +62,10 @@ export default function ChipRenderer({
         }
         sx={{
           backgroundColor: componentColor,
-          color: getTextColorForFilled(componentColor),
+          color: `${getTextColorForFilled(componentColor)} !important`,
+          "& .MuiChip-label": {
+            color: `${getTextColorForFilled(componentColor)} !important`,
+          },
           ...(isEditing && editingField === "label" && textWidthRef?.current && textWidthRef.current > 0 ? {
             width: `${textWidthRef.current + 40}px`,
             minWidth: `${textWidthRef.current + 40}px`,
