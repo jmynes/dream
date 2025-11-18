@@ -1,12 +1,10 @@
 import {
   GridOn as GridIcon,
-  Palette as ColorIcon,
   Edit as PenIcon,
   AutoFixHigh as MagicWandIcon,
   NearMe as CursorIcon,
   TextFields as TextIcon,
   Web as WebIcon,
-  Refresh as RefreshIcon,
   Gesture as GestureIcon,
 } from "@mui/icons-material";
 import {
@@ -15,7 +13,6 @@ import {
   ButtonGroup,
   IconButton,
   Paper,
-  Popover,
   Slider,
   Tooltip,
   Typography,
@@ -23,7 +20,7 @@ import {
   FormControlLabel,
 } from "@mui/material";
 import { useState, useEffect, useRef } from "react";
-import ColorPicker from "./ColorPicker";
+import ColorSection from "./ColorSection";
 
 
 interface ToolsDrawerProps {
@@ -100,13 +97,6 @@ export default function ToolsDrawer({
   onMacOSStyleToggle,
 }: ToolsDrawerProps) {
   const tooltipSlotProps = { tooltip: { sx: { fontSize: "0.85rem" } } };
-  // State for color picker popovers
-  const [componentColorAnchor, setComponentColorAnchor] =
-    useState<HTMLElement | null>(null);
-  const [penColorAnchor, setPenColorAnchor] = useState<HTMLElement | null>(null);
-  const [canvasColorAnchor, setCanvasColorAnchor] =
-    useState<HTMLElement | null>(null);
-  
   
   // Brush size slider refs/state for performant updates
   const [displayPenSize, setDisplayPenSize] = useState(penSize);
@@ -139,34 +129,6 @@ export default function ToolsDrawer({
 
   const handlePenSizeChangeCommitted = () => {
     onPenSizeChange(penSizeRefLocal.current);
-  };
-
-  const handleComponentColorOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setComponentColorAnchor(event.currentTarget);
-  };
-  
-  const handleComponentColorClose = () => {
-    setComponentColorAnchor(null);
-  };
-  
-  const handleComponentColorChange = (color: string) => {
-    onComponentColorChange(color, Date.now());
-  };
-  
-  const handlePenColorOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setPenColorAnchor(event.currentTarget);
-  };
-  
-  const handlePenColorClose = () => {
-    setPenColorAnchor(null);
-  };
-  
-  const handleCanvasColorOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setCanvasColorAnchor(event.currentTarget);
-  };
-  
-  const handleCanvasColorClose = () => {
-    setCanvasColorAnchor(null);
   };
   
   return (
@@ -339,158 +301,26 @@ export default function ToolsDrawer({
           />
         </Box>
 
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-          <Typography variant="body2" color="text.secondary">
-            Brush Color
-          </Typography>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <ColorIcon sx={{ color: "#1976d2" }} />
-            <Button
-              variant="outlined"
-              onClick={handlePenColorOpen}
-              sx={{
-                width: 60,
-                height: 30,
-                minWidth: 60,
-                padding: 0,
-                backgroundColor: penColor,
-                border: "1px solid #ccc",
-                "&:hover": {
-                  backgroundColor: penColor,
-                  border: "1px solid #999",
-                },
-              }}
-            />
-            <Popover
-              open={Boolean(penColorAnchor)}
-              anchorEl={penColorAnchor}
-              onClose={handlePenColorClose}
-              anchorOrigin={{
-                vertical: "bottom",
-                horizontal: "left",
-              }}
-            >
-              <ColorPicker
-                currentColor={penColor}
-                onColorChange={onPenColorChange}
-                onClose={handlePenColorClose}
-              />
-            </Popover>
-            {penColor !== "#1976d2" && (
-              <Tooltip title="Reset to default" slotProps={tooltipSlotProps}>
-                <IconButton
-                  size="small"
-                  onClick={() => onPenColorChange("#1976d2")}
-                  sx={{ padding: 0.5 }}
-                >
-                  <RefreshIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
-            )}
-          </Box>
-        </Box>
+        <ColorSection
+          label="Brush Color"
+          color={penColor}
+          onColorChange={onPenColorChange}
+          defaultColor="#1976d2"
+        />
 
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-          <Typography variant="body2" color="text.secondary">
-            Component Color
-          </Typography>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <ColorIcon sx={{ color: "#1976d2" }} />
-            <Button
-              variant="outlined"
-              onClick={handleComponentColorOpen}
-              sx={{
-                width: 60,
-                height: 30,
-                minWidth: 60,
-                padding: 0,
-                backgroundColor: componentColor,
-                border: "1px solid #ccc",
-                "&:hover": {
-                  backgroundColor: componentColor,
-                  border: "1px solid #999",
-                },
-              }}
-            />
-            <Popover
-              open={Boolean(componentColorAnchor)}
-              anchorEl={componentColorAnchor}
-              onClose={handleComponentColorClose}
-              anchorOrigin={{
-                vertical: "bottom",
-                horizontal: "left",
-              }}
-            >
-              <ColorPicker
-                currentColor={componentColor}
-                onColorChange={handleComponentColorChange}
-                onClose={handleComponentColorClose}
-              />
-            </Popover>
-            {componentColor !== "#1976d2" && (
-              <Tooltip title="Reset to default" slotProps={tooltipSlotProps}>
-                <IconButton
-                  size="small"
-                  onClick={() => onComponentColorChange("#1976d2", Date.now())}
-                  sx={{ padding: 0.5 }}
-                >
-                  <RefreshIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
-            )}
-          </Box>
-        </Box>
+        <ColorSection
+          label="Component Color"
+          color={componentColor}
+          onColorChange={onComponentColorChange}
+          defaultColor="#1976d2"
+        />
 
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-          <Typography variant="body2" color="text.secondary">
-            Canvas Color
-          </Typography>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <ColorIcon sx={{ color: "#1976d2" }} />
-            <Button
-              variant="outlined"
-              onClick={handleCanvasColorOpen}
-              sx={{
-                width: 60,
-                height: 30,
-                minWidth: 60,
-                padding: 0,
-                backgroundColor: canvasColor,
-                border: "1px solid #ccc",
-                "&:hover": {
-                  backgroundColor: canvasColor,
-                  border: "1px solid #999",
-                },
-              }}
-            />
-            <Popover
-              open={Boolean(canvasColorAnchor)}
-              anchorEl={canvasColorAnchor}
-              onClose={handleCanvasColorClose}
-              anchorOrigin={{
-                vertical: "bottom",
-                horizontal: "left",
-              }}
-            >
-              <ColorPicker
-                currentColor={canvasColor}
-                onColorChange={onCanvasColorChange}
-                onClose={handleCanvasColorClose}
-              />
-            </Popover>
-            {canvasColor !== "#ffffff" && (
-              <Tooltip title="Reset to default" slotProps={tooltipSlotProps}>
-                <IconButton
-                  size="small"
-                  onClick={() => onCanvasColorChange("#ffffff")}
-                  sx={{ padding: 0.5 }}
-                >
-                  <RefreshIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
-            )}
-          </Box>
-        </Box>
+        <ColorSection
+          label="Canvas Color"
+          color={canvasColor}
+          onColorChange={onCanvasColorChange}
+          defaultColor="#ffffff"
+        />
 
         <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
