@@ -1,6 +1,6 @@
 import { Box, Chip } from "@mui/material";
 import type { RendererProps } from "./rendererTypes";
-import { getTextColorForFilled } from "./rendererUtils";
+import { useColorUtils } from "../../contexts/ColorUtilsContext";
 
 interface ChipRendererProps extends RendererProps {
   textWidthRef?: React.MutableRefObject<number>;
@@ -18,6 +18,7 @@ export default function ChipRenderer({
   onEditKeyDown,
   textWidthRef,
 }: ChipRendererProps) {
+  const { getTextColorForFilled } = useColorUtils();
   return (
     <Box
       sx={{

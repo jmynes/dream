@@ -7,6 +7,7 @@ import Footer from "./components/Footer";
 import ComponentsDrawer from "./components/ComponentsDrawer";
 import ToolsDrawer from "./components/ToolsDrawer";
 import MenuBar from "./components/MenuBar";
+import { ColorUtilsProvider } from "./contexts/ColorUtilsContext";
 import type { CanvasComponent, ComponentType } from "./types/component";
 
 const theme = createTheme({
@@ -15,6 +16,119 @@ const theme = createTheme({
   },
   zIndex: {
     modal: 2100, // Higher than BrowserUI (2000) so dialogs appear above it
+  },
+  components: {
+    // Disable color-related transitions on all MUI components for instant color changes
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          transition: "none !important",
+        },
+      },
+    },
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          transition: "none !important",
+        },
+      },
+    },
+    MuiCheckbox: {
+      styleOverrides: {
+        root: {
+          transition: "none !important",
+          "& .MuiSvgIcon-root": {
+            transition: "none !important",
+          },
+        },
+      },
+    },
+    MuiSwitch: {
+      styleOverrides: {
+        root: {
+          transition: "none !important",
+        },
+      },
+    },
+    MuiChip: {
+      styleOverrides: {
+        root: {
+          transition: "none !important",
+        },
+      },
+    },
+    MuiAvatar: {
+      styleOverrides: {
+        root: {
+          transition: "none !important",
+        },
+      },
+    },
+    MuiDivider: {
+      styleOverrides: {
+        root: {
+          transition: "none !important",
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          transition: "none !important",
+        },
+      },
+    },
+    MuiBox: {
+      styleOverrides: {
+        root: {
+          transition: "none !important",
+        },
+      },
+    },
+    MuiRadio: {
+      styleOverrides: {
+        root: {
+          transition: "none !important",
+          "& .MuiSvgIcon-root": {
+            transition: "none !important",
+          },
+        },
+      },
+    },
+    MuiSlider: {
+      styleOverrides: {
+        root: {
+          transition: "none !important",
+          "& .MuiSlider-thumb": {
+            transition: "none !important",
+          },
+          "& .MuiSlider-track": {
+            transition: "none !important",
+          },
+        },
+      },
+    },
+    MuiTextField: {
+      styleOverrides: {
+        root: {
+          transition: "none !important",
+        },
+      },
+    },
+    MuiTypography: {
+      styleOverrides: {
+        root: {
+          transition: "none !important",
+        },
+      },
+    },
+    MuiTableCell: {
+      styleOverrides: {
+        root: {
+          transition: "none !important",
+        },
+      },
+    },
   },
 });
 
@@ -225,9 +339,10 @@ function App() {
   }, [handleUndo, handleRedo]);
 
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <Box
+    <ColorUtilsProvider>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <Box
         sx={{
           display: "flex",
           flexDirection: "column",
@@ -404,7 +519,8 @@ function App() {
         message={toastMessage}
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       />
-    </ThemeProvider>
+      </ThemeProvider>
+    </ColorUtilsProvider>
   );
 }
 

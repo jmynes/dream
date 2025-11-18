@@ -166,13 +166,17 @@ export default function ColorPicker({
   const [hexInput, setHexInput] = useState(rgbHex);
   const [alphaInput, setAlphaInput] = useState(alphaHex);
   
-  // Sync inputs when rgba changes externally
+  // Sync hex input when rgba changes externally (but not from hex input itself)
   useEffect(() => {
     if (updateSourceRef.current === "external" || updateSourceRef.current === "picker" || updateSourceRef.current === "swatch") {
       setHexInput(rgbHex);
-      setAlphaInput(alphaHex);
     }
-  }, [rgbHex, alphaHex]);
+  }, [rgbHex]);
+  
+  // Always sync alpha input when alpha changes
+  useEffect(() => {
+    setAlphaInput(alphaHex);
+  }, [alphaHex]);
   
   // Refs for input elements
   const hexInputRef = useRef<HTMLInputElement>(null);
@@ -198,27 +202,51 @@ export default function ColorPicker({
   // Handle hex input keydown (auto-advance)
   const handleHexInputKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
     const input = e.currentTarget;
+    const currentValue = input.value;
+    const cursorPos = input.selectionStart || 0;
     
-    // Auto-advance to alpha input when hex is complete
-    if (input.value.length === 6 && /[0-9A-Fa-f]/.test(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey) {
-      e.preventDefault();
-      const newValue = input.value + e.key.toUpperCase();
-      setHexInput(newValue.substring(0, 6));
+    // Auto-advance to alpha input when hex is complete or at max length
+    if (/[0-9A-Fa-f]/.test(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      const newValue = currentValue.substring(0, cursorPos) + e.key.toUpperCase() + currentValue.substring(cursorPos || currentValue.length);
       
-      // Move overflow to alpha input
-      const overflow = newValue.substring(6);
-      if (overflow.length > 0) {
-        setAlphaInput(overflow.substring(0, 2));
-        alphaInputRef.current?.focus();
-        alphaInputRef.current?.setSelectionRange(overflow.length, overflow.length);
+      if (newValue.length > 6 || (currentValue.length === 6 && cursorPos === 6)) {
+        e.preventDefault();
+        // Fill hex with up to 6 characters
+        const hexPart = newValue.substring(0, 6);
+        setHexInput(hexPart);
+        
+        // Move overflow to alpha input
+        const overflow = newValue.substring(6);
+        if (overflow.length > 0) {
+          const newAlpha = overflow.substring(0, 2);
+          setAlphaInput(newAlpha);
+          
+          // Update color if hex is complete
+          if (hexPart.length === 6) {
+            const r = parseInt(hexPart.substring(0, 2), 16) || 0;
+            const g = parseInt(hexPart.substring(2, 4), 16) || 0;
+            const b = parseInt(hexPart.substring(4, 6), 16) || 0;
+            const a = newAlpha.length === 2 ? (parseInt(newAlpha, 16) || rgba.a) : rgba.a;
+            
+            updateSourceRef.current = "hex";
+            updateColor({ r, g, b, a });
+          }
+          
+          // Focus alpha input
+          setTimeout(() => {
+            alphaInputRef.current?.focus();
+            alphaInputRef.current?.setSelectionRange(newAlpha.length, newAlpha.length);
+          }, 0);
+        } else if (hexPart.length === 6) {
+          // Hex complete, move to alpha
+          setTimeout(() => {
+            alphaInputRef.current?.focus();
+            alphaInputRef.current?.setSelectionRange(0, 0);
+          }, 0);
+        }
       }
     }
-    
-    // Handle paste
-    if ((e.ctrlKey || e.metaKey) && e.key === "v") {
-      // Will be handled by onPaste
-    }
-  }, []);
+  }, [rgba.a, updateColor]);
   
   // Handle hex input paste
   const handleHexInputPaste = useCallback((e: React.ClipboardEvent<HTMLInputElement>) => {
@@ -287,32 +315,54 @@ export default function ColorPicker({
   // Handle alpha input keydown (auto-advance backwards)
   const handleAlphaInputKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
     const input = e.currentTarget;
+    const cursorPos = input.selectionStart || 0;
+    const cursorEnd = input.selectionEnd || 0;
     
     // Backspace at start moves to hex input
-    if (e.key === "Backspace" && input.selectionStart === 0 && input.selectionEnd === 0) {
+    if (e.key === "Backspace" && cursorPos === 0 && cursorEnd === 0) {
       if (alphaInput.length > 0) {
-        // Move last char of alpha to end of hex
+        // Move last char of alpha to end of hex (if hex isn't full)
+        e.preventDefault();
         const lastChar = alphaInput.substring(alphaInput.length - 1);
-        setAlphaInput(alphaInput.substring(0, alphaInput.length - 1));
-        const newHex = hexInput + lastChar;
-        setHexInput(newHex.substring(0, 6));
-        hexInputRef.current?.focus();
-        const newPos = Math.min(newHex.length, 6);
-        setTimeout(() => {
-          hexInputRef.current?.setSelectionRange(newPos, newPos);
-        }, 0);
+        const newAlpha = alphaInput.substring(0, alphaInput.length - 1);
+        setAlphaInput(newAlpha);
+        
+        if (hexInput.length < 6) {
+          const newHex = hexInput + lastChar;
+          setHexInput(newHex);
+          hexInputRef.current?.focus();
+          setTimeout(() => {
+            hexInputRef.current?.setSelectionRange(newHex.length, newHex.length);
+          }, 0);
+        } else {
+          // Hex is full, just focus hex at the end
+          hexInputRef.current?.focus();
+          setTimeout(() => {
+            hexInputRef.current?.setSelectionRange(6, 6);
+          }, 0);
+        }
       } else if (hexInput.length > 0) {
-        // Alpha is empty, just move to hex and backspace there
+        // Alpha is empty, move to hex and backspace there
         e.preventDefault();
         hexInputRef.current?.focus();
         const newHex = hexInput.substring(0, hexInput.length - 1);
         setHexInput(newHex);
+        
+        // Update color if needed
+        if (newHex.length === 6) {
+          const r = parseInt(newHex.substring(0, 2), 16) || 0;
+          const g = parseInt(newHex.substring(2, 4), 16) || 0;
+          const b = parseInt(newHex.substring(4, 6), 16) || 0;
+          updateSourceRef.current = "hex";
+          updateColor({ r, g, b, a: rgba.a });
+        }
+        
         setTimeout(() => {
           hexInputRef.current?.setSelectionRange(newHex.length, newHex.length);
         }, 0);
       }
     }
-  }, [hexInput, alphaInput]);
+  }, [hexInput, alphaInput, rgba.a, updateColor]);
   
   // Handle alpha input blur
   const handleAlphaInputBlur = useCallback(() => {
@@ -327,14 +377,77 @@ export default function ColorPicker({
     }
   }, [alphaInput, rgba, updateColor]);
   
-  // Handle opacity slider changes
+  // Throttle parent updates using requestAnimationFrame for smooth real-time updates
+  const pendingUpdateRef = useRef<{ r: number; g: number; b: number; a: number } | null>(null);
+  const rafIdRef = useRef<number | null>(null);
+  
+  const flushPendingUpdate = useCallback(() => {
+    if (pendingUpdateRef.current && rafIdRef.current !== null) {
+      const { r, g, b, a } = pendingUpdateRef.current;
+      const newColor = rgbaToHex(r, g, b, a);
+      isInternalUpdateRef.current = true;
+      onColorChange(newColor);
+      pendingUpdateRef.current = null;
+      rafIdRef.current = null;
+    }
+  }, [onColorChange]);
+  
+  const scheduleUpdate = useCallback((newRgba: { r: number; g: number; b: number; a: number }) => {
+    pendingUpdateRef.current = newRgba;
+    
+    if (rafIdRef.current === null) {
+      rafIdRef.current = requestAnimationFrame(() => {
+        flushPendingUpdate();
+      });
+    }
+  }, [flushPendingUpdate]);
+  
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (rafIdRef.current !== null) {
+        cancelAnimationFrame(rafIdRef.current);
+      }
+    };
+  }, []);
+  
+  // Handle opacity slider changes (during drag)
+  // Update local state immediately for visual feedback, throttle parent updates via RAF
   const handleOpacityChange = useCallback((_event: Event, value: number | number[]) => {
     const newOpacity = Array.isArray(value) ? value[0] : value;
     const a = Math.round((newOpacity / 100) * 255);
     
+    // Update local state immediately (feels instant)
     updateSourceRef.current = "opacity";
-    updateColor({ ...rgba, a });
-  }, [rgba, updateColor]);
+    setRgba((prevRgba) => {
+      const newRgba = { ...prevRgba, a };
+      // Schedule parent update via requestAnimationFrame (batched at 60fps)
+      scheduleUpdate(newRgba);
+      return newRgba;
+    });
+  }, [scheduleUpdate]);
+  
+  // Handle opacity slider commit (when released)
+  // Flush any pending update and ensure final value is sent
+  const handleOpacityChangeCommitted = useCallback((_event: Event | React.SyntheticEvent, value: number | number[]) => {
+    const newOpacity = Array.isArray(value) ? value[0] : value;
+    const a = Math.round((newOpacity / 100) * 255);
+    
+    // Cancel pending RAF if any
+    if (rafIdRef.current !== null) {
+      cancelAnimationFrame(rafIdRef.current);
+      rafIdRef.current = null;
+    }
+    
+    // Ensure final value is sent immediately
+    setRgba((prevRgba) => {
+      const newRgba = { ...prevRgba, a };
+      const newColor = rgbaToHex(newRgba.r, newRgba.g, newRgba.b, newRgba.a);
+      isInternalUpdateRef.current = true;
+      onColorChange(newColor);
+      return newRgba;
+    });
+  }, [onColorChange]);
   
   // Handle native color picker changes
   const handleColorPickerChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -470,6 +583,7 @@ export default function ColorPicker({
         <Slider
           value={opacityPercent}
           onChange={handleOpacityChange}
+          onChangeCommitted={handleOpacityChangeCommitted}
           min={0}
           max={100}
           step={1}

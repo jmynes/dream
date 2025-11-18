@@ -1,6 +1,7 @@
 import { Paper, Typography } from "@mui/material";
 import type { RendererProps } from "./rendererTypes";
-import { inlineInputStyle, getTextColorForFilled } from "./rendererUtils";
+import { inlineInputStyle } from "./rendererUtils";
+import { useColorUtils } from "../../contexts/ColorUtilsContext";
 
 export default function PaperRenderer({
   component,
@@ -14,6 +15,7 @@ export default function PaperRenderer({
   onEditBlur,
   onEditKeyDown,
 }: RendererProps) {
+  const { getTextColorForFilled } = useColorUtils();
   return (
     <Paper
       sx={{

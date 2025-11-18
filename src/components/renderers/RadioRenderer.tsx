@@ -1,6 +1,6 @@
 import { Box, Radio, RadioGroup, FormControlLabel } from "@mui/material";
 import type { RendererProps } from "./rendererTypes";
-import { isDarkColor } from "./rendererUtils";
+import { useColorUtils } from "../../contexts/ColorUtilsContext";
 
 interface RadioRendererProps extends RendererProps {
   onRadioDoubleClick: (field: string, currentText: string) => void;
@@ -18,6 +18,7 @@ export default function RadioRenderer({
   onEditKeyDown,
   onRadioDoubleClick,
 }: RadioRendererProps) {
+  const { isDarkColor } = useColorUtils();
   const inlineInputStyle = {
     background: "transparent",
     border: "none",

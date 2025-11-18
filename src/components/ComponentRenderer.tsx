@@ -10,7 +10,7 @@ import {
   EditNote as EditNoteIcon,
   Palette as PaletteIcon,
 } from "@mui/icons-material";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, memo } from "react";
 import type { CanvasComponent } from "../types/component";
 import ColorPicker from "./ColorPicker";
 import ButtonRenderer from "./renderers/ButtonRenderer";
@@ -41,7 +41,7 @@ interface ComponentRendererProps {
   isTextSelectMode?: boolean;
 }
 
-export default function ComponentRenderer({
+function ComponentRenderer({
   component,
   onMouseDown,
   onComponentUpdate,
@@ -882,3 +882,53 @@ export default function ComponentRenderer({
     </>
   );
 }
+
+// Memoize ComponentRenderer to prevent unnecessary re-renders
+// Only re-render when component data or relevant props actually change
+export default memo(ComponentRenderer, (prevProps, nextProps) => {
+  const prev = prevProps.component;
+  const next = nextProps.component;
+  
+  // Deep comparison of component data (object references change on array updates)
+  if (
+    prev.id !== next.id ||
+    prev.type !== next.type ||
+    prev.x !== next.x ||
+    prev.y !== next.y ||
+    prev.width !== next.width ||
+    prev.height !== next.height ||
+    prev.color !== next.color
+  ) {
+    return false; // Component data changed, need to re-render
+  }
+  
+  // Compare props object (shallow check for common props)
+  // Only check if references are different to avoid expensive deep comparison
+  if (prev.props !== next.props) {
+    // Quick check: if props reference is the same, they're equal
+    // If different, assume changed (could optimize further if needed)
+    const prevKeys = Object.keys(prev.props || {});
+    const nextKeys = Object.keys(next.props || {});
+    if (prevKeys.length !== nextKeys.length) {
+      return false; // Props changed
+    }
+    // Check key props that commonly change
+    for (const key of ['text', 'label', 'value', 'checked', 'selected']) {
+      if (prev.props?.[key] !== next.props?.[key]) {
+        return false; // Props changed
+      }
+    }
+  }
+  
+  // Check if selection/dragging state changed
+  if (
+    prevProps.isDragging !== nextProps.isDragging ||
+    prevProps.isSelected !== nextProps.isSelected ||
+    prevProps.isTextSelectMode !== nextProps.isTextSelectMode
+  ) {
+    return false; // State changed, need to re-render
+  }
+  
+  // Props are equal, skip re-render
+  return true;
+});

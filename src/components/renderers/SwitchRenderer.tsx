@@ -1,11 +1,12 @@
 import { Box, Switch } from "@mui/material";
 import type { RendererProps } from "./rendererTypes";
-import { isDarkColor } from "./rendererUtils";
+import { useColorUtils } from "../../contexts/ColorUtilsContext";
 
 export default function SwitchRenderer({
   component,
   componentColor,
 }: RendererProps) {
+  const { isDarkColor } = useColorUtils();
   return (
     <Box
       sx={{

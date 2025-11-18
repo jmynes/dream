@@ -1,6 +1,7 @@
 import { Button } from "@mui/material";
 import type { RendererProps } from "./rendererTypes";
-import { inlineInputStyle, getTextColorForFilled } from "./rendererUtils";
+import { inlineInputStyle } from "./rendererUtils";
+import { useColorUtils } from "../../contexts/ColorUtilsContext";
 
 export default function ButtonRenderer({
   component,
@@ -16,6 +17,7 @@ export default function ButtonRenderer({
   onEditBlur,
   onEditKeyDown,
 }: RendererProps) {
+  const { getTextColorForFilled } = useColorUtils();
   const { sx: propsSx, ...otherProps } = (component.props || {}) as {
     sx?: unknown;
     [key: string]: unknown;

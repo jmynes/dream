@@ -1,6 +1,7 @@
 import { Box, Avatar } from "@mui/material";
 import type { RendererProps } from "./rendererTypes";
-import { inlineInputStyle, getTextColorForFilled } from "./rendererUtils";
+import { inlineInputStyle } from "./rendererUtils";
+import { useColorUtils } from "../../contexts/ColorUtilsContext";
 
 interface AvatarRendererProps extends RendererProps {
   componentWidth?: number;
@@ -20,6 +21,7 @@ export default function AvatarRenderer({
   componentWidth,
   componentHeight,
 }: AvatarRendererProps) {
+  const { getTextColorForFilled } = useColorUtils();
   return (
     <Box
       sx={{

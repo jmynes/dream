@@ -1,6 +1,6 @@
 import { Box, Slider } from "@mui/material";
 import type { RendererProps } from "./rendererTypes";
-import { isDarkColor } from "./rendererUtils";
+import { useColorUtils } from "../../contexts/ColorUtilsContext";
 
 interface SliderRendererProps extends RendererProps {
   sliderDisplayValue: number;
@@ -21,6 +21,7 @@ export default function SliderRenderer({
   onSliderChange,
   onSliderChangeCommitted,
 }: SliderRendererProps) {
+  const { isDarkColor } = useColorUtils();
   return (
     <Box
       sx={{
