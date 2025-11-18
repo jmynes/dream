@@ -15,7 +15,7 @@ import {
   ExpandMore as ExpandMoreIcon,
   ExpandLess as ExpandLessIcon,
 } from "@mui/icons-material";
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useColorUtils } from "../contexts/ColorUtilsContext";
 
 // Type for react-color color result
@@ -101,9 +101,23 @@ export default function ColorSection({
   const { setLiveComponentColor, setLiveDrawerColor } = useColorUtils();
   const isDraggingRef = useRef(false);
   const liveColorRef = useRef<string | null>(null);
+  // Keep picker color stable during dragging to avoid re-renders
+  const [pickerColor, setPickerColor] = useState(color);
+  // Fast throttle for picker color updates (60fps = ~16ms)
+  const pickerColorTimeoutRef = useRef<number | null>(null);
+  const lastPickerColorUpdateRef = useRef<number>(0);
+
+  // Sync picker color when color prop changes (but not during dragging)
+  useEffect(() => {
+    if (!isDraggingRef.current) {
+      setPickerColor(color);
+    }
+  }, [color]);
 
   const handlePickerOpen = (event: React.MouseEvent<HTMLElement>) => {
     setPickerAnchor(event.currentTarget);
+    // Reset picker color to current color when opening
+    setPickerColor(color);
   };
 
   const handlePickerClose = () => {
@@ -114,6 +128,13 @@ export default function ColorSection({
       liveColorRef.current = null;
       setLiveComponentColor(null, selectedComponentIds);
       setLiveDrawerColor(null);
+      // Cancel any pending timeout
+      if (pickerColorTimeoutRef.current !== null) {
+        clearTimeout(pickerColorTimeoutRef.current);
+        pickerColorTimeoutRef.current = null;
+      }
+      // Reset picker color to original color
+      setPickerColor(color);
     }
   };
 
@@ -128,11 +149,32 @@ export default function ColorSection({
       if (label === "Component Color" && selectedComponentIds.length > 0) {
         isDraggingRef.current = true;
         liveColorRef.current = hexColor;
-        // Update live color via CSS custom properties (no re-renders)
+        // Update live color via CSS custom properties (no re-renders) - high priority
         setLiveComponentColor(hexColor, selectedComponentIds);
         setLiveDrawerColor(hexColor);
+        // Throttle picker color updates to ~60fps for smooth selector movement
+        const now = Date.now();
+        if (now - lastPickerColorUpdateRef.current >= 16) {
+          setPickerColor(hexColor);
+          lastPickerColorUpdateRef.current = now;
+          if (pickerColorTimeoutRef.current !== null) {
+            clearTimeout(pickerColorTimeoutRef.current);
+            pickerColorTimeoutRef.current = null;
+          }
+        } else {
+          // Schedule update if not already scheduled
+          if (pickerColorTimeoutRef.current === null) {
+            const delay = 16 - (now - lastPickerColorUpdateRef.current);
+            pickerColorTimeoutRef.current = window.setTimeout(() => {
+              setPickerColor(hexColor);
+              lastPickerColorUpdateRef.current = Date.now();
+              pickerColorTimeoutRef.current = null;
+            }, delay);
+          }
+        }
       } else {
         // For other colors, update immediately
+        setPickerColor(hexColor);
         onColorChange(hexColor, label === "Component Color" ? Date.now() : undefined);
       }
     },
@@ -153,9 +195,11 @@ export default function ColorSection({
         // Clear live color and commit actual change
         setLiveComponentColor(null, selectedComponentIds);
         setLiveDrawerColor(null);
+        setPickerColor(hexColor); // Update picker color after commit
         onColorChange(hexColor, Date.now());
       } else {
         // For other colors, just update
+        setPickerColor(hexColor); // Update picker color
         onColorChange(hexColor, label === "Component Color" ? Date.now() : undefined);
       }
     },
@@ -226,7 +270,7 @@ export default function ColorSection({
           <Box sx={{ p: 2 }}>
             <Box sx={{ "& > div": { boxShadow: "none !important", border: "1px solid #e0e0e0", borderRadius: "4px" } }}>
               <ChromePicker
-                color={liveColorRef.current || color}
+                color={pickerColor}
                 onChange={handleColorChange}
                 onChangeComplete={handleColorChangeComplete}
               />
