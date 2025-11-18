@@ -573,8 +573,12 @@ function ComponentRenderer({
   };
 
   const renderComponent = () => {
-    const widthProps = componentWidth ? { sx: { width: "100%" } } : {};
-    const heightProps = componentHeight ? { sx: { height: "100%" } } : {};
+    const widthProps = componentWidth
+      ? { sx: { width: "100%" } }
+      : ({} as Record<string, never>);
+    const heightProps = componentHeight
+      ? { sx: { height: "100%" } }
+      : ({} as Record<string, never>);
     const centeredAlignment = { sx: { textAlign: "center" as const } };
     const componentColor = component.color || "#1976d2";
 

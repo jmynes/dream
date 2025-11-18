@@ -474,27 +474,58 @@ export default function Canvas({
     resetLasso();
   }, [isLassoDrawing, components, resetLasso]);
 
-  // Update selection in real-time during drag
+  // Update selection in real-time during drag (throttled for performance)
+  // Use refs to avoid closure issues and throttle state updates
+  const selectedComponentIdsRef = useRef<string[]>([]);
+  const lastSelectionUpdateRef = useRef<number>(0);
+  const selectionUpdateTimeoutRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    selectedComponentIdsRef.current = selectedComponentIds;
+  }, [selectedComponentIds]);
+
   useEffect(() => {
     if (!selectionBoxStart) {
+      // Clear any pending updates when selection box stops
+      if (selectionUpdateTimeoutRef.current !== null) {
+        clearTimeout(selectionUpdateTimeoutRef.current);
+        selectionUpdateTimeoutRef.current = null;
+      }
       return;
     }
 
-    let animationFrameId: number;
+    const THROTTLE_MS = 100; // Update selection state max once per 100ms
+
     const updateSelection = () => {
-      const preview = getPreviewSelection();
-      // Update selection in real-time during drag
-      if (preview.length > 0 || selectionBoxStart) {
-        setSelectedComponentIds(preview);
+      const now = Date.now();
+      if (now - lastSelectionUpdateRef.current >= THROTTLE_MS) {
+        const preview = getPreviewSelection();
+        // Only update if selection actually changed (compare sorted arrays)
+        const previewStr = [...preview].sort().join(",");
+        const currentStr = [...selectedComponentIdsRef.current]
+          .sort()
+          .join(",");
+        if (previewStr !== currentStr) {
+          setSelectedComponentIds(preview);
+          lastSelectionUpdateRef.current = now;
+        }
       }
-      animationFrameId = requestAnimationFrame(updateSelection);
+      selectionUpdateTimeoutRef.current = window.setTimeout(
+        updateSelection,
+        THROTTLE_MS,
+      );
     };
 
-    animationFrameId = requestAnimationFrame(updateSelection);
+    // Start throttled updates
+    selectionUpdateTimeoutRef.current = window.setTimeout(
+      updateSelection,
+      THROTTLE_MS,
+    );
 
     return () => {
-      if (animationFrameId) {
-        cancelAnimationFrame(animationFrameId);
+      if (selectionUpdateTimeoutRef.current !== null) {
+        clearTimeout(selectionUpdateTimeoutRef.current);
+        selectionUpdateTimeoutRef.current = null;
       }
     };
   }, [selectionBoxStart, getPreviewSelection]);
