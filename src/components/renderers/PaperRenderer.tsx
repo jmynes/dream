@@ -16,6 +16,9 @@ export default function PaperRenderer({
   onEditKeyDown,
 }: RendererProps) {
   const { getTextColorForFilled } = useColorUtils();
+  // Use CSS variable for live color updates, fallback to prop
+  const bgColor = `var(--live-component-color, ${componentColor})`;
+  
   return (
     <Paper
       sx={{
@@ -24,7 +27,7 @@ export default function PaperRenderer({
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: componentColor,
+        backgroundColor: bgColor,
         ...centeredAlignment.sx,
       }}
       {...(component.props as object)}

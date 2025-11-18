@@ -19,6 +19,9 @@ export default function ChipRenderer({
   textWidthRef,
 }: ChipRendererProps) {
   const { getTextColorForFilled } = useColorUtils();
+  // Use CSS variable for live color updates, fallback to prop
+  const bgColor = `var(--live-component-color, ${componentColor})`;
+  
   return (
     <Box
       sx={{
@@ -61,7 +64,7 @@ export default function ChipRenderer({
           )
         }
         sx={{
-          backgroundColor: componentColor,
+          backgroundColor: bgColor,
           color: `${getTextColorForFilled(componentColor)} !important`,
           "& .MuiChip-label": {
             color: `${getTextColorForFilled(componentColor)} !important`,

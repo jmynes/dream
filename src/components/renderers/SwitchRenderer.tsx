@@ -7,6 +7,9 @@ export default function SwitchRenderer({
   componentColor,
 }: RendererProps) {
   const { isDarkColor } = useColorUtils();
+  // Use CSS variable for live color updates, fallback to prop
+  const switchColor = `var(--live-component-color, ${componentColor})`;
+  
   return (
     <Box
       sx={{
@@ -21,9 +24,9 @@ export default function SwitchRenderer({
         {...(component.props as object)}
         defaultChecked={component.props?.checked as boolean}
         sx={{
-          "& .MuiSwitch-switchBase.Mui-checked": { color: componentColor },
+          "& .MuiSwitch-switchBase.Mui-checked": { color: switchColor },
           "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": { 
-            backgroundColor: componentColor,
+            backgroundColor: switchColor,
             ...(isDarkColor(componentColor) ? {} : {
               boxShadow: "0 0 0 1px rgba(0, 0, 0, 0.2)",
             }),

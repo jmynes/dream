@@ -14,6 +14,12 @@ export default function BoxRenderer({
   onEditBlur,
   onEditKeyDown,
 }: RendererProps) {
+  // Use CSS variable for live color updates, fallback to prop
+  const borderColor = `var(--live-component-color, ${componentColor})`;
+  // For semi-transparent background, we'll update border in real-time
+  // Background uses the prop directly (semi-transparent calculation is complex with CSS vars)
+  const bgColor = `${componentColor}20`;
+  
   return (
     <Box
       sx={{
@@ -23,8 +29,8 @@ export default function BoxRenderer({
         alignItems: "center",
         justifyContent: "center",
         border: "1px dashed",
-        borderColor: componentColor,
-        backgroundColor: `${componentColor}20`,
+        borderColor: borderColor,
+        backgroundColor: bgColor,
         ...(centeredAlignment.sx || {}),
       }}
       {...(component.props as object)}

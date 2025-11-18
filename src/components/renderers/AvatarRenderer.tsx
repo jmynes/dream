@@ -22,6 +22,9 @@ export default function AvatarRenderer({
   componentHeight,
 }: AvatarRendererProps) {
   const { getTextColorForFilled } = useColorUtils();
+  // Use CSS variable for live color updates, fallback to prop
+  const bgColor = `var(--live-component-color, ${componentColor})`;
+  
   return (
     <Box
       sx={{
@@ -37,7 +40,7 @@ export default function AvatarRenderer({
         sx={{
           width: Math.min(componentWidth || 40, componentHeight || 40),
           height: Math.min(componentWidth || 40, componentHeight || 40),
-          bgcolor: componentColor,
+          bgcolor: bgColor,
           color: `${getTextColorForFilled(componentColor)} !important`,
         }}
       >
