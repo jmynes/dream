@@ -3,7 +3,12 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "packageManager": "pnpm@10.22.0",
+  "engines": {
+    "pnpm": ">=8.0.0"
+  },
   "scripts": {
+    "preinstall": "npx only-allow pnpm",
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
@@ -33,6 +38,7 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.5.0",
+    "only-allow": "^1.2.1",
     "sass": "^1.94.0",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.46.3",

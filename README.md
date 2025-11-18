@@ -21,12 +21,12 @@ A React + TypeScript web application that provides a canvas-based interface for 
 ### Prerequisites
 
 - Node.js (v18 or higher)
-- npm or yarn
+- pnpm (v8 or higher) - This project uses pnpm as the package manager
 
 ### Installation
 
 ```bash
-npm install
+pnpm install
 ```
 
 ### Development
@@ -34,7 +34,7 @@ npm install
 Start the development server:
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
 The app will be available at `http://localhost:5173`
@@ -44,7 +44,7 @@ The app will be available at `http://localhost:5173`
 Build for production:
 
 ```bash
-npm run build
+pnpm build
 ```
 
 ### Linting & Formatting
@@ -52,13 +52,13 @@ npm run build
 Check code with BiomeJS:
 
 ```bash
-npm run lint:biome
+pnpm lint:biome
 ```
 
 Format code:
 
 ```bash
-npm run format
+pnpm format
 ```
 
 ## Project Structure
