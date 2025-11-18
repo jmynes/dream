@@ -1,5 +1,4 @@
-import { Box, Button, Menu, MenuItem, Paper, Snackbar } from "@mui/material";
-import { ContentPaste as PasteIcon, SelectAll as SelectAllIcon } from "@mui/icons-material";
+import { Box, Button, Paper, Snackbar } from "@mui/material";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { CanvasComponent, ComponentType } from "../types/component";
 import RecognitionUI from "./RecognitionUI";
@@ -9,6 +8,7 @@ import SelectionBox from "./SelectionBox";
 import ComponentOverlay from "./ComponentOverlay";
 import LassoPath from "./LassoPath";
 import BrowserUI from "./BrowserUI";
+import CanvasContextMenu from "./CanvasContextMenu";
 import {
   getPointFromEvent,
   snapToGridPoint,
@@ -1018,64 +1018,45 @@ export default function Canvas({
       />
 
       {/* Context menu for empty space */}
-      <Menu
-        open={contextMenuAnchor !== null}
+      <CanvasContextMenu
+        anchor={contextMenuAnchor}
+        copiedComponents={copiedComponents}
         onClose={() => setContextMenuAnchor(null)}
-        anchorReference="anchorPosition"
-        anchorPosition={
-          contextMenuAnchor !== null
-            ? { top: contextMenuAnchor.mouseY, left: contextMenuAnchor.mouseX }
-            : undefined
-        }
-      >
-        <MenuItem
-          disabled={copiedComponents.length === 0}
-          onClick={() => {
-            if (copiedComponents.length === 0) return;
+        onPaste={() => {
+          if (copiedComponents.length === 0) return;
+          
+          // Create new components with offset positions and new IDs
+          const offsetX = snapToGrid ? gridCellWidth : 10;
+          const offsetY = snapToGrid ? gridCellHeight : 10;
+          
+          const newComponents = copiedComponents.map((comp, index) => {
+            let newX = comp.x + offsetX;
+            let newY = comp.y + offsetY;
             
-            // Create new components with offset positions and new IDs
-            const offsetX = snapToGrid ? gridCellWidth : 10;
-            const offsetY = snapToGrid ? gridCellHeight : 10;
-            
-            const newComponents = copiedComponents.map((comp, index) => {
-              let newX = comp.x + offsetX;
-              let newY = comp.y + offsetY;
-              
-              if (snapToGrid) {
-                newX = Math.round(newX / gridCellWidth) * gridCellWidth;
-                newY = Math.round(newY / gridCellHeight) * gridCellHeight;
-              }
-              
-              return {
-                ...comp,
-                id: `component-${Date.now()}-${index}-${Math.random().toString(36).substring(2, 9)}`,
-                x: newX,
-                y: newY,
-              };
-            });
-            
-            const newComponentIds = newComponents.map((c) => c.id);
-            onComponentsChange([...components, ...newComponents]);
-            setSelectedComponentIds(newComponentIds);
-            setToastMessage(`${newComponents.length} component${newComponents.length === 1 ? '' : 's'} pasted`);
-            setContextMenuAnchor(null);
-          }}
-        >
-          <PasteIcon sx={{ mr: 1, fontSize: "1.2rem" }} />
-          Paste
-        </MenuItem>
-        <MenuItem
-          onClick={() => {
-            if (components.length > 0) {
-              setSelectedComponentIds(components.map((c) => c.id));
+            if (snapToGrid) {
+              newX = Math.round(newX / gridCellWidth) * gridCellWidth;
+              newY = Math.round(newY / gridCellHeight) * gridCellHeight;
             }
-            setContextMenuAnchor(null);
-          }}
-        >
-          <SelectAllIcon sx={{ mr: 1, fontSize: "1.2rem" }} />
-          Select All
-        </MenuItem>
-      </Menu>
+            
+            return {
+              ...comp,
+              id: `component-${Date.now()}-${index}-${Math.random().toString(36).substring(2, 9)}`,
+              x: newX,
+              y: newY,
+            };
+          });
+          
+          const newComponentIds = newComponents.map((c) => c.id);
+          onComponentsChange([...components, ...newComponents]);
+          setSelectedComponentIds(newComponentIds);
+          setToastMessage(`${newComponents.length} component${newComponents.length === 1 ? '' : 's'} pasted`);
+        }}
+        onSelectAll={() => {
+          if (components.length > 0) {
+            setSelectedComponentIds(components.map((c) => c.id));
+          }
+        }}
+      />
     </Box>
   );
 }

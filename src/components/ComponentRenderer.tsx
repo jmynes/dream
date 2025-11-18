@@ -1,40 +1,33 @@
 import {
-  Avatar,
   Box,
-  Button,
-  Card,
-  CardContent,
-  Checkbox,
-  Chip,
-  Divider,
-  Paper,
   Popover,
-  Radio,
-  RadioGroup,
-  FormControlLabel,
-  Slider,
   SpeedDial,
   SpeedDialAction,
-  Switch,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TextField,
-  Typography,
 } from "@mui/material";
 import {
   ContentCopy as CopyIcon,
   Delete as DeleteIcon,
-  Edit as EditIcon,
   EditNote as EditNoteIcon,
   Palette as PaletteIcon,
 } from "@mui/icons-material";
 import { useState, useRef, useEffect } from "react";
 import type { CanvasComponent } from "../types/component";
 import ColorPicker from "./ColorPicker";
+import ButtonRenderer from "./renderers/ButtonRenderer";
+import TextFieldRenderer from "./renderers/TextFieldRenderer";
+import CardRenderer from "./renderers/CardRenderer";
+import TypographyRenderer from "./renderers/TypographyRenderer";
+import CheckboxRenderer from "./renderers/CheckboxRenderer";
+import SwitchRenderer from "./renderers/SwitchRenderer";
+import SliderRenderer from "./renderers/SliderRenderer";
+import ChipRenderer from "./renderers/ChipRenderer";
+import AvatarRenderer from "./renderers/AvatarRenderer";
+import DividerRenderer from "./renderers/DividerRenderer";
+import PaperRenderer from "./renderers/PaperRenderer";
+import BoxRenderer from "./renderers/BoxRenderer";
+import RadioRenderer from "./renderers/RadioRenderer";
+import TableRenderer from "./renderers/TableRenderer";
+import { resizeHandleBaseStyle } from "./renderers/rendererUtils";
 
 interface ComponentRendererProps {
   component: CanvasComponent;
@@ -525,41 +518,36 @@ export default function ComponentRenderer({
     height: componentHeight ? `${componentHeight}px` : "auto",
   };
 
-  const resizeHandleBaseStyle: React.CSSProperties = {
-    position: "absolute",
-    width: 8,
-    height: 8,
-    backgroundColor: "#1976d2",
-    border: "1px solid #fff",
-    borderRadius: "50%",
+  const resizeHandleBaseStyleLocal: React.CSSProperties = {
+    ...resizeHandleBaseStyle,
     zIndex: 11,
     boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
   };
 
   // Corner handles (diagonal resize)
   const topLeftHandleStyle: React.CSSProperties = {
-    ...resizeHandleBaseStyle,
+    ...resizeHandleBaseStyleLocal,
     top: -4,
     left: -4,
     cursor: "nw-resize",
   };
 
   const topRightHandleStyle: React.CSSProperties = {
-    ...resizeHandleBaseStyle,
+    ...resizeHandleBaseStyleLocal,
     top: -4,
     right: -4,
     cursor: "ne-resize",
   };
 
   const bottomLeftHandleStyle: React.CSSProperties = {
-    ...resizeHandleBaseStyle,
+    ...resizeHandleBaseStyleLocal,
     bottom: -4,
     left: -4,
     cursor: "sw-resize",
   };
 
   const bottomRightHandleStyle: React.CSSProperties = {
-    ...resizeHandleBaseStyle,
+    ...resizeHandleBaseStyleLocal,
     bottom: -4,
     right: -4,
     cursor: "se-resize",
@@ -567,7 +555,7 @@ export default function ComponentRenderer({
 
   // Edge handles (single direction resize)
   const topHandleStyle: React.CSSProperties = {
-    ...resizeHandleBaseStyle,
+    ...resizeHandleBaseStyleLocal,
     top: -4,
     left: "50%",
     transform: "translateX(-50%)",
@@ -575,7 +563,7 @@ export default function ComponentRenderer({
   };
 
   const rightHandleStyle: React.CSSProperties = {
-    ...resizeHandleBaseStyle,
+    ...resizeHandleBaseStyleLocal,
     right: -4,
     top: "50%",
     transform: "translateY(-50%)",
@@ -583,52 +571,40 @@ export default function ComponentRenderer({
   };
 
   const bottomHandleStyle: React.CSSProperties = {
-    ...resizeHandleBaseStyle,
+    ...resizeHandleBaseStyleLocal,
     bottom: -4,
     left: "50%",
     transform: "translateX(-50%)",
     cursor: "s-resize",
   };
 
-const leftHandleStyle: React.CSSProperties = {
-  ...resizeHandleBaseStyle,
-  left: -4,
-  top: "50%",
-  transform: "translateY(-50%)",
-  cursor: "w-resize",
-};
+  const leftHandleStyle: React.CSSProperties = {
+    ...resizeHandleBaseStyleLocal,
+    left: -4,
+    top: "50%",
+    transform: "translateY(-50%)",
+    cursor: "w-resize",
+  };
 
-// Shared inline input style to avoid layout shifts
-const inlineInputStyle: React.CSSProperties = {
-  background: "transparent",
-  border: "none",
-  outline: "none",
-  color: "inherit",
-  fontSize: "inherit",
-  fontFamily: "inherit",
-  padding: 0,
-  margin: 0,
-  width: "100%",
-  minWidth: 0,
-  boxSizing: "border-box",
-};
+  const handleRadioDoubleClick = (field: string, currentText: string) => {
+    setEditingField(field);
+    setEditValue(currentText);
+    setIsEditing(true);
+  };
 
-// Helper function to determine if a color is dark (for text contrast)
-const isDarkColor = (color: string): boolean => {
-  // Convert hex to RGB
-  const hex = color.replace("#", "");
-  const r = parseInt(hex.substring(0, 2), 16);
-  const g = parseInt(hex.substring(2, 4), 16);
-  const b = parseInt(hex.substring(4, 6), 16);
-  // Calculate luminance
-  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-  return luminance < 0.5;
-};
+  const handleCellDoubleClick = (field: string, currentText: string) => {
+    setEditingField(field);
+    setEditValue(currentText);
+    setIsEditing(true);
+  };
 
-// Helper to get text color for filled components
-const getTextColorForFilled = (bgColor: string): string => {
-  return isDarkColor(bgColor) ? "#ffffff" : "#000000";
-};
+  const handleCheckboxDoubleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const currentText = (component.props?.label as string) || "Checkbox";
+    setEditingField("label");
+    setEditValue(currentText);
+    setIsEditing(true);
+  };
 
   const renderComponent = () => {
     const widthProps = componentWidth ? { sx: { width: "100%" } } : {};
@@ -636,895 +612,82 @@ const getTextColorForFilled = (bgColor: string): string => {
     const centeredAlignment = { sx: { textAlign: "center" as const } };
     const componentColor = component.color || "#1976d2";
 
+    const rendererProps = {
+      component,
+      componentColor,
+      widthProps,
+      heightProps,
+      centeredAlignment,
+      isEditing,
+      editingField: editingField || "",
+      editValue,
+      inputRef,
+      onEditChange: setEditValue,
+      onEditBlur: handleBlur,
+      onEditKeyDown: handleKeyDown,
+      textWidthRef,
+    };
+
     switch (component.type) {
-      case "Button": {
-        const { sx: propsSx, ...otherProps } = (component.props || {}) as {
-          sx?: unknown;
-          [key: string]: unknown;
-        };
-        return (
-          <Button
-            variant="contained"
-            {...otherProps}
-            sx={{
-              ...(widthProps.sx || {}),
-              ...(heightProps.sx || {}),
-              ...(centeredAlignment.sx || {}),
-              backgroundColor: componentColor,
-              color: getTextColorForFilled(componentColor),
-              "&:hover": { backgroundColor: componentColor },
-              textTransform: "none",
-              ...((propsSx as object) || {}),
-            }}
-          >
-            {isEditing && editingField === "text" ? (
-              <input
-                ref={inputRef}
-                type="text"
-                value={editValue}
-                onChange={(e) => setEditValue(e.target.value)}
-                onBlur={handleBlur}
-                onKeyDown={handleKeyDown}
-                onClick={(e) => e.stopPropagation()}
-                style={{ ...inlineInputStyle, textAlign: "center" }}
-              />
-            ) : (
-              (component.props?.text as string) || "Button"
-            )}
-          </Button>
-        );
-      }
+      case "Button":
+        return <ButtonRenderer {...rendererProps} />;
       case "TextField":
-        return (
-          <TextField
-            label={(component.props?.label as string) || "Text Field"}
-            size="small"
-            {...(component.props as object)}
-            {...widthProps}
-            value={
-              isEditing && editingField === "value" ? editValue : (component.props?.value as string) || ""
-            }
-            sx={{
-              ...(widthProps.sx || {}),
-              "& input": { textAlign: "center", color: componentColor },
-              "& .MuiOutlinedInput-root": {
-                "& fieldset": { borderColor: componentColor },
-                "&:hover fieldset": { borderColor: componentColor },
-                "&.Mui-focused fieldset": { borderColor: componentColor },
-              },
-            }}
-          />
-        );
+        return <TextFieldRenderer {...rendererProps} />;
       case "Card":
-        return (
-          <Card
-            sx={{
-              width: "100%",
-              height: "100%",
-              minWidth: componentWidth || 200,
-              border: `2px solid ${componentColor}`,
-            }}
-          >
-            <CardContent
-              sx={{
-                textAlign: "center",
-                height: "100%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              {isEditing && editingField === "text" ? (
-                <input
-                  ref={inputRef}
-                  type="text"
-                  value={editValue}
-                  onChange={(e) => setEditValue(e.target.value)}
-                  onBlur={handleBlur}
-                  onKeyDown={handleKeyDown}
-                  onClick={(e) => e.stopPropagation()}
-                  style={{
-                    ...inlineInputStyle,
-                    textAlign: "center",
-                  }}
-                />
-              ) : (
-                <Typography variant="body2">
-                  {(component.props?.text as string) || "Card Content"}
-                </Typography>
-              )}
-            </CardContent>
-          </Card>
-        );
+        return <CardRenderer {...rendererProps} componentWidth={componentWidth} />;
       case "Typography":
-        return (
-          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", width: "100%", height: "100%" }}>
-            <Typography
-              variant="body1"
-              {...(component.props as object)}
-              {...widthProps}
-              {...centeredAlignment}
-              sx={{
-                ...(widthProps.sx || {}),
-                ...(centeredAlignment.sx || {}),
-                color: componentColor,
-              }}
-            >
-              {isEditing && editingField === "text" ? (
-                <input
-                  ref={inputRef}
-                  type="text"
-                  value={editValue}
-                  onChange={(e) => setEditValue(e.target.value)}
-                  onBlur={handleBlur}
-                  onKeyDown={handleKeyDown}
-                  onClick={(e) => e.stopPropagation()}
-                  style={{ ...inlineInputStyle, textAlign: "center" }}
-                />
-              ) : (
-                (component.props?.text as string) || "Typography"
-              )}
-            </Typography>
-          </Box>
-        );
+        return <TypographyRenderer {...rendererProps} />;
       case "Checkbox":
-        return (
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: "100%",
-              height: "100%",
-            }}
-          >
-            <FormControlLabel
-              control={
-                <Checkbox
-                  {...(component.props as object)}
-                  defaultChecked={component.props?.checked as boolean}
-                  sx={{ 
-                    color: componentColor,
-                    "&.Mui-checked": { 
-                      color: componentColor,
-                    },
-                    "& .MuiSvgIcon-root": {
-                      color: componentColor,
-                    },
-                    "&.Mui-checked .MuiSvgIcon-root": {
-                      color: componentColor,
-                    },
-                  }}
-                />
-              }
-              label={
-                isEditing && editingField === "label" ? (
-                  <input
-                    ref={inputRef}
-                    type="text"
-                    value={editValue}
-                    onChange={(e) => setEditValue(e.target.value)}
-                    onBlur={handleBlur}
-                    onKeyDown={handleKeyDown}
-                    onClick={(e) => e.stopPropagation()}
-                    style={{
-                      ...inlineInputStyle,
-                      minWidth: 0,
-                    }}
-                  />
-                ) : (
-                  <span
-                    data-field="label"
-                    onDoubleClick={(e) => {
-                      e.stopPropagation();
-                      const currentText = (component.props?.label as string) || "Checkbox";
-                      setEditingField("label");
-                      setEditValue(currentText);
-                      setIsEditing(true);
-                    }}
-                  >
-                    {(component.props?.label as string) || "Checkbox"}
-                  </span>
-                )
-              }
-            />
-          </Box>
-        );
+        return <CheckboxRenderer {...rendererProps} onDoubleClick={handleCheckboxDoubleClick} />;
       case "Switch":
-        return (
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: "100%",
-              height: "100%",
-            }}
-          >
-            <Switch
-              {...(component.props as object)}
-              defaultChecked={component.props?.checked as boolean}
-              sx={{
-                "& .MuiSwitch-switchBase.Mui-checked": { color: componentColor },
-                "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": { 
-                  backgroundColor: componentColor,
-                  ...(isDarkColor(componentColor) ? {} : {
-                    boxShadow: "0 0 0 1px rgba(0, 0, 0, 0.2)",
-                  }),
-                },
-                "& .MuiSwitch-thumb": {
-                  ...(isDarkColor(componentColor) ? {} : {
-                    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
-                  }),
-                },
-              }}
-            />
-          </Box>
-        );
+        return <SwitchRenderer {...rendererProps} />;
       case "Slider":
         return (
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: "100%",
-              height: "100%",
-              px: 2,
-            }}
-          >
-            <Slider
-              {...(component.props as object)}
-              value={sliderDisplayValue}
-              onMouseDown={handleSliderMouseDown}
-              onMouseMove={handleSliderMouseMove}
-              onMouseUp={handleSliderMouseUp}
-              onChange={handleSliderChange}
-              onChangeCommitted={handleSliderChangeCommitted}
-              sx={{ 
-                width: "100%", 
-                color: componentColor,
-                "& .MuiSlider-thumb": {
-                  ...(isDarkColor(componentColor) ? {} : {
-                    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
-                  }),
-                },
-                "& .MuiSlider-track": {
-                  ...(isDarkColor(componentColor) ? {} : {
-                    border: "1px solid rgba(0, 0, 0, 0.1)",
-                  }),
-                },
-                "& .MuiSlider-rail": {
-                  ...(isDarkColor(componentColor) ? {} : {
-                    border: "1px solid rgba(0, 0, 0, 0.1)",
-                  }),
-                },
-              }}
-            />
-          </Box>
+          <SliderRenderer
+            {...rendererProps}
+            sliderDisplayValue={sliderDisplayValue}
+            onSliderMouseDown={handleSliderMouseDown}
+            onSliderMouseMove={handleSliderMouseMove}
+            onSliderMouseUp={handleSliderMouseUp}
+            onSliderChange={handleSliderChange}
+            onSliderChangeCommitted={handleSliderChangeCommitted}
+          />
         );
       case "Chip":
-        return (
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: "100%",
-              height: "100%",
-            }}
-          >
-            <Chip
-              {...(component.props as object)}
-              label={
-                isEditing && editingField === "label" ? (
-                  <input
-                    ref={inputRef}
-                    type="text"
-                    value={editValue}
-                    onChange={(e) => setEditValue(e.target.value)}
-                    onBlur={handleBlur}
-                    onKeyDown={handleKeyDown}
-                    onClick={(e) => e.stopPropagation()}
-                    size={Math.max(editValue.length || 1, 4)}
-                    style={{
-                      background: "transparent",
-                      border: "none",
-                      outline: "none",
-                      color: "inherit",
-                      fontSize: "inherit",
-                      fontFamily: "inherit",
-                      padding: 0,
-                      margin: 0,
-                      width: isEditing && textWidthRef.current > 0 ? `${textWidthRef.current}px` : "auto",
-                      minWidth: 0,
-                      maxWidth: isEditing && textWidthRef.current > 0 ? `${textWidthRef.current * 2}px` : "none",
-                    }}
-                  />
-                ) : (
-                  (component.props?.label as string) || "Chip"
-                )
-              }
-              sx={{
-                backgroundColor: componentColor,
-                color: getTextColorForFilled(componentColor),
-                ...(isEditing && editingField === "label" && textWidthRef.current > 0 ? {
-                  width: `${textWidthRef.current + 40}px`,
-                  minWidth: `${textWidthRef.current + 40}px`,
-                  maxWidth: `${textWidthRef.current * 3 + 40}px`,
-                } : {}),
-              }}
-            />
-          </Box>
-        );
+        return <ChipRenderer {...rendererProps} />;
       case "Avatar":
         return (
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: "100%",
-              height: "100%",
-            }}
-          >
-            <Avatar
-              {...(component.props as object)}
-              sx={{
-                width: Math.min(componentWidth || 40, componentHeight || 40),
-                height: Math.min(componentWidth || 40, componentHeight || 40),
-                bgcolor: componentColor,
-                color: getTextColorForFilled(componentColor),
-              }}
-            >
-              {isEditing && editingField === "text" ? (
-                <input
-                  ref={inputRef}
-                  type="text"
-                  value={editValue}
-                  onChange={(e) => setEditValue(e.target.value)}
-                  onBlur={handleBlur}
-                  onKeyDown={handleKeyDown}
-                  onClick={(e) => e.stopPropagation()}
-                  style={{ ...inlineInputStyle, textAlign: "center" }}
-                />
-              ) : (
-                (component.props?.text as string) || "A"
-              )}
-            </Avatar>
-          </Box>
+          <AvatarRenderer
+            {...rendererProps}
+            componentWidth={componentWidth}
+            componentHeight={componentHeight}
+          />
         );
       case "Divider":
-        const isVertical =
-          componentHeight &&
-          componentWidth &&
-          componentHeight > componentWidth;
         return (
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              width: "100%",
-              height: "100%",
-            }}
-          >
-            <Divider
-              {...(component.props as object)}
-              orientation={isVertical ? "vertical" : "horizontal"}
-              sx={{
-                width: "100%",
-                borderColor: componentColor,
-                ...(isVertical
-                  ? { borderLeftWidth: "2px" }
-                  : { borderTopWidth: "2px" }),
-              }}
-            />
-          </Box>
+          <DividerRenderer
+            {...rendererProps}
+            componentWidth={componentWidth}
+            componentHeight={componentHeight}
+          />
         );
       case "Paper":
-        return (
-          <Paper
-            sx={{
-              width: "100%",
-              height: "100%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: componentColor,
-              ...centeredAlignment.sx,
-            }}
-            {...(component.props as object)}
-          >
-            {isEditing && editingField === "text" ? (
-              <input
-                ref={inputRef}
-                type="text"
-                value={editValue}
-                onChange={(e) => setEditValue(e.target.value)}
-                onBlur={handleBlur}
-                onKeyDown={handleKeyDown}
-                onClick={(e) => e.stopPropagation()}
-                style={{
-                  ...inlineInputStyle,
-                  textAlign: "center",
-                  color: getTextColorForFilled(componentColor),
-                }}
-              />
-            ) : (
-              <Typography
-                variant="body2"
-                sx={{ color: getTextColorForFilled(componentColor) }}
-              >
-                {(component.props?.text as string) || "Paper"}
-              </Typography>
-            )}
-          </Paper>
-        );
+        return <PaperRenderer {...rendererProps} />;
       case "Box":
-        return (
-          <Box
-            sx={{
-              width: "100%",
-              height: "100%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              border: "1px dashed",
-              borderColor: componentColor,
-              backgroundColor: `${componentColor}20`,
-              ...centeredAlignment.sx,
-            }}
-            {...(component.props as object)}
-          >
-            {isEditing && editingField === "text" ? (
-              <input
-                ref={inputRef}
-                type="text"
-                value={editValue}
-                onChange={(e) => setEditValue(e.target.value)}
-                onBlur={handleBlur}
-                onKeyDown={handleKeyDown}
-                onClick={(e) => e.stopPropagation()}
-                style={{ ...inlineInputStyle, textAlign: "center" }}
-              />
-            ) : (
-              <Typography variant="body2">
-                {(component.props?.text as string) || "Box"}
-              </Typography>
-            )}
-          </Box>
-        );
+        return <BoxRenderer {...rendererProps} />;
       case "Radio":
         return (
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: "100%",
-              height: "100%",
-              pl: 2, // Add left padding
-            }}
-          >
-            <RadioGroup
-              {...(component.props as object)}
-              defaultValue={component.props?.value as string || "option1"}
-              row
-            >
-              <FormControlLabel
-                value="option1"
-                control={
-                  <Radio
-                    sx={{
-                      color: isDarkColor(componentColor) ? componentColor : "#000000",
-                      "&.Mui-checked": {
-                        color: componentColor,
-                      },
-                    }}
-                  />
-                }
-                label={
-                  isEditing && editingField === "radio1" ? (
-                    <input
-                      ref={inputRef}
-                      type="text"
-                      value={editValue}
-                      onChange={(e) => setEditValue(e.target.value)}
-                      onBlur={handleBlur}
-                      onKeyDown={handleKeyDown}
-                      onClick={(e) => e.stopPropagation()}
-                      size={Math.max(editValue.length || 1, 4)}
-                      style={{
-                        background: "transparent",
-                        border: "none",
-                        outline: "none",
-                        color: "inherit",
-                        fontSize: "inherit",
-                        fontFamily: "inherit",
-                        padding: 0,
-                        margin: 0,
-                        width: "auto",
-                        minWidth: 0,
-                      }}
-                    />
-                  ) : (
-                    <span
-                      data-field="radio1"
-                      onDoubleClick={(e) => {
-                        e.stopPropagation();
-                        const currentText = (component.props?.label as string) || "Option 1";
-                        setEditingField("radio1");
-                        setEditValue(currentText);
-                        setIsEditing(true);
-                      }}
-                    >
-                      {(component.props?.label as string) || "Option 1"}
-                    </span>
-                  )
-                }
-              />
-              <FormControlLabel
-                value="option2"
-                control={
-                  <Radio
-                    sx={{
-                      color: isDarkColor(componentColor) ? componentColor : "#000000",
-                      "&.Mui-checked": {
-                        color: componentColor,
-                      },
-                    }}
-                  />
-                }
-                label={
-                  isEditing && editingField === "radio2" ? (
-                    <input
-                      ref={inputRef}
-                      type="text"
-                      value={editValue}
-                      onChange={(e) => setEditValue(e.target.value)}
-                      onBlur={handleBlur}
-                      onKeyDown={handleKeyDown}
-                      onClick={(e) => e.stopPropagation()}
-                      size={Math.max(editValue.length || 1, 4)}
-                      style={{
-                        background: "transparent",
-                        border: "none",
-                        outline: "none",
-                        color: "inherit",
-                        fontSize: "inherit",
-                        fontFamily: "inherit",
-                        padding: 0,
-                        margin: 0,
-                        width: "auto",
-                        minWidth: 0,
-                      }}
-                    />
-                  ) : (
-                    <span
-                      data-field="radio2"
-                      onDoubleClick={(e) => {
-                        e.stopPropagation();
-                        const currentText = (component.props?.label2 as string) || "Option 2";
-                        setEditingField("radio2");
-                        setEditValue(currentText);
-                        setIsEditing(true);
-                      }}
-                    >
-                      {(component.props?.label2 as string) || "Option 2"}
-                    </span>
-                  )
-                }
-              />
-            </RadioGroup>
-          </Box>
+          <RadioRenderer
+            {...rendererProps}
+            onRadioDoubleClick={handleRadioDoubleClick}
+          />
         );
       case "Table":
         return (
-          <TableContainer
-            sx={{
-              width: "100%",
-              height: "100%",
-              overflow: "auto",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Table size="small" sx={{ border: `1px solid ${componentColor}`, tableLayout: "fixed", width: "100%" }}>
-              <TableHead>
-                <TableRow>
-                  <TableCell
-                    sx={{ borderColor: componentColor, fontWeight: "bold", textAlign: "center" }}
-                    data-field="header1"
-                    onDoubleClick={(e) => {
-                      e.stopPropagation();
-                      const currentText = (component.props?.header1 as string) || "Header 1";
-                      setEditingField("header1");
-                      setEditValue(currentText);
-                      setIsEditing(true);
-                    }}
-                  >
-                    {isEditing && editingField === "header1" ? (
-                      <Box sx={{ textAlign: "center", width: "100%" }}>
-                        <input
-                          ref={inputRef}
-                          type="text"
-                          value={editValue}
-                          onChange={(e) => setEditValue(e.target.value)}
-                          onBlur={handleBlur}
-                          onKeyDown={handleKeyDown}
-                          onClick={(e) => e.stopPropagation()}
-                          style={{
-                            ...inlineInputStyle,
-                            textAlign: "center",
-                            fontWeight: "bold",
-                          }}
-                        />
-                      </Box>
-                    ) : (
-                      (component.props?.header1 as string) || "Header 1"
-                    )}
-                  </TableCell>
-                  <TableCell
-                    sx={{ borderColor: componentColor, fontWeight: "bold", textAlign: "center" }}
-                    data-field="header2"
-                    onDoubleClick={(e) => {
-                      e.stopPropagation();
-                      const currentText = (component.props?.header2 as string) || "Header 2";
-                      setEditingField("header2");
-                      setEditValue(currentText);
-                      setIsEditing(true);
-                    }}
-                  >
-                    {isEditing && editingField === "header2" ? (
-                      <Box sx={{ textAlign: "center", width: "100%" }}>
-                        <input
-                          ref={inputRef}
-                          type="text"
-                          value={editValue}
-                          onChange={(e) => setEditValue(e.target.value)}
-                          onBlur={handleBlur}
-                          onKeyDown={handleKeyDown}
-                          onClick={(e) => e.stopPropagation()}
-                          style={{
-                            ...inlineInputStyle,
-                            textAlign: "center",
-                            fontWeight: "bold",
-                          }}
-                        />
-                      </Box>
-                    ) : (
-                      (component.props?.header2 as string) || "Header 2"
-                    )}
-                  </TableCell>
-                  <TableCell
-                    sx={{ borderColor: componentColor, fontWeight: "bold", textAlign: "center" }}
-                    data-field="header3"
-                    onDoubleClick={(e) => {
-                      e.stopPropagation();
-                      const currentText = (component.props?.header3 as string) || "Header 3";
-                      setEditingField("header3");
-                      setEditValue(currentText);
-                      setIsEditing(true);
-                    }}
-                  >
-                    {isEditing && editingField === "header3" ? (
-                      <Box sx={{ textAlign: "center", width: "100%" }}>
-                        <input
-                          ref={inputRef}
-                          type="text"
-                          value={editValue}
-                          onChange={(e) => setEditValue(e.target.value)}
-                          onBlur={handleBlur}
-                          onKeyDown={handleKeyDown}
-                          onClick={(e) => e.stopPropagation()}
-                          style={{
-                            ...inlineInputStyle,
-                            textAlign: "center",
-                            fontWeight: "bold",
-                          }}
-                        />
-                      </Box>
-                    ) : (
-                      (component.props?.header3 as string) || "Header 3"
-                    )}
-                  </TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                <TableRow>
-                  <TableCell
-                    sx={{ borderColor: componentColor, textAlign: "center" }}
-                    data-field="cell1_1"
-                    onDoubleClick={(e) => {
-                      e.stopPropagation();
-                      const currentText = (component.props?.cell1_1 as string) || "Cell 1-1";
-                      setEditingField("cell1_1");
-                      setEditValue(currentText);
-                      setIsEditing(true);
-                    }}
-                  >
-                    {isEditing && editingField === "cell1_1" ? (
-                      <Box sx={{ textAlign: "center", width: "100%" }}>
-                        <input
-                          ref={inputRef}
-                          type="text"
-                          value={editValue}
-                          onChange={(e) => setEditValue(e.target.value)}
-                          onBlur={handleBlur}
-                          onKeyDown={handleKeyDown}
-                          onClick={(e) => e.stopPropagation()}
-                          style={{
-                            ...inlineInputStyle,
-                            textAlign: "center",
-                          }}
-                        />
-                      </Box>
-                    ) : (
-                      (component.props?.cell1_1 as string) || "Cell 1-1"
-                    )}
-                  </TableCell>
-                  <TableCell
-                    sx={{ borderColor: componentColor, textAlign: "center" }}
-                    data-field="cell1_2"
-                    onDoubleClick={(e) => {
-                      e.stopPropagation();
-                      const currentText = (component.props?.cell1_2 as string) || "Cell 1-2";
-                      setEditingField("cell1_2");
-                      setEditValue(currentText);
-                      setIsEditing(true);
-                    }}
-                  >
-                    {isEditing && editingField === "cell1_2" ? (
-                      <Box sx={{ textAlign: "center", width: "100%" }}>
-                        <input
-                          ref={inputRef}
-                          type="text"
-                          value={editValue}
-                          onChange={(e) => setEditValue(e.target.value)}
-                          onBlur={handleBlur}
-                          onKeyDown={handleKeyDown}
-                          onClick={(e) => e.stopPropagation()}
-                          style={{
-                            ...inlineInputStyle,
-                            textAlign: "center",
-                          }}
-                        />
-                      </Box>
-                    ) : (
-                      (component.props?.cell1_2 as string) || "Cell 1-2"
-                    )}
-                  </TableCell>
-                  <TableCell
-                    sx={{ borderColor: componentColor, textAlign: "center" }}
-                    data-field="cell1_3"
-                    onDoubleClick={(e) => {
-                      e.stopPropagation();
-                      const currentText = (component.props?.cell1_3 as string) || "Cell 1-3";
-                      setEditingField("cell1_3");
-                      setEditValue(currentText);
-                      setIsEditing(true);
-                    }}
-                  >
-                    {isEditing && editingField === "cell1_3" ? (
-                      <Box sx={{ textAlign: "center", width: "100%" }}>
-                        <input
-                          ref={inputRef}
-                          type="text"
-                          value={editValue}
-                          onChange={(e) => setEditValue(e.target.value)}
-                          onBlur={handleBlur}
-                          onKeyDown={handleKeyDown}
-                          onClick={(e) => e.stopPropagation()}
-                          style={{
-                            ...inlineInputStyle,
-                            textAlign: "center",
-                          }}
-                        />
-                      </Box>
-                    ) : (
-                      (component.props?.cell1_3 as string) || "Cell 1-3"
-                    )}
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell
-                    sx={{ borderColor: componentColor, textAlign: "center" }}
-                    data-field="cell2_1"
-                    onDoubleClick={(e) => {
-                      e.stopPropagation();
-                      const currentText = (component.props?.cell2_1 as string) || "Cell 2-1";
-                      setEditingField("cell2_1");
-                      setEditValue(currentText);
-                      setIsEditing(true);
-                    }}
-                  >
-                    {isEditing && editingField === "cell2_1" ? (
-                      <Box sx={{ textAlign: "center", width: "100%" }}>
-                        <input
-                          ref={inputRef}
-                          type="text"
-                          value={editValue}
-                          onChange={(e) => setEditValue(e.target.value)}
-                          onBlur={handleBlur}
-                          onKeyDown={handleKeyDown}
-                          onClick={(e) => e.stopPropagation()}
-                          style={{
-                            ...inlineInputStyle,
-                            textAlign: "center",
-                          }}
-                        />
-                      </Box>
-                    ) : (
-                      (component.props?.cell2_1 as string) || "Cell 2-1"
-                    )}
-                  </TableCell>
-                  <TableCell
-                    sx={{ borderColor: componentColor, textAlign: "center" }}
-                    data-field="cell2_2"
-                    onDoubleClick={(e) => {
-                      e.stopPropagation();
-                      const currentText = (component.props?.cell2_2 as string) || "Cell 2-2";
-                      setEditingField("cell2_2");
-                      setEditValue(currentText);
-                      setIsEditing(true);
-                    }}
-                  >
-                    {isEditing && editingField === "cell2_2" ? (
-                      <Box sx={{ textAlign: "center", width: "100%" }}>
-                        <input
-                          ref={inputRef}
-                          type="text"
-                          value={editValue}
-                          onChange={(e) => setEditValue(e.target.value)}
-                          onBlur={handleBlur}
-                          onKeyDown={handleKeyDown}
-                          onClick={(e) => e.stopPropagation()}
-                          style={{
-                            ...inlineInputStyle,
-                            textAlign: "center",
-                          }}
-                        />
-                      </Box>
-                    ) : (
-                      (component.props?.cell2_2 as string) || "Cell 2-2"
-                    )}
-                  </TableCell>
-                  <TableCell
-                    sx={{ borderColor: componentColor, textAlign: "center" }}
-                    data-field="cell2_3"
-                    onDoubleClick={(e) => {
-                      e.stopPropagation();
-                      const currentText = (component.props?.cell2_3 as string) || "Cell 2-3";
-                      setEditingField("cell2_3");
-                      setEditValue(currentText);
-                      setIsEditing(true);
-                    }}
-                  >
-                    {isEditing && editingField === "cell2_3" ? (
-                      <Box sx={{ textAlign: "center", width: "100%" }}>
-                        <input
-                          ref={inputRef}
-                          type="text"
-                          value={editValue}
-                          onChange={(e) => setEditValue(e.target.value)}
-                          onBlur={handleBlur}
-                          onKeyDown={handleKeyDown}
-                          onClick={(e) => e.stopPropagation()}
-                          style={{
-                            ...inlineInputStyle,
-                            textAlign: "center",
-                          }}
-                        />
-                      </Box>
-                    ) : (
-                      (component.props?.cell2_3 as string) || "Cell 2-3"
-                    )}
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          </TableContainer>
+          <TableRenderer
+            {...rendererProps}
+            onCellDoubleClick={handleCellDoubleClick}
+          />
         );
       default:
         return null;
