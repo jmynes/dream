@@ -2,11 +2,11 @@ import { Box, Snackbar } from "@mui/material";
 import CssBaseline from "@mui/material/CssBaseline";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { useCallback, useEffect, useRef, useState } from "react";
-import Canvas from "./components/Canvas";
-import Footer from "./components/Footer";
-import ComponentsDrawer from "./components/ComponentsDrawer";
-import ToolsDrawer from "./components/ToolsDrawer";
-import MenuBar from "./components/MenuBar";
+import Canvas from "./components/canvas/Canvas";
+import Footer from "./components/ui/Footer";
+import ComponentsDrawer from "./components/drawers/ComponentsDrawer";
+import ToolsDrawer from "./components/drawers/ToolsDrawer";
+import MenuBar from "./components/ui/MenuBar";
 import { ColorUtilsProvider } from "./contexts/ColorUtilsContext";
 import type { CanvasComponent, ComponentType } from "./types/component";
 

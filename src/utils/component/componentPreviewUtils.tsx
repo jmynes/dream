@@ -22,8 +22,8 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import type { ComponentType } from "../types/component";
-import { getTextColorForFilled, isDarkColor } from "./colorUtils";
+import type { ComponentType } from "../../types/component";
+import { getTextColorForFilled, isDarkColor } from "../color/colorUtils";
 
 // Helper to get CSS variable reference for live color updates
 const getLiveColor = (componentColor: string) =>

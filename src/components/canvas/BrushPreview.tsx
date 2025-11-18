@@ -1,5 +1,5 @@
 import { Box } from "@mui/material";
-import type { Point } from "../utils/canvasUtils";
+import type { Point } from "../../utils/canvas/canvasUtils";
 
 interface BrushPreviewProps {
   isDrawing: boolean;

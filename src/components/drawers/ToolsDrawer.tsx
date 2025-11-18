@@ -20,7 +20,7 @@ import {
   FormControlLabel,
 } from "@mui/material";
 import { useState, useEffect, useRef } from "react";
-import ColorSection from "./ColorSection";
+import ColorSection from "../color/ColorSection";
 
 
 interface ToolsDrawerProps {

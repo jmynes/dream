@@ -1,4 +1,4 @@
-import type { CanvasComponent } from "../types/component";
+import type { CanvasComponent } from "../../types/component";
 
 // Component types that support text editing
 export const TEXT_EDITABLE_TYPES = [

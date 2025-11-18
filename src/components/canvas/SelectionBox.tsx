@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import type { Point } from "../utils/canvasUtils";
+import type { Point } from "../../utils/canvas/canvasUtils";
 
 interface SelectionBoxProps {
   start: Point | null;

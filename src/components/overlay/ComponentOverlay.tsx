@@ -1,7 +1,7 @@
 import { Box } from "@mui/material";
-import type { CanvasComponent } from "../types/component";
-import ComponentRenderer from "./ComponentRenderer";
-import type { Point } from "../utils/canvasUtils";
+import type { CanvasComponent } from "../../types/component";
+import ComponentRenderer from "../ComponentRenderer";
+import type { Point } from "../../utils/canvas/canvasUtils";
 
 interface ComponentOverlayProps {
   components: CanvasComponent[];

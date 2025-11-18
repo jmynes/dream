@@ -1,5 +1,5 @@
-import type { CanvasComponent, ComponentType } from "../types/component";
-import type { Point } from "./canvasUtils";
+import type { CanvasComponent, ComponentType } from "../../types/component";
+import type { Point } from "../canvas/canvasUtils";
 
 export function createComponentAtPoint(
   type: ComponentType,

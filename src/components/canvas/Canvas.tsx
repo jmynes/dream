@@ -1,28 +1,28 @@
 import { Box, Button, Paper, Snackbar } from "@mui/material";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { CanvasComponent, ComponentType } from "../types/component";
-import RecognitionUI from "./RecognitionUI";
+import type { CanvasComponent, ComponentType } from "../../types/component";
+import RecognitionUI from "../overlay/RecognitionUI";
 import GridOverlay from "./GridOverlay";
 import BrushPreview from "./BrushPreview";
 import SelectionBox from "./SelectionBox";
-import ComponentOverlay from "./ComponentOverlay";
+import ComponentOverlay from "../overlay/ComponentOverlay";
 import LassoPath from "./LassoPath";
-import BrowserUI from "./BrowserUI";
+import BrowserUI from "../ui/BrowserUI";
 import CanvasContextMenu from "./CanvasContextMenu";
 import {
   getPointFromEvent,
   snapToGridPoint,
   type Point,
-} from "../utils/canvasUtils";
-import { createComponentAtPoint } from "../utils/componentPlacement";
-import { useCanvasLifecycle } from "../hooks/useCanvasLifecycle";
-import { useGrid } from "../hooks/useGrid";
-import { useBrushPreview } from "../hooks/useBrushPreview";
-import { useCanvasDrawing } from "../hooks/useCanvasDrawing";
-import { useSelectionBox } from "../hooks/useSelectionBox";
-import { useComponentDragResize } from "../hooks/useComponentDragResize";
-import { useMagicWand } from "../hooks/useMagicWand";
-import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
+} from "../../utils/canvas/canvasUtils";
+import { createComponentAtPoint } from "../../utils/component/componentPlacement";
+import { useCanvasLifecycle } from "../../hooks/canvas/useCanvasLifecycle";
+import { useGrid } from "../../hooks/canvas/useGrid";
+import { useBrushPreview } from "../../hooks/canvas/useBrushPreview";
+import { useCanvasDrawing } from "../../hooks/canvas/useCanvasDrawing";
+import { useSelectionBox } from "../../hooks/canvas/useSelectionBox";
+import { useComponentDragResize } from "../../hooks/component/useComponentDragResize";
+import { useMagicWand } from "../../hooks/canvas/useMagicWand";
+import { useKeyboardShortcuts } from "../../hooks/canvas/useKeyboardShortcuts";
 
 const isPointInPolygon = (point: Point, polygon: Point[]): boolean => {
   let inside = false;

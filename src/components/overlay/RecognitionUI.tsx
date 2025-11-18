@@ -7,7 +7,7 @@ import {
   Select,
   Typography,
 } from "@mui/material";
-import type { ComponentType } from "../types/component";
+import type { ComponentType } from "../../types/component";
 
 interface RecognitionFailed {
   x: number;

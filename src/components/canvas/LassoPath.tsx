@@ -1,4 +1,4 @@
-import type { Point } from "../utils/canvasUtils";
+import type { Point } from "../../utils/canvas/canvasUtils";
 
 interface LassoPathProps {
   path: Point[];

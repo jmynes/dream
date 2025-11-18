@@ -1,6 +1,6 @@
 import { Menu, MenuItem } from "@mui/material";
 import { ContentPaste as PasteIcon, SelectAll as SelectAllIcon } from "@mui/icons-material";
-import type { CanvasComponent } from "../types/component";
+import type { CanvasComponent } from "../../types/component";
 
 interface CanvasContextMenuProps {
   anchor: { mouseX: number; mouseY: number } | null;

@@ -13,9 +13,9 @@ import {
   Refresh as RefreshIcon,
 } from "@mui/icons-material";
 import { useCallback } from "react";
-import { useColorUtils } from "../contexts/ColorUtilsContext";
-import { useColorPicker } from "../hooks/useColorPicker";
-import { useEyedropper } from "../hooks/useEyedropper";
+import { useColorUtils } from "../../contexts/ColorUtilsContext";
+import { useColorPicker } from "../../hooks/color/useColorPicker";
+import { useEyedropper } from "../../hooks/color/useEyedropper";
 import ColorSwatches from "./ColorSwatches";
 
 interface ColorSectionProps {

@@ -11,10 +11,10 @@ import {
   Typography,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
-import type { ComponentType } from "../types/component";
+import type { ComponentType } from "../../types/component";
 import { useMemo, useState, useEffect, useRef } from "react";
-import { useColorUtils } from "../contexts/ColorUtilsContext";
-import { getComponentItems } from "../utils/componentPreviewUtils";
+import { useColorUtils } from "../../contexts/ColorUtilsContext";
+import { getComponentItems } from "../../utils/component/componentPreviewUtils";
 
 interface ComponentsDrawerProps {
   onComponentSelect: (type: ComponentType) => void;

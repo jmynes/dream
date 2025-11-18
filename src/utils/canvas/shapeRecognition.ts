@@ -1,4 +1,4 @@
-import type { ComponentType } from "../types/component";
+import type { ComponentType } from "../../types/component";
 import { calculateAngle, type Point } from "./canvasUtils";
 
 // Detect checkmark pattern - looks for characteristic checkmark shape

@@ -1,6 +1,6 @@
 import { useCallback, useState, useRef, useEffect } from "react";
-import type { Point } from "../utils/canvasUtils";
-import type { CanvasComponent } from "../types/component";
+import type { Point } from "../../utils/canvas/canvasUtils";
+import type { CanvasComponent } from "../../types/component";
 
 interface UseComponentDragResizeProps {
   components: CanvasComponent[];

@@ -1,8 +1,8 @@
 import { useCallback, useRef, useState } from "react";
-import type { ComponentType } from "../types/component";
-import type { CanvasComponent } from "../types/component";
-import type { Point } from "../utils/canvasUtils";
-import { recognizeShape } from "../utils/shapeRecognition";
+import type { ComponentType } from "../../types/component";
+import type { CanvasComponent } from "../../types/component";
+import type { Point } from "../../utils/canvas/canvasUtils";
+import { recognizeShape } from "../../utils/canvas/shapeRecognition";
 
 interface UseMagicWandProps {
   canvasRef: React.RefObject<HTMLCanvasElement | null>;

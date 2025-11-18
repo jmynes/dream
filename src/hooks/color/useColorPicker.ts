@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { colorResultToHex, type ColorResult } from "../utils/colorUtils";
+import { colorResultToHex, type ColorResult } from "../../utils/color/colorUtils";
 
 interface UseColorPickerOptions {
   color: string;

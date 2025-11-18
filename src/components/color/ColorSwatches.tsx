@@ -4,7 +4,7 @@ import {
   ExpandLess as ExpandLessIcon,
 } from "@mui/icons-material";
 import { useState } from "react";
-import { swatchColors } from "../utils/swatchColors";
+import { swatchColors } from "../../utils/color/swatchColors";
 
 interface ColorSwatchesProps {
   color: string;

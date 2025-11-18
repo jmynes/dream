@@ -13,7 +13,7 @@ import {
 import { useState, useRef, useEffect, memo, useCallback } from "react";
 import type { CanvasComponent } from "../types/component";
 import { ChromePicker } from "react-color";
-import { colorResultToHex, type ColorResult } from "../utils/colorUtils";
+import { colorResultToHex, type ColorResult } from "../utils/color/colorUtils";
 
 import ButtonRenderer from "./renderers/ButtonRenderer";
 import TextFieldRenderer from "./renderers/TextFieldRenderer";
@@ -35,7 +35,7 @@ import {
   canEditText,
   getComponentTextInfo,
   getUpdateProps,
-} from "../utils/textEditingUtils";
+} from "../utils/component/textEditingUtils";
 
 // Helper: Create SpeedDialAction mouse handlers
 const createSpeedDialMouseHandlers = () => ({

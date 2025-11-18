@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import type { CanvasComponent, ComponentType } from "../types/component";
+import type { CanvasComponent, ComponentType } from "../../types/component";
 
 interface UseKeyboardShortcutsProps {
   components: CanvasComponent[];

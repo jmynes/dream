@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from "react";
-import type { Point } from "../utils/canvasUtils";
-import type { CanvasComponent } from "../types/component";
+import type { Point } from "../../utils/canvas/canvasUtils";
+import type { CanvasComponent } from "../../types/component";
 
 interface UseSelectionBoxProps {
   isDrawing: boolean;
