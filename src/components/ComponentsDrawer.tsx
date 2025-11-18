@@ -310,26 +310,26 @@ const getComponentItems = (componentColor: string): ComponentItem[] => {
           <Table size="small" sx={{ border: `1px solid ${liveColor}` }}>
             <TableHead>
               <TableRow>
-                <TableCell sx={{ borderColor: liveColor, fontWeight: "bold", p: 0.5, fontSize: "0.7rem" }}>
+                <TableCell sx={{ borderColor: liveColor, fontWeight: "bold", p: 0.5, fontSize: "0.7rem", textAlign: "center" }}>
                   H1
                 </TableCell>
-                <TableCell sx={{ borderColor: liveColor, fontWeight: "bold", p: 0.5, fontSize: "0.7rem" }}>
+                <TableCell sx={{ borderColor: liveColor, fontWeight: "bold", p: 0.5, fontSize: "0.7rem", textAlign: "center" }}>
                   H2
                 </TableCell>
-                <TableCell sx={{ borderColor: liveColor, fontWeight: "bold", p: 0.5, fontSize: "0.7rem" }}>
+                <TableCell sx={{ borderColor: liveColor, fontWeight: "bold", p: 0.5, fontSize: "0.7rem", textAlign: "center" }}>
                   H3
                 </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               <TableRow>
-                <TableCell sx={{ borderColor: liveColor, p: 0.5, fontSize: "0.7rem" }}>
+                <TableCell sx={{ borderColor: liveColor, p: 0.5, fontSize: "0.7rem", textAlign: "center" }}>
                   C1
                 </TableCell>
-                <TableCell sx={{ borderColor: liveColor, p: 0.5, fontSize: "0.7rem" }}>
+                <TableCell sx={{ borderColor: liveColor, p: 0.5, fontSize: "0.7rem", textAlign: "center" }}>
                   C2
                 </TableCell>
-                <TableCell sx={{ borderColor: liveColor, p: 0.5, fontSize: "0.7rem" }}>
+                <TableCell sx={{ borderColor: liveColor, p: 0.5, fontSize: "0.7rem", textAlign: "center" }}>
                   C3
                 </TableCell>
               </TableRow>
