@@ -56,6 +56,125 @@ import RadioRenderer from "./renderers/RadioRenderer";
 import TableRenderer from "./renderers/TableRenderer";
 import { resizeHandleBaseStyle } from "./renderers/rendererUtils";
 
+// Component types that support text editing
+const TEXT_EDITABLE_TYPES = [
+  "Button",
+  "Card",
+  "Typography",
+  "Avatar",
+  "Paper",
+  "Box",
+  "Radio",
+  "Table",
+  "TextField",
+  "Chip",
+  "Checkbox",
+] as const;
+
+// Helper: Check if component type supports text editing
+const canEditText = (componentType: string): boolean => {
+  return TEXT_EDITABLE_TYPES.includes(componentType as any);
+};
+
+// Helper: Get field name and current text for a component type
+const getComponentTextInfo = (
+  componentType: string,
+  props: CanvasComponent["props"],
+  dataField?: string | null,
+): { field: string; currentText: string } => {
+  if (componentType === "Radio") {
+    const field = dataField === "radio2" ? "radio2" : "radio1";
+    const currentText =
+      (props?.[field === "radio2" ? "label2" : "label"] as string) ||
+      (field === "radio2" ? "Option 2" : "Option 1");
+    return { field, currentText };
+  }
+
+  if (componentType === "Table") {
+    if (dataField) {
+      const fieldMap: Record<string, string> = {
+        header1: (props?.header1 as string) || "Header 1",
+        header2: (props?.header2 as string) || "Header 2",
+        header3: (props?.header3 as string) || "Header 3",
+        cell1_1: (props?.cell1_1 as string) || "Cell 1-1",
+        cell1_2: (props?.cell1_2 as string) || "Cell 1-2",
+        cell1_3: (props?.cell1_3 as string) || "Cell 1-3",
+        cell2_1: (props?.cell2_1 as string) || "Cell 2-1",
+        cell2_2: (props?.cell2_2 as string) || "Cell 2-2",
+        cell2_3: (props?.cell2_3 as string) || "Cell 2-3",
+      };
+      return { field: dataField, currentText: fieldMap[dataField] || "" };
+    }
+    return {
+      field: "header1",
+      currentText: (props?.header1 as string) || "Header 1",
+    };
+  }
+
+  if (componentType === "TextField") {
+    return { field: "value", currentText: (props?.value as string) || "" };
+  }
+
+  if (componentType === "Chip") {
+    return { field: "label", currentText: (props?.label as string) || "Chip" };
+  }
+
+  if (componentType === "Checkbox") {
+    return {
+      field: "label",
+      currentText: (props?.label as string) || "Checkbox",
+    };
+  }
+
+  // Default: text field
+  return { field: "text", currentText: (props?.text as string) || "" };
+};
+
+// Helper: Get update props for a component type and field
+const getUpdateProps = (
+  componentType: string,
+  field: string,
+  value: string,
+): Record<string, unknown> => {
+  if (componentType === "Radio") {
+    if (field === "radio2") {
+      return { label2: value };
+    }
+    return { label: value };
+  }
+
+  if (componentType === "Table") {
+    return { [field]: value };
+  }
+
+  if (componentType === "TextField") {
+    return { value };
+  }
+
+  if (componentType === "Chip" || componentType === "Checkbox") {
+    return { label: value };
+  }
+
+  return { text: value };
+};
+
+// Helper: Create SpeedDialAction mouse handlers
+const createSpeedDialMouseHandlers = () => ({
+  onMouseEnter: (e: React.MouseEvent) => {
+    e.stopPropagation();
+  },
+  onMouseLeave: (e: React.MouseEvent) => {
+    e.stopPropagation();
+  },
+});
+
+// Helper: Get tooltip elements for event listener management
+const getTooltipElements = () => {
+  return document.querySelectorAll(
+    ".MuiTooltip-root, .MuiTooltip-popper, .MuiSpeedDialAction-staticTooltipLabel",
+  );
+};
+
 interface ComponentRendererProps {
   component: CanvasComponent;
   onMouseDown: (e: React.MouseEvent, componentId: string, resizeDirection?: string) => void;
@@ -224,38 +343,18 @@ function ComponentRenderer({
     setSpeedDialOpen(false);
     setSpeedDialAnchor(null);
     // Trigger text editing mode (same as double-click)
-    const hasText = ["Button", "Card", "Typography", "Avatar", "Paper", "Box", "Radio", "Table", "TextField", "Chip", "Checkbox"].includes(component.type);
-    if (hasText && onComponentUpdate) {
-      let currentText = "";
-      let field = "";
-      
-      if (component.type === "Radio") {
-        field = "radio1";
-        currentText = (component.props?.label as string) || "Option 1";
-      } else if (component.type === "Table") {
-        field = "header1";
-        currentText = (component.props?.header1 as string) || "Header 1";
-      } else if (component.type === "TextField") {
-        field = "value";
-        currentText = (component.props?.value as string) || "";
-      } else if (component.type === "Chip") {
-        field = "label";
-        currentText = (component.props?.label as string) || "Chip";
-      } else if (component.type === "Checkbox") {
-        field = "label";
-        currentText = (component.props?.label as string) || "Checkbox";
-      } else {
-        field = "text";
-        currentText = (component.props?.text as string) || "";
-      }
-      
+    if (canEditText(component.type) && onComponentUpdate) {
+      const { field, currentText } = getComponentTextInfo(
+        component.type,
+        component.props,
+      );
       setEditingField(field);
       setEditValue(currentText);
       setIsEditing(true);
     }
   };
 
-  const canEditText = ["Button", "Card", "Typography", "Avatar", "Paper", "Box", "TextField", "Chip", "Radio", "Table", "Checkbox"].includes(component.type);
+  const componentCanEditText = canEditText(component.type);
 
   const handleColorPickerClose = () => {
     setColorPickerAnchor(null);
@@ -320,15 +419,13 @@ function ComponentRenderer({
   const triggerInlineEdit = (e: React.MouseEvent) => {
     e.stopPropagation();
     // Only allow editing for components that have text
-    const hasText = ["Button", "Card", "Typography", "Avatar", "Paper", "Box", "Radio", "Table", "TextField", "Chip", "Checkbox"].includes(component.type);
-    if (hasText && onComponentUpdate) {
-      let currentText = "";
-      let field = "";
-      
+    if (canEditText(component.type) && onComponentUpdate) {
       // Check if clicking on a specific field (radio option or table cell)
       const target = e.target as HTMLElement;
-      const dataField = target.getAttribute("data-field") || target.closest("[data-field]")?.getAttribute("data-field");
-      
+      const dataField =
+        target.getAttribute("data-field") ||
+        target.closest("[data-field]")?.getAttribute("data-field");
+
       // Store the width of the text element before editing (to prevent expansion)
       if (component.type === "Chip") {
         // Find the Chip label element
@@ -343,7 +440,8 @@ function ComponentRenderer({
           tempSpan.style.fontSize = computedStyle.fontSize;
           tempSpan.style.fontFamily = computedStyle.fontFamily;
           tempSpan.style.fontWeight = computedStyle.fontWeight;
-          tempSpan.textContent = (component.props?.label as string) || "Chip";
+          tempSpan.textContent =
+            (component.props?.label as string) || "Chip";
           document.body.appendChild(tempSpan);
           textWidthRef.current = tempSpan.offsetWidth;
           document.body.removeChild(tempSpan);
@@ -355,50 +453,13 @@ function ComponentRenderer({
       } else {
         textWidthRef.current = 0;
       }
-      
-      if (component.type === "Radio") {
-        if (dataField === "radio2") {
-          field = "radio2";
-          currentText = (component.props?.label2 as string) || "Option 2";
-        } else {
-          field = "radio1";
-          currentText = (component.props?.label as string) || "Option 1";
-        }
-      } else if (component.type === "Table") {
-        if (dataField) {
-          field = dataField;
-          // Get the current value for the specific field
-          const fieldMap: Record<string, string> = {
-            header1: (component.props?.header1 as string) || "Header 1",
-            header2: (component.props?.header2 as string) || "Header 2",
-            header3: (component.props?.header3 as string) || "Header 3",
-            cell1_1: (component.props?.cell1_1 as string) || "Cell 1-1",
-            cell1_2: (component.props?.cell1_2 as string) || "Cell 1-2",
-            cell1_3: (component.props?.cell1_3 as string) || "Cell 1-3",
-            cell2_1: (component.props?.cell2_1 as string) || "Cell 2-1",
-            cell2_2: (component.props?.cell2_2 as string) || "Cell 2-2",
-            cell2_3: (component.props?.cell2_3 as string) || "Cell 2-3",
-          };
-          currentText = fieldMap[dataField] || "";
-        } else {
-          // Default to first header if no field specified
-          field = "header1";
-          currentText = (component.props?.header1 as string) || "Header 1";
-        }
-      } else if (component.type === "TextField") {
-        field = "value";
-        currentText = (component.props?.value as string) || "";
-      } else if (component.type === "Chip") {
-        field = "label";
-        currentText = (component.props?.label as string) || "Chip";
-      } else if (component.type === "Checkbox") {
-        field = "label";
-        currentText = (component.props?.label as string) || "Checkbox";
-      } else {
-        field = "text";
-        currentText = (component.props?.text as string) || "";
-      }
-      
+
+      const { field, currentText } = getComponentTextInfo(
+        component.type,
+        component.props,
+        dataField,
+      );
+
       setEditingField(field);
       setEditValue(currentText);
       setIsEditing(true);
@@ -418,27 +479,11 @@ function ComponentRenderer({
 
   const handleBlur = () => {
     if (onComponentUpdate && isEditing && editingField) {
-      const updateProps: Record<string, unknown> = {};
-      
-      if (component.type === "Radio") {
-        if (editingField === "radio2") {
-          updateProps.label2 = editValue;
-        } else {
-          updateProps.label = editValue;
-        }
-      } else if (component.type === "Table") {
-        // Update the specific field that was edited
-        updateProps[editingField] = editValue;
-      } else if (component.type === "TextField") {
-        updateProps.value = editValue;
-      } else if (component.type === "Chip") {
-        updateProps.label = editValue;
-      } else if (component.type === "Checkbox") {
-        updateProps.label = editValue;
-      } else {
-        updateProps.text = editValue;
-      }
-      
+      const updateProps = getUpdateProps(
+        component.type,
+        editingField,
+        editValue,
+      );
       onComponentUpdate(component.id, updateProps);
       setIsEditing(false);
       setEditingField(null);
@@ -518,7 +563,7 @@ function ComponentRenderer({
       document.addEventListener("keydown", handleEscape, true);
       
       // Attach to tooltip elements if they exist
-      const tooltipElements = document.querySelectorAll(".MuiTooltip-root, .MuiTooltip-popper, .MuiSpeedDialAction-staticTooltipLabel");
+      const tooltipElements = getTooltipElements();
       tooltipElements.forEach((el) => {
         el.addEventListener("mouseenter", handleTooltipMouseEnter);
         el.addEventListener("mouseleave", handleTooltipMouseLeave);
@@ -530,8 +575,8 @@ function ComponentRenderer({
       document.removeEventListener("click", handleClickOutside, true);
       document.removeEventListener("contextmenu", handleClickOutside, true);
       document.removeEventListener("keydown", handleEscape, true);
-      
-      const tooltipElements = document.querySelectorAll(".MuiTooltip-root, .MuiTooltip-popper, .MuiSpeedDialAction-staticTooltipLabel");
+
+      const tooltipElements = getTooltipElements();
       tooltipElements.forEach((el) => {
         el.removeEventListener("mouseenter", handleTooltipMouseEnter);
         el.removeEventListener("mouseleave", handleTooltipMouseLeave);
@@ -554,73 +599,65 @@ function ComponentRenderer({
     height: componentHeight ? `${componentHeight}px` : "auto",
   };
 
-  const resizeHandleBaseStyleLocal: React.CSSProperties = {
-    ...resizeHandleBaseStyle,
-    zIndex: 11,
-    boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
+  // Helper: Create resize handle style
+  const createResizeHandleStyle = (
+    position: {
+      top?: number | string;
+      right?: number | string;
+      bottom?: number | string;
+      left?: number | string;
+      transform?: string;
+    },
+    cursor: string,
+  ): React.CSSProperties => {
+    const baseStyle: React.CSSProperties = {
+      ...resizeHandleBaseStyle,
+      zIndex: 11,
+      boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
+    };
+
+    return {
+      ...baseStyle,
+      ...position,
+      cursor,
+    };
   };
 
   // Corner handles (diagonal resize)
-  const topLeftHandleStyle: React.CSSProperties = {
-    ...resizeHandleBaseStyleLocal,
-    top: -4,
-    left: -4,
-    cursor: "nw-resize",
-  };
-
-  const topRightHandleStyle: React.CSSProperties = {
-    ...resizeHandleBaseStyleLocal,
-    top: -4,
-    right: -4,
-    cursor: "ne-resize",
-  };
-
-  const bottomLeftHandleStyle: React.CSSProperties = {
-    ...resizeHandleBaseStyleLocal,
-    bottom: -4,
-    left: -4,
-    cursor: "sw-resize",
-  };
-
-  const bottomRightHandleStyle: React.CSSProperties = {
-    ...resizeHandleBaseStyleLocal,
-    bottom: -4,
-    right: -4,
-    cursor: "se-resize",
-  };
+  const topLeftHandleStyle = createResizeHandleStyle(
+    { top: -4, left: -4 },
+    "nw-resize",
+  );
+  const topRightHandleStyle = createResizeHandleStyle(
+    { top: -4, right: -4 },
+    "ne-resize",
+  );
+  const bottomLeftHandleStyle = createResizeHandleStyle(
+    { bottom: -4, left: -4 },
+    "sw-resize",
+  );
+  const bottomRightHandleStyle = createResizeHandleStyle(
+    { bottom: -4, right: -4 },
+    "se-resize",
+  );
 
   // Edge handles (single direction resize)
-  const topHandleStyle: React.CSSProperties = {
-    ...resizeHandleBaseStyleLocal,
-    top: -4,
-    left: "50%",
-    transform: "translateX(-50%)",
-    cursor: "n-resize",
-  };
-
-  const rightHandleStyle: React.CSSProperties = {
-    ...resizeHandleBaseStyleLocal,
-    right: -4,
-    top: "50%",
-    transform: "translateY(-50%)",
-    cursor: "e-resize",
-  };
-
-  const bottomHandleStyle: React.CSSProperties = {
-    ...resizeHandleBaseStyleLocal,
-    bottom: -4,
-    left: "50%",
-    transform: "translateX(-50%)",
-    cursor: "s-resize",
-  };
-
-  const leftHandleStyle: React.CSSProperties = {
-    ...resizeHandleBaseStyleLocal,
-    left: -4,
-    top: "50%",
-    transform: "translateY(-50%)",
-    cursor: "w-resize",
-  };
+  const topHandleStyle = createResizeHandleStyle(
+    { top: -4, left: "50%", transform: "translateX(-50%)" },
+    "n-resize",
+  );
+  const rightHandleStyle = createResizeHandleStyle(
+    { right: -4, top: "50%", transform: "translateY(-50%)" },
+    "e-resize",
+  );
+  const bottomHandleStyle = createResizeHandleStyle(
+    { bottom: -4, left: "50%", transform: "translateX(-50%)" },
+    "s-resize",
+  );
+  const leftHandleStyle = createResizeHandleStyle(
+    { left: -4, top: "50%", transform: "translateY(-50%)" },
+    "w-resize",
+  );
 
   const handleRadioDoubleClick = (field: string, currentText: string) => {
     setEditingField(field);
@@ -826,7 +863,7 @@ function ComponentRenderer({
               },
             }}
           >
-            {canEditText && (
+            {componentCanEditText && (
               <SpeedDialAction
                 key="edit-text"
                 icon={<EditNoteIcon />}
@@ -834,15 +871,7 @@ function ComponentRenderer({
                 tooltipOpen
                 tooltipPlacement="right"
                 onClick={handleEditText}
-                onMouseEnter={(e) => {
-                  // Keep menu open when hovering over button
-                  e.stopPropagation();
-                }}
-                onMouseLeave={(e) => {
-                  // Keep menu open when unhovering from button
-                  // Don't close, just stop propagation
-                  e.stopPropagation();
-                }}
+                {...createSpeedDialMouseHandlers()}
               />
             )}
             <SpeedDialAction
@@ -852,15 +881,7 @@ function ComponentRenderer({
               tooltipOpen
               tooltipPlacement="right"
               onClick={handleCopy}
-              onMouseEnter={(e) => {
-                // Keep menu open when hovering over button
-                e.stopPropagation();
-              }}
-              onMouseLeave={(e) => {
-                // Keep menu open when unhovering from button
-                // Don't close, just stop propagation
-                e.stopPropagation();
-              }}
+              {...createSpeedDialMouseHandlers()}
             />
             <SpeedDialAction
               key="edit-color"
@@ -869,15 +890,7 @@ function ComponentRenderer({
               tooltipOpen
               tooltipPlacement="right"
               onClick={handleEditColor}
-              onMouseEnter={(e) => {
-                // Keep menu open when hovering over button
-                e.stopPropagation();
-              }}
-              onMouseLeave={(e) => {
-                // Keep menu open when unhovering from button
-                // Don't close, just stop propagation
-                e.stopPropagation();
-              }}
+              {...createSpeedDialMouseHandlers()}
             />
             <SpeedDialAction
               key="delete"
@@ -886,15 +899,7 @@ function ComponentRenderer({
               tooltipOpen
               tooltipPlacement="right"
               onClick={handleDelete}
-              onMouseEnter={(e) => {
-                // Keep menu open when hovering over button
-                e.stopPropagation();
-              }}
-              onMouseLeave={(e) => {
-                // Keep menu open when unhovering from button
-                // Don't close, just stop propagation
-                e.stopPropagation();
-              }}
+              {...createSpeedDialMouseHandlers()}
             />
           </SpeedDial>
         </Box>
