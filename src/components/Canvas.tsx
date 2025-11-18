@@ -127,26 +127,29 @@ export default function Canvas({
     }
   }, [isLasso, resetLasso]);
 
+  // Helper: Update a component by ID (defined early as it's used in useEffect)
+  const updateComponent = useCallback(
+    (componentId: string, updater: (comp: CanvasComponent) => CanvasComponent) => {
+      onComponentsChange(
+        components.map((c) => (c.id === componentId ? updater(c) : c)),
+      );
+    },
+    [components, onComponentsChange],
+  );
+
   // Update selected components' colors when componentColor changes or when timestamp changes
   // The timestamp allows us to force updates even when the same color is selected
   const lastAppliedTimestampRef = useRef<number>(componentColorTimestamp);
   
   useEffect(() => {
     if (selectedComponentIds.length > 0 && componentColorTimestamp > lastAppliedTimestampRef.current) {
-      const updatedComponents = components.map((comp) => {
-        if (selectedComponentIds.includes(comp.id)) {
-          return {
-            ...comp,
-            color: componentColor,
-          };
-        }
-        return comp;
+      selectedComponentIds.forEach((id) => {
+        updateComponent(id, (comp) => ({ ...comp, color: componentColor }));
       });
-      onComponentsChange(updatedComponents);
       lastAppliedTimestampRef.current = componentColorTimestamp;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [componentColor, componentColorTimestamp]); // Run when componentColor or timestamp changes
+  }, [componentColor, componentColorTimestamp, selectedComponentIds, updateComponent]); // Run when componentColor or timestamp changes
 
   // Canvas lifecycle management
   const { actualWidth, actualHeight } = useCanvasLifecycle({
@@ -176,6 +179,121 @@ export default function Canvas({
       getPointFromEvent(e, containerRef.current),
     [],
   );
+
+  // Helper: Generate unique component ID
+  const generateComponentId = useCallback((index?: number): string => {
+    const timestamp = Date.now();
+    const random = Math.random().toString(36).substring(2, 9);
+    return index !== undefined
+      ? `component-${timestamp}-${index}-${random}`
+      : `component-${timestamp}-${random}`;
+  }, []);
+
+  // Helper: Convert global mouse event to canvas coordinates with clamping
+  const getClampedCanvasPoint = useCallback(
+    (e: MouseEvent): Point => {
+      const container = containerRef.current;
+      if (!container) return { x: 0, y: 0 };
+
+      const rect = container.getBoundingClientRect();
+      let x = e.clientX - rect.left;
+      let y = e.clientY - rect.top;
+
+      // Clamp to canvas boundaries
+      x = Math.max(0, Math.min(x, actualWidth));
+      y = Math.max(0, Math.min(y, actualHeight));
+
+      return { x, y };
+    },
+    [actualWidth, actualHeight],
+  );
+
+  // Helper: Create component with snapping
+  const createComponent = useCallback(
+    (type: ComponentType, point: Point): CanvasComponent => {
+      const snappedPoint = snapToGridPointFn(point);
+      return createComponentAtPoint(
+        type,
+        snappedPoint,
+        gridCellWidth,
+        gridCellHeight,
+        componentColor,
+      );
+    },
+    [snapToGridPointFn, gridCellWidth, gridCellHeight, componentColor],
+  );
+
+  // Helper: Paste components with offset
+  const pasteComponents = useCallback(
+    (componentsToPaste: CanvasComponent[]) => {
+      if (componentsToPaste.length === 0) return;
+
+      const offsetX = snapToGrid ? gridCellWidth : 10;
+      const offsetY = snapToGrid ? gridCellHeight : 10;
+
+      const newComponents = componentsToPaste.map((comp, index) => {
+        let newX = comp.x + offsetX;
+        let newY = comp.y + offsetY;
+
+        if (snapToGrid) {
+          newX = Math.round(newX / gridCellWidth) * gridCellWidth;
+          newY = Math.round(newY / gridCellHeight) * gridCellHeight;
+        }
+
+        return {
+          ...comp,
+          id: generateComponentId(index),
+          x: newX,
+          y: newY,
+        };
+      });
+
+      const newComponentIds = newComponents.map((c) => c.id);
+      onComponentsChange([...components, ...newComponents]);
+      setSelectedComponentIds(newComponentIds);
+      setToastMessage(
+        `${newComponents.length} component${newComponents.length === 1 ? "" : "s"} pasted`,
+      );
+    },
+    [
+      snapToGrid,
+      gridCellWidth,
+      gridCellHeight,
+      generateComponentId,
+      components,
+      onComponentsChange,
+    ],
+  );
+
+  // Helper: Snap point to grid if enabled
+  const snapPointToGrid = useCallback(
+    (point: Point): Point => {
+      if (!snapToGrid) return point;
+      return {
+        x: Math.round(point.x / gridCellWidth) * gridCellWidth,
+        y: Math.round(point.y / gridCellHeight) * gridCellHeight,
+      };
+    },
+    [snapToGrid, gridCellWidth, gridCellHeight],
+  );
+
+  // Helper: Clamp component position to canvas boundaries
+  const clampComponentPosition = useCallback(
+    (x: number, y: number, compWidth: number, compHeight: number): Point => {
+      return {
+        x: Math.max(0, Math.min(x, actualWidth - compWidth)),
+        y: Math.max(0, Math.min(y, actualHeight - compHeight)),
+      };
+    },
+    [actualWidth, actualHeight],
+  );
+
+  // Helper: Select all components
+  const selectAllComponents = useCallback(() => {
+    if (components.length > 0) {
+      setSelectedComponentIds(components.map((c) => c.id));
+    }
+  }, [components]);
 
   // Canvas drawing hook
   const {
@@ -399,20 +517,9 @@ export default function Canvas({
         return;
       }
 
-      // Convert global mouse position to canvas coordinates
-      const container = containerRef.current;
-      if (!container) return;
-
-      const rect = container.getBoundingClientRect();
-      let x = e.clientX - rect.left;
-      let y = e.clientY - rect.top;
-
-      // Clamp to canvas boundaries
-      x = Math.max(0, Math.min(x, actualWidth));
-      y = Math.max(0, Math.min(y, actualHeight));
-
       // Update selection box with clamped point
-      updateSelectionBox({ x, y }, draggedComponentId, resizingComponentId);
+      const point = getClampedCanvasPoint(e);
+      updateSelectionBox(point, draggedComponentId, resizingComponentId);
     };
 
     document.addEventListener("mousemove", handleGlobalMouseMove);
@@ -420,7 +527,7 @@ export default function Canvas({
     return () => {
       document.removeEventListener("mousemove", handleGlobalMouseMove);
     };
-  }, [selectionBoxStart, draggedComponentId, resizingComponentId, actualWidth, actualHeight, updateSelectionBox]);
+  }, [selectionBoxStart, draggedComponentId, resizingComponentId, getClampedCanvasPoint, updateSelectionBox]);
 
   // Global mouse move listener to continue updating lasso when mouse leaves canvas
   useEffect(() => {
@@ -433,20 +540,9 @@ export default function Canvas({
         return;
       }
 
-      // Convert global mouse position to canvas coordinates
-      const container = containerRef.current;
-      if (!container) return;
-
-      const rect = container.getBoundingClientRect();
-      let x = e.clientX - rect.left;
-      let y = e.clientY - rect.top;
-
-      // Clamp to canvas boundaries
-      x = Math.max(0, Math.min(x, actualWidth));
-      y = Math.max(0, Math.min(y, actualHeight));
-
       // Update lasso with clamped point
-      handleLassoUpdate({ x, y });
+      const point = getClampedCanvasPoint(e);
+      handleLassoUpdate(point);
     };
 
     document.addEventListener("mousemove", handleGlobalMouseMove);
@@ -454,7 +550,7 @@ export default function Canvas({
     return () => {
       document.removeEventListener("mousemove", handleGlobalMouseMove);
     };
-  }, [isLassoDrawing, draggedComponentId, resizingComponentId, actualWidth, actualHeight, handleLassoUpdate]);
+  }, [isLassoDrawing, draggedComponentId, resizingComponentId, getClampedCanvasPoint, handleLassoUpdate]);
 
   // Global mouse up listener to finish selection box and lasso if mouse released outside canvas
   useEffect(() => {
@@ -533,27 +629,11 @@ export default function Canvas({
   const placeComponent = useCallback(
     (point: Point) => {
       if (!selectedComponentType) return;
-      const snappedPoint = snapToGridPointFn(point);
-      const newComponent = createComponentAtPoint(
-        selectedComponentType,
-        snappedPoint,
-        gridCellWidth,
-        gridCellHeight,
-        componentColor,
-      );
+      const newComponent = createComponent(selectedComponentType, point);
       onComponentsChange([...components, newComponent]);
       onComponentPlaced();
     },
-    [
-      selectedComponentType,
-      snapToGridPointFn,
-      gridCellWidth,
-      gridCellHeight,
-      componentColor,
-      components,
-      onComponentsChange,
-      onComponentPlaced,
-    ],
+    [selectedComponentType, createComponent, components, onComponentsChange, onComponentPlaced],
   );
 
   const handleContainerClick = useCallback(
@@ -666,27 +746,11 @@ export default function Canvas({
       if (!componentType) return;
 
       const point = getPointFromEventFn(e);
-      const snappedPoint = snapToGridPointFn(point);
-      const newComponent = createComponentAtPoint(
-        componentType,
-        snappedPoint,
-        gridCellWidth,
-        gridCellHeight,
-        componentColor,
-      );
+      const newComponent = createComponent(componentType, point);
       onComponentsChange([...components, newComponent]);
       onComponentPlaced();
     },
-    [
-      getPointFromEventFn,
-      snapToGridPointFn,
-      gridCellWidth,
-      gridCellHeight,
-      componentColor,
-      components,
-      onComponentsChange,
-      onComponentPlaced,
-    ],
+    [getPointFromEventFn, createComponent, components, onComponentsChange, onComponentPlaced],
   );
 
   // Keyboard shortcuts hook
@@ -700,11 +764,7 @@ export default function Canvas({
     gridCellWidth,
     gridCellHeight,
     snapToGrid,
-    onSelectAll: () => {
-      if (components.length > 0) {
-        setSelectedComponentIds(components.map((c) => c.id));
-      }
-    },
+    onSelectAll: selectAllComponents,
     onDeleteSelected: () => {
       onComponentsChange(
         components.filter((c) => !selectedComponentIds.includes(c.id)),
@@ -718,31 +778,18 @@ export default function Canvas({
       if (selectedComponentIds.length === 0) return;
       
       const updatedComponents = components.map((comp) => {
-        if (selectedComponentIds.includes(comp.id)) {
-          let newX = comp.x + deltaX;
-          let newY = comp.y + deltaY;
-          
-          // Snap to grid if enabled
-          if (snapToGrid) {
-            newX = Math.round(newX / gridCellWidth) * gridCellWidth;
-            newY = Math.round(newY / gridCellHeight) * gridCellHeight;
-          }
-          
-          // Get component dimensions
-          const compWidth = comp.width || 100;
-          const compHeight = comp.height || 40;
-          
-          // Clamp to canvas boundaries
-          newX = Math.max(0, Math.min(newX, actualWidth - compWidth));
-          newY = Math.max(0, Math.min(newY, actualHeight - compHeight));
-          
-          return {
-            ...comp,
-            x: newX,
-            y: newY,
-          };
+        if (!selectedComponentIds.includes(comp.id)) {
+          return comp;
         }
-        return comp;
+        
+        const compWidth = comp.width || 100;
+        const compHeight = comp.height || 40;
+        let newPoint = { x: comp.x + deltaX, y: comp.y + deltaY };
+        
+        newPoint = snapPointToGrid(newPoint);
+        newPoint = clampComponentPosition(newPoint.x, newPoint.y, compWidth, compHeight);
+        
+        return { ...comp, x: newPoint.x, y: newPoint.y };
       });
       
       onComponentsChange(updatedComponents);
@@ -756,33 +803,7 @@ export default function Canvas({
       setToastMessage(`${selectedComps.length} component${selectedComps.length === 1 ? '' : 's'} copied to clipboard`);
     },
     onPaste: () => {
-      if (copiedComponents.length === 0) return;
-      
-      // Create new components with offset positions and new IDs
-      const offsetX = snapToGrid ? gridCellWidth : 10;
-      const offsetY = snapToGrid ? gridCellHeight : 10;
-      
-      const newComponents = copiedComponents.map((comp, index) => {
-        let newX = comp.x + offsetX;
-        let newY = comp.y + offsetY;
-        
-        if (snapToGrid) {
-          newX = Math.round(newX / gridCellWidth) * gridCellWidth;
-          newY = Math.round(newY / gridCellHeight) * gridCellHeight;
-        }
-        
-        return {
-          ...comp,
-          id: `component-${Date.now()}-${index}-${Math.random().toString(36).substring(2, 9)}`,
-          x: newX,
-          y: newY,
-        };
-      });
-      
-      const newComponentIds = newComponents.map((c) => c.id);
-      onComponentsChange([...components, ...newComponents]);
-      setSelectedComponentIds(newComponentIds);
-      setToastMessage(`${newComponents.length} component${newComponents.length === 1 ? '' : 's'} pasted`);
+      pasteComponents(copiedComponents);
     },
     onRecognizePath: handleRecognizePath,
     onSubmitRecognition: handleSubmitRecognition,
@@ -934,18 +955,13 @@ export default function Canvas({
         onLassoFinish={handleLassoFinish}
         onComponentMouseDown={handleComponentMouseDown}
         onComponentUpdate={(componentId, props) => {
-          onComponentsChange(
-            components.map((c) =>
-              c.id === componentId ? { ...c, props: { ...c.props, ...props } } : c
-            )
-          );
+          updateComponent(componentId, (c) => ({
+            ...c,
+            props: { ...c.props, ...props },
+          }));
         }}
         onComponentColorChange={(componentId, color) => {
-          onComponentsChange(
-            components.map((c) =>
-              c.id === componentId ? { ...c, color } : c
-            )
-          );
+          updateComponent(componentId, (c) => ({ ...c, color }));
         }}
         onComponentDelete={(componentId) => {
           onComponentsChange(
@@ -1021,40 +1037,8 @@ export default function Canvas({
         anchor={contextMenuAnchor}
         copiedComponents={copiedComponents}
         onClose={() => setContextMenuAnchor(null)}
-        onPaste={() => {
-          if (copiedComponents.length === 0) return;
-          
-          // Create new components with offset positions and new IDs
-          const offsetX = snapToGrid ? gridCellWidth : 10;
-          const offsetY = snapToGrid ? gridCellHeight : 10;
-          
-          const newComponents = copiedComponents.map((comp, index) => {
-            let newX = comp.x + offsetX;
-            let newY = comp.y + offsetY;
-            
-            if (snapToGrid) {
-              newX = Math.round(newX / gridCellWidth) * gridCellWidth;
-              newY = Math.round(newY / gridCellHeight) * gridCellHeight;
-            }
-            
-            return {
-              ...comp,
-              id: `component-${Date.now()}-${index}-${Math.random().toString(36).substring(2, 9)}`,
-              x: newX,
-              y: newY,
-            };
-          });
-          
-          const newComponentIds = newComponents.map((c) => c.id);
-          onComponentsChange([...components, ...newComponents]);
-          setSelectedComponentIds(newComponentIds);
-          setToastMessage(`${newComponents.length} component${newComponents.length === 1 ? '' : 's'} pasted`);
-        }}
-        onSelectAll={() => {
-          if (components.length > 0) {
-            setSelectedComponentIds(components.map((c) => c.id));
-          }
-        }}
+        onPaste={() => pasteComponents(copiedComponents)}
+        onSelectAll={selectAllComponents}
       />
     </Box>
   );
