@@ -325,7 +325,18 @@ export default function ToolsDrawer({
         <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <GridIcon />
-            <Typography variant="body2" color="text.secondary">
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{
+                cursor: "pointer",
+                userSelect: "none",
+                "&:hover": {
+                  color: "text.primary",
+                },
+              }}
+              onClick={() => onSnapToGridToggle(!snapToGrid)}
+            >
               Snap to Grid
             </Typography>
             <Switch
