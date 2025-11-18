@@ -205,7 +205,6 @@ export default function Canvas({
     handleCancelRecognition,
   } = useMagicWand({
     canvasRef,
-    penSize,
     components,
     onComponentsChange,
     onComponentPlaced,

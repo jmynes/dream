@@ -6,7 +6,6 @@ import { recognizeShape } from "../utils/shapeRecognition";
 
 interface UseMagicWandProps {
   canvasRef: React.RefObject<HTMLCanvasElement | null>;
-  penSize: number;
   components: CanvasComponent[];
   onComponentsChange: (components: CanvasComponent[]) => void;
   onComponentPlaced: () => void;
@@ -17,7 +16,6 @@ interface UseMagicWandProps {
 
 export function useMagicWand({
   canvasRef,
-  penSize,
   components,
   onComponentsChange,
   onComponentPlaced,
