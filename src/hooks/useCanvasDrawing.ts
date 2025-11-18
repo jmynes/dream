@@ -27,6 +27,11 @@ export function useCanvasDrawing({
   const lastPointRef = useRef<Point | null>(null);
   // Keep state for external consumers if needed, but update refs for performance
   const [isDraggingPen, setIsDraggingPen] = useState(false);
+  
+  // Batch drawing operations using requestAnimationFrame
+  const pendingDrawRef = useRef<{ from: Point; to: Point } | null>(null);
+  const drawAnimationFrameRef = useRef<number | null>(null);
+  const lastDrawTimeRef = useRef<number>(0);
 
   const drawLine = useCallback(
     (from: Point, to: Point) => {
@@ -88,6 +93,26 @@ export function useCanvasDrawing({
     [isDrawing, isEraser, isMagicWand, selectedComponentType],
   );
 
+  // Batched drawing function that processes pending draws
+  const processPendingDraw = useCallback(() => {
+    const pending = pendingDrawRef.current;
+    if (!pending) {
+      drawAnimationFrameRef.current = null;
+      return;
+    }
+
+    const { from, to } = pending;
+    pendingDrawRef.current = null;
+    drawAnimationFrameRef.current = null;
+
+    // Draw the line
+    if (isDrawing || isEraser) {
+      drawLine(from, to);
+    } else if (isMagicWand) {
+      drawLine(from, to);
+    }
+  }, [isDrawing, isEraser, isMagicWand, drawLine]);
+
   const handleCanvasMouseMove = useCallback(
     (point: Point, onPathPoint?: (point: Point) => void) => {
       // Use refs to avoid re-renders
@@ -107,12 +132,49 @@ export function useCanvasDrawing({
         onPathPoint(point);
       }
 
-      // Draw line for regular drawing or eraser
-      if (isDrawing || isEraser) {
-        drawLine(lastPoint, point);
-      } else if (isMagicWand) {
-        // Draw temporary line for magic wand
-        drawLine(lastPoint, point);
+      // Batch drawing operations using requestAnimationFrame for smooth 60fps updates
+      const now = performance.now();
+      const timeSinceLastDraw = now - lastDrawTimeRef.current;
+      
+      // Draw immediately if enough time has passed (throttle to ~60fps)
+      // This ensures smooth drawing while preventing excessive canvas operations
+      if (timeSinceLastDraw >= 16) {
+        // If there's a pending draw, process it first to avoid gaps
+        if (pendingDrawRef.current) {
+          const pending = pendingDrawRef.current;
+          if (isDrawing || isEraser) {
+            drawLine(pending.from, pending.to);
+          } else if (isMagicWand) {
+            drawLine(pending.from, pending.to);
+          }
+          pendingDrawRef.current = null;
+        }
+        
+        // Cancel any pending animation frame since we're drawing now
+        if (drawAnimationFrameRef.current !== null) {
+          cancelAnimationFrame(drawAnimationFrameRef.current);
+          drawAnimationFrameRef.current = null;
+        }
+        
+        // Draw current line immediately
+        if (isDrawing || isEraser) {
+          drawLine(lastPoint, point);
+        } else if (isMagicWand) {
+          drawLine(lastPoint, point);
+        }
+        
+        lastDrawTimeRef.current = now;
+      } else {
+        // Schedule draw for next frame, but update the pending point
+        // to ensure we always draw to the latest point
+        pendingDrawRef.current = { from: lastPoint, to: point };
+        
+        if (drawAnimationFrameRef.current === null) {
+          drawAnimationFrameRef.current = requestAnimationFrame(() => {
+            processPendingDraw();
+            lastDrawTimeRef.current = performance.now();
+          });
+        }
       }
 
       // Update ref (no re-render)
@@ -124,13 +186,32 @@ export function useCanvasDrawing({
       isMagicWand,
       selectedComponentType,
       drawLine,
+      processPendingDraw,
     ],
   );
 
   const handleCanvasMouseUp = useCallback(() => {
+    // Process any pending draw before finishing
+    if (pendingDrawRef.current && lastPointRef.current) {
+      const pending = pendingDrawRef.current;
+      if (isDrawing || isEraser) {
+        drawLine(pending.from, pending.to);
+      } else if (isMagicWand) {
+        drawLine(pending.from, pending.to);
+      }
+      pendingDrawRef.current = null;
+    }
+    
+    // Cancel any pending animation frame
+    if (drawAnimationFrameRef.current !== null) {
+      cancelAnimationFrame(drawAnimationFrameRef.current);
+      drawAnimationFrameRef.current = null;
+    }
+    
     // Reset refs immediately (no re-render)
     isDraggingPenRef.current = false;
     lastPointRef.current = null;
+    lastDrawTimeRef.current = 0;
     // Update state for external consumers
     setIsDraggingPen(false);
 
@@ -141,7 +222,7 @@ export function useCanvasDrawing({
         saveCanvasState();
       }, 0);
     }
-  }, [isDrawing, isEraser, saveCanvasState]);
+  }, [isDrawing, isEraser, isMagicWand, saveCanvasState, drawLine]);
 
   return {
     isDraggingPen,
