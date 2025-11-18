@@ -63,12 +63,46 @@ export function ColorUtilsProvider({ children }: ColorUtilsProviderProps) {
   const liveColorRef = useRef<string | null>(null);
   const selectedIdsRef = useRef<string[]>([]);
   const animationFrameRef = useRef<number | null>(null);
+  // Cache element references to avoid repeated DOM queries
+  const elementCacheRef = useRef<Map<string, HTMLElement>>(new Map());
+
+  // Update element cache when selected IDs change
+  const updateElementCache = useCallback((selectedIds: string[]) => {
+    const cache = elementCacheRef.current;
+    const newCache = new Map<string, HTMLElement>();
+    
+    // Update cache with current selected IDs
+    selectedIds.forEach((id) => {
+      // Check if element is already cached and still in DOM
+      const cached = cache.get(id);
+      if (cached && document.contains(cached)) {
+        newCache.set(id, cached);
+      } else {
+        // Query for new element
+        const element = document.querySelector(
+          `[data-component-id="${id}"]`,
+        ) as HTMLElement | null;
+        if (element) {
+          newCache.set(id, element);
+        }
+      }
+    });
+    
+    elementCacheRef.current = newCache;
+  }, []);
 
   // Update live color for selected components using CSS custom properties
   const setLiveComponentColor = useCallback(
     (color: string | null, selectedIds: string[]) => {
       liveColorRef.current = color;
-      selectedIdsRef.current = selectedIds;
+      const idsChanged = 
+        selectedIdsRef.current.length !== selectedIds.length ||
+        selectedIdsRef.current.some((id, i) => id !== selectedIds[i]);
+      
+      if (idsChanged) {
+        selectedIdsRef.current = selectedIds;
+        updateElementCache(selectedIds);
+      }
 
       // Cancel any pending animation frame
       if (animationFrameRef.current !== null) {
@@ -77,31 +111,23 @@ export function ColorUtilsProvider({ children }: ColorUtilsProviderProps) {
 
       // Schedule DOM update on next frame
       animationFrameRef.current = requestAnimationFrame(() => {
+        const cache = elementCacheRef.current;
+        
         if (color === null) {
-          // Clear live color - remove CSS variable from all selected components
-          selectedIdsRef.current.forEach((id) => {
-            const element = document.querySelector(
-              `[data-component-id="${id}"]`,
-            ) as HTMLElement | null;
-            if (element) {
-              element.style.removeProperty("--live-component-color");
-            }
+          // Clear live color - remove CSS variable from all cached elements
+          cache.forEach((element) => {
+            element.style.removeProperty("--live-component-color");
           });
         } else {
-          // Set live color via CSS custom property
-          selectedIdsRef.current.forEach((id) => {
-            const element = document.querySelector(
-              `[data-component-id="${id}"]`,
-            ) as HTMLElement | null;
-            if (element) {
-              element.style.setProperty("--live-component-color", color);
-            }
+          // Set live color via CSS custom property on all cached elements
+          cache.forEach((element) => {
+            element.style.setProperty("--live-component-color", color);
           });
         }
         animationFrameRef.current = null;
       });
     },
-    [],
+    [updateElementCache],
   );
 
   const value = useMemo(

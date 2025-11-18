@@ -19,6 +19,9 @@ export default function RadioRenderer({
   onRadioDoubleClick,
 }: RadioRendererProps) {
   const { isDarkColor } = useColorUtils();
+  // Use CSS variable for live color updates, fallback to prop
+  const radioColor = `var(--live-component-color, ${componentColor})`;
+  
   const inlineInputStyle = {
     background: "transparent",
     border: "none",
@@ -53,9 +56,9 @@ export default function RadioRenderer({
           control={
             <Radio
               sx={{
-                color: isDarkColor(componentColor) ? componentColor : "#000000",
+                color: isDarkColor(componentColor) ? radioColor : "#000000",
                 "&.Mui-checked": {
-                  color: componentColor,
+                  color: radioColor,
                 },
               }}
             />
@@ -92,9 +95,9 @@ export default function RadioRenderer({
           control={
             <Radio
               sx={{
-                color: isDarkColor(componentColor) ? componentColor : "#000000",
+                color: isDarkColor(componentColor) ? radioColor : "#000000",
                 "&.Mui-checked": {
-                  color: componentColor,
+                  color: radioColor,
                 },
               }}
             />

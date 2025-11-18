@@ -17,6 +17,9 @@ export default function DividerRenderer({
     componentWidth &&
     componentHeight > componentWidth;
 
+  // Use CSS variable for live color updates, fallback to prop
+  const borderColor = `var(--live-component-color, ${componentColor})`;
+
   return (
     <Box
       sx={{
@@ -31,7 +34,7 @@ export default function DividerRenderer({
         orientation={isVertical ? "vertical" : "horizontal"}
         sx={{
           width: "100%",
-          borderColor: componentColor,
+          borderColor: borderColor,
           ...(isVertical
             ? { borderLeftWidth: "2px" }
             : { borderTopWidth: "2px" }),

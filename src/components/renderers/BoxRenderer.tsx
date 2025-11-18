@@ -16,9 +16,11 @@ export default function BoxRenderer({
 }: RendererProps) {
   // Use CSS variable for live color updates, fallback to prop
   const borderColor = `var(--live-component-color, ${componentColor})`;
-  // For semi-transparent background, we'll update border in real-time
-  // Background uses the prop directly (semi-transparent calculation is complex with CSS vars)
-  const bgColor = `${componentColor}20`;
+  // For semi-transparent background, use the CSS variable with opacity
+  // We use a wrapper approach: the CSS variable will be used if set, otherwise fallback
+  const baseColor = `var(--live-component-color, ${componentColor})`;
+  // Use color-mix for modern browsers, with fallback
+  const bgColor = `color-mix(in srgb, ${baseColor} 12.5%, transparent)`;
   
   return (
     <Box

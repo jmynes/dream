@@ -15,6 +15,9 @@ export default function TypographyRenderer({
   onEditBlur,
   onEditKeyDown,
 }: RendererProps) {
+  // Use CSS variable for live color updates, fallback to prop
+  const textColor = `var(--live-component-color, ${componentColor})`;
+
   return (
     <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", width: "100%", height: "100%" }}>
       <Typography
@@ -25,7 +28,7 @@ export default function TypographyRenderer({
         sx={{
           ...("sx" in widthProps ? widthProps.sx : {}),
           ...(centeredAlignment.sx || {}),
-          color: componentColor,
+          color: textColor,
         }}
       >
         {isEditing && editingField === "text" ? (

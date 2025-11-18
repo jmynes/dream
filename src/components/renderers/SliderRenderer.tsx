@@ -22,6 +22,9 @@ export default function SliderRenderer({
   onSliderChangeCommitted,
 }: SliderRendererProps) {
   const { isDarkColor } = useColorUtils();
+  // Use CSS variable for live color updates, fallback to prop
+  const sliderColor = `var(--live-component-color, ${componentColor})`;
+
   return (
     <Box
       sx={{
@@ -43,7 +46,7 @@ export default function SliderRenderer({
         onChangeCommitted={onSliderChangeCommitted}
         sx={{ 
           width: "100%", 
-          color: componentColor,
+          color: sliderColor,
           "& .MuiSlider-thumb": {
             ...(isDarkColor(componentColor) ? {} : {
               boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",

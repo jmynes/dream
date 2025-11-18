@@ -81,6 +81,9 @@ export default function TableRenderer({
   onEditKeyDown,
   onCellDoubleClick,
 }: TableRendererProps) {
+  // Use CSS variable for live color updates, fallback to prop
+  const borderColor = `var(--live-component-color, ${componentColor})`;
+
   const fieldMap: Record<string, string> = {
     header1: (component.props?.header1 as string) || "Header 1",
     header2: (component.props?.header2 as string) || "Header 2",
@@ -110,11 +113,11 @@ export default function TableRenderer({
         justifyContent: "center",
       }}
     >
-      <Table size="small" sx={{ border: `1px solid ${componentColor}`, tableLayout: "fixed", width: "100%" }}>
+      <Table size="small" sx={{ border: `1px solid ${borderColor}`, tableLayout: "fixed", width: "100%" }}>
         <TableHead>
           <TableRow>
             <TableCell
-              sx={{ borderColor: componentColor, fontWeight: "bold", textAlign: "center" }}
+              sx={{ borderColor: borderColor, fontWeight: "bold", textAlign: "center" }}
               data-field="header1"
               onDoubleClick={(e) => handleCellDoubleClick("header1", e)}
             >
@@ -132,7 +135,7 @@ export default function TableRenderer({
               />
             </TableCell>
             <TableCell
-              sx={{ borderColor: componentColor, fontWeight: "bold", textAlign: "center" }}
+              sx={{ borderColor: borderColor, fontWeight: "bold", textAlign: "center" }}
               data-field="header2"
               onDoubleClick={(e) => handleCellDoubleClick("header2", e)}
             >
@@ -150,7 +153,7 @@ export default function TableRenderer({
               />
             </TableCell>
             <TableCell
-              sx={{ borderColor: componentColor, fontWeight: "bold", textAlign: "center" }}
+              sx={{ borderColor: borderColor, fontWeight: "bold", textAlign: "center" }}
               data-field="header3"
               onDoubleClick={(e) => handleCellDoubleClick("header3", e)}
             >
@@ -172,7 +175,7 @@ export default function TableRenderer({
         <TableBody>
           <TableRow>
             <TableCell
-              sx={{ borderColor: componentColor, textAlign: "center" }}
+              sx={{ borderColor: borderColor, textAlign: "center" }}
               data-field="cell1_1"
               onDoubleClick={(e) => handleCellDoubleClick("cell1_1", e)}
             >
@@ -189,7 +192,7 @@ export default function TableRenderer({
               />
             </TableCell>
             <TableCell
-              sx={{ borderColor: componentColor, textAlign: "center" }}
+              sx={{ borderColor: borderColor, textAlign: "center" }}
               data-field="cell1_2"
               onDoubleClick={(e) => handleCellDoubleClick("cell1_2", e)}
             >
@@ -206,7 +209,7 @@ export default function TableRenderer({
               />
             </TableCell>
             <TableCell
-              sx={{ borderColor: componentColor, textAlign: "center" }}
+              sx={{ borderColor: borderColor, textAlign: "center" }}
               data-field="cell1_3"
               onDoubleClick={(e) => handleCellDoubleClick("cell1_3", e)}
             >
@@ -225,7 +228,7 @@ export default function TableRenderer({
           </TableRow>
           <TableRow>
             <TableCell
-              sx={{ borderColor: componentColor, textAlign: "center" }}
+              sx={{ borderColor: borderColor, textAlign: "center" }}
               data-field="cell2_1"
               onDoubleClick={(e) => handleCellDoubleClick("cell2_1", e)}
             >
@@ -242,7 +245,7 @@ export default function TableRenderer({
               />
             </TableCell>
             <TableCell
-              sx={{ borderColor: componentColor, textAlign: "center" }}
+              sx={{ borderColor: borderColor, textAlign: "center" }}
               data-field="cell2_2"
               onDoubleClick={(e) => handleCellDoubleClick("cell2_2", e)}
             >
@@ -259,7 +262,7 @@ export default function TableRenderer({
               />
             </TableCell>
             <TableCell
-              sx={{ borderColor: componentColor, textAlign: "center" }}
+              sx={{ borderColor: borderColor, textAlign: "center" }}
               data-field="cell2_3"
               onDoubleClick={(e) => handleCellDoubleClick("cell2_3", e)}
             >

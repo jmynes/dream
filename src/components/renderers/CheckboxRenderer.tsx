@@ -14,6 +14,9 @@ export default function CheckboxRenderer({
   onEditKeyDown,
   onDoubleClick,
 }: RendererProps) {
+  // Use CSS variable for live color updates, fallback to prop
+  const checkboxColor = `var(--live-component-color, ${componentColor})`;
+
   return (
     <Box
       sx={{
@@ -30,15 +33,15 @@ export default function CheckboxRenderer({
             {...(component.props as object)}
             defaultChecked={component.props?.checked as boolean}
             sx={{ 
-              color: componentColor,
+              color: checkboxColor,
               "&.Mui-checked": { 
-                color: componentColor,
+                color: checkboxColor,
               },
               "& .MuiSvgIcon-root": {
-                color: componentColor,
+                color: checkboxColor,
               },
               "&.Mui-checked .MuiSvgIcon-root": {
-                color: componentColor,
+                color: checkboxColor,
               },
             }}
           />

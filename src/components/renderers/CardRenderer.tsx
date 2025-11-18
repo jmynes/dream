@@ -18,13 +18,16 @@ export default function CardRenderer({
   onEditKeyDown,
   componentWidth,
 }: CardRendererProps) {
+  // Use CSS variable for live color updates, fallback to prop
+  const borderColor = `var(--live-component-color, ${componentColor})`;
+
   return (
     <Card
       sx={{
         width: "100%",
         height: "100%",
         minWidth: componentWidth || 200,
-        border: `2px solid ${componentColor}`,
+        border: `2px solid ${borderColor}`,
       }}
     >
       <CardContent

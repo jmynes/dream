@@ -9,6 +9,9 @@ export default function TextFieldRenderer({
   editingField,
   editValue,
 }: RendererProps) {
+  // Use CSS variable for live color updates, fallback to prop
+  const fieldColor = `var(--live-component-color, ${componentColor})`;
+
   return (
     <TextField
       label={(component.props?.label as string) || "Text Field"}
@@ -20,11 +23,11 @@ export default function TextFieldRenderer({
       }
       sx={{
         ...("sx" in widthProps ? widthProps.sx : {}),
-        "& input": { textAlign: "center", color: componentColor },
+        "& input": { textAlign: "center", color: fieldColor },
         "& .MuiOutlinedInput-root": {
-          "& fieldset": { borderColor: componentColor },
-          "&:hover fieldset": { borderColor: componentColor },
-          "&.Mui-focused fieldset": { borderColor: componentColor },
+          "& fieldset": { borderColor: fieldColor },
+          "&:hover fieldset": { borderColor: fieldColor },
+          "&.Mui-focused fieldset": { borderColor: fieldColor },
         },
       }}
     />
