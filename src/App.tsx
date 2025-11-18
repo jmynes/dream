@@ -13,6 +13,9 @@ const theme = createTheme({
   palette: {
     mode: "light",
   },
+  zIndex: {
+    modal: 2100, // Higher than BrowserUI (2000) so dialogs appear above it
+  },
 });
 
 function App() {

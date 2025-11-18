@@ -114,7 +114,36 @@ export default function Footer() {
         </Box>
       </Box>
 
-      <Dialog open={open} onClose={() => setOpen(false)} maxWidth="sm" fullWidth>
+      <Dialog 
+        open={open} 
+        onClose={() => setOpen(false)} 
+        maxWidth="sm" 
+        fullWidth
+        sx={{
+          zIndex: 2100, // Higher than BrowserUI (2000) to ensure it's on top
+          "& .MuiBackdrop-root": {
+            zIndex: 2099, // Backdrop should be just below the dialog
+          },
+          "& .MuiDialog-container": {
+            zIndex: 2100,
+          },
+          "& .MuiPaper-root": {
+            zIndex: 2100, // Ensure paper is above BrowserUI
+          },
+        }}
+        slotProps={{
+          paper: {
+            sx: {
+              zIndex: 2100, // Higher than BrowserUI (2000) to ensure it's on top
+            },
+          },
+          backdrop: {
+            sx: {
+              zIndex: 2099, // Backdrop should be just below the dialog
+            },
+          },
+        }}
+      >
         <DialogTitle>Keyboard Shortcuts</DialogTitle>
         <DialogContent>
           <Table size="small">
