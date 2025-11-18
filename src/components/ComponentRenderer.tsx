@@ -13,32 +13,7 @@ import {
 import { useState, useRef, useEffect, memo, useCallback } from "react";
 import type { CanvasComponent } from "../types/component";
 import { ChromePicker } from "react-color";
-
-// Type for react-color color result
-type ColorResult = {
-  hex: string;
-  rgb: {
-    r: number;
-    g: number;
-    b: number;
-    a?: number;
-  };
-};
-
-// Convert rgba to hex with alpha (8-digit if alpha < 1)
-const rgbaToHex = (r: number, g: number, b: number, a: number): string => {
-  const toHex = (n: number) => {
-    const hex = Math.round(n).toString(16).toUpperCase();
-    return hex.length === 1 ? `0${hex}` : hex;
-  };
-  
-  const alpha = Math.round(a * 255);
-  if (alpha === 255) {
-    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
-  }
-  
-  return `#${toHex(r)}${toHex(g)}${toHex(b)}${toHex(alpha)}`;
-};
+import { colorResultToHex, type ColorResult } from "../utils/colorUtils";
 
 import ButtonRenderer from "./renderers/ButtonRenderer";
 import TextFieldRenderer from "./renderers/TextFieldRenderer";
@@ -56,107 +31,11 @@ import RadioRenderer from "./renderers/RadioRenderer";
 import TableRenderer from "./renderers/TableRenderer";
 import { resizeHandleBaseStyle } from "./renderers/rendererUtils";
 
-// Component types that support text editing
-const TEXT_EDITABLE_TYPES = [
-  "Button",
-  "Card",
-  "Typography",
-  "Avatar",
-  "Paper",
-  "Box",
-  "Radio",
-  "Table",
-  "TextField",
-  "Chip",
-  "Checkbox",
-] as const;
-
-// Helper: Check if component type supports text editing
-const canEditText = (componentType: string): boolean => {
-  return TEXT_EDITABLE_TYPES.includes(componentType as any);
-};
-
-// Helper: Get field name and current text for a component type
-const getComponentTextInfo = (
-  componentType: string,
-  props: CanvasComponent["props"],
-  dataField?: string | null,
-): { field: string; currentText: string } => {
-  if (componentType === "Radio") {
-    const field = dataField === "radio2" ? "radio2" : "radio1";
-    const currentText =
-      (props?.[field === "radio2" ? "label2" : "label"] as string) ||
-      (field === "radio2" ? "Option 2" : "Option 1");
-    return { field, currentText };
-  }
-
-  if (componentType === "Table") {
-    if (dataField) {
-      const fieldMap: Record<string, string> = {
-        header1: (props?.header1 as string) || "Header 1",
-        header2: (props?.header2 as string) || "Header 2",
-        header3: (props?.header3 as string) || "Header 3",
-        cell1_1: (props?.cell1_1 as string) || "Cell 1-1",
-        cell1_2: (props?.cell1_2 as string) || "Cell 1-2",
-        cell1_3: (props?.cell1_3 as string) || "Cell 1-3",
-        cell2_1: (props?.cell2_1 as string) || "Cell 2-1",
-        cell2_2: (props?.cell2_2 as string) || "Cell 2-2",
-        cell2_3: (props?.cell2_3 as string) || "Cell 2-3",
-      };
-      return { field: dataField, currentText: fieldMap[dataField] || "" };
-    }
-    return {
-      field: "header1",
-      currentText: (props?.header1 as string) || "Header 1",
-    };
-  }
-
-  if (componentType === "TextField") {
-    return { field: "value", currentText: (props?.value as string) || "" };
-  }
-
-  if (componentType === "Chip") {
-    return { field: "label", currentText: (props?.label as string) || "Chip" };
-  }
-
-  if (componentType === "Checkbox") {
-    return {
-      field: "label",
-      currentText: (props?.label as string) || "Checkbox",
-    };
-  }
-
-  // Default: text field
-  return { field: "text", currentText: (props?.text as string) || "" };
-};
-
-// Helper: Get update props for a component type and field
-const getUpdateProps = (
-  componentType: string,
-  field: string,
-  value: string,
-): Record<string, unknown> => {
-  if (componentType === "Radio") {
-    if (field === "radio2") {
-      return { label2: value };
-    }
-    return { label: value };
-  }
-
-  if (componentType === "Table") {
-    return { [field]: value };
-  }
-
-  if (componentType === "TextField") {
-    return { value };
-  }
-
-  if (componentType === "Chip" || componentType === "Checkbox") {
-    return { label: value };
-  }
-
-  return { text: value };
-};
+import {
+  canEditText,
+  getComponentTextInfo,
+  getUpdateProps,
+} from "../utils/textEditingUtils";
 
 // Helper: Create SpeedDialAction mouse handlers
 const createSpeedDialMouseHandlers = () => ({
@@ -362,11 +241,7 @@ function ComponentRenderer({
 
   const handleColorChange = useCallback((colorResult: ColorResult) => {
     if (onComponentColorChange) {
-      const rgba = colorResult.rgb;
-      const a = rgba.a ?? 1;
-      const hexColor = a === 1 
-        ? colorResult.hex 
-        : rgbaToHex(rgba.r, rgba.g, rgba.b, a);
+      const hexColor = colorResultToHex(colorResult);
       onComponentColorChange(component.id, hexColor);
     }
   }, [onComponentColorChange, component.id]);

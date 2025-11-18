@@ -2,7 +2,6 @@ import { ChromePicker } from "react-color";
 import {
   Box,
   Button,
-  Collapse,
   IconButton,
   Popover,
   Tooltip,
@@ -12,69 +11,12 @@ import {
   Colorize as EyedropperIcon,
   Palette as ColorIcon,
   Refresh as RefreshIcon,
-  ExpandMore as ExpandMoreIcon,
-  ExpandLess as ExpandLessIcon,
 } from "@mui/icons-material";
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useCallback } from "react";
 import { useColorUtils } from "../contexts/ColorUtilsContext";
-
-// Type for react-color color result
-type ColorResult = {
-  hex: string;
-  rgb: {
-    r: number;
-    g: number;
-    b: number;
-    a?: number;
-  };
-};
-
-// Convert rgba to hex with alpha (8-digit if alpha < 1)
-const rgbaToHex = (r: number, g: number, b: number, a: number): string => {
-  const toHex = (n: number) => {
-    const hex = Math.round(n).toString(16).toUpperCase();
-    return hex.length === 1 ? `0${hex}` : hex;
-  };
-
-  const alpha = Math.round(a * 255);
-  if (alpha === 255) {
-    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
-  }
-
-  return `#${toHex(r)}${toHex(g)}${toHex(b)}${toHex(alpha)}`;
-};
-
-// Material color swatches with names
-const swatchColors = [
-  // Blues & Teals
-  { hex: "#1976D2", name: "Primary Blue" },
-  { hex: "#2196F3", name: "Blue" },
-  { hex: "#03A9F4", name: "Light Blue" },
-  { hex: "#00BCD4", name: "Cyan" },
-  { hex: "#0097A7", name: "Teal" },
-  { hex: "#40E0D0", name: "Turquoise" },
-  // Purples & Reds
-  { hex: "#7B1FA2", name: "Deep Purple" },
-  { hex: "#9C27B0", name: "Purple" },
-  { hex: "#E91E63", name: "Pink" },
-  { hex: "#F44336", name: "Red" },
-  { hex: "#FF5722", name: "Deep Orange" },
-  { hex: "#FF9800", name: "Orange" },
-  // Greens & Yellows
-  { hex: "#4CAF50", name: "Green" },
-  { hex: "#8BC34A", name: "Light Green" },
-  { hex: "#CDDC39", name: "Lime" },
-  { hex: "#D4AF37", name: "Gold" },
-  { hex: "#FFEB3B", name: "Yellow" },
-  { hex: "#FFE135", name: "Banana" },
-  // Neutrals
-  { hex: "#212121", name: "Grey 900" },
-  { hex: "#616161", name: "Grey 700" },
-  { hex: "#9E9E9E", name: "Grey 500" },
-  { hex: "#E0E0E0", name: "Grey 300" },
-  { hex: "#F5F5F5", name: "Grey 100" },
-  { hex: "#FFFFFF", name: "White" },
-];
+import { useColorPicker } from "../hooks/useColorPicker";
+import { useEyedropper } from "../hooks/useEyedropper";
+import ColorSwatches from "./ColorSwatches";
 
 interface ColorSectionProps {
   label: string;
@@ -93,147 +35,41 @@ export default function ColorSection({
   resetTooltip = "Reset to default",
   selectedComponentIds = [],
 }: ColorSectionProps) {
-  const [pickerAnchor, setPickerAnchor] = useState<HTMLElement | null>(null);
-  const [isEyedropperActive, setIsEyedropperActive] = useState(false);
-  const [swatchesExpanded, setSwatchesExpanded] = useState(false);
-  const eyedropperAbortRef = useRef<AbortController | null>(null);
   const tooltipSlotProps = { tooltip: { sx: { fontSize: "0.85rem" } } };
   const { setLiveComponentColor, setLiveDrawerColor } = useColorUtils();
-  const isDraggingRef = useRef(false);
-  const liveColorRef = useRef<string | null>(null);
-  // Keep picker color stable during dragging to avoid re-renders
-  const [pickerColor, setPickerColor] = useState(color);
-  // Fast throttle for picker color updates (60fps = ~16ms)
-  const pickerColorTimeoutRef = useRef<number | null>(null);
-  const lastPickerColorUpdateRef = useRef<number>(0);
 
-  // Sync picker color when color prop changes (but not during dragging)
-  useEffect(() => {
-    if (!isDraggingRef.current) {
-      setPickerColor(color);
-    }
-  }, [color]);
+  const {
+    pickerAnchor,
+    pickerColor,
+    handlePickerOpen,
+    handlePickerClose,
+    handleColorChange,
+    handleColorChangeComplete,
+  } = useColorPicker({
+    color,
+    label,
+    selectedComponentIds,
+    setLiveComponentColor,
+    setLiveDrawerColor,
+    onColorChange,
+  });
 
-  const handlePickerOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setPickerAnchor(event.currentTarget);
-    // Reset picker color to current color when opening
-    setPickerColor(color);
-  };
+  const { isActive: isEyedropperActive, handleEyedropperClick } =
+    useEyedropper(
+      useCallback(
+        (hex: string) => {
+          onColorChange(hex, label === "Component Color" ? Date.now() : undefined);
+        },
+        [onColorChange, label],
+      ),
+    );
 
-  const handlePickerClose = () => {
-    setPickerAnchor(null);
-    // Clear live color when picker closes (in case user closed without completing)
-    if (label === "Component Color" && selectedComponentIds.length > 0 && isDraggingRef.current) {
-      isDraggingRef.current = false;
-      liveColorRef.current = null;
-      setLiveComponentColor(null, selectedComponentIds);
-      setLiveDrawerColor(null);
-      // Cancel any pending timeout
-      if (pickerColorTimeoutRef.current !== null) {
-        clearTimeout(pickerColorTimeoutRef.current);
-        pickerColorTimeoutRef.current = null;
-      }
-      // Reset picker color to original color
-      setPickerColor(color);
-    }
-  };
-
-  const handleColorChange = useCallback(
-    (colorResult: ColorResult) => {
-      const rgba = colorResult.rgb;
-      const a = rgba.a ?? 1;
-      const hexColor =
-        a === 1 ? colorResult.hex : rgbaToHex(rgba.r, rgba.g, rgba.b, a);
-
-      // For Component Color, use live color updates during dragging
-      if (label === "Component Color" && selectedComponentIds.length > 0) {
-        isDraggingRef.current = true;
-        liveColorRef.current = hexColor;
-        // Update live color via CSS custom properties (no re-renders) - high priority
-        setLiveComponentColor(hexColor, selectedComponentIds);
-        setLiveDrawerColor(hexColor);
-        // Throttle picker color updates to ~60fps for smooth selector movement
-        const now = Date.now();
-        if (now - lastPickerColorUpdateRef.current >= 16) {
-          setPickerColor(hexColor);
-          lastPickerColorUpdateRef.current = now;
-          if (pickerColorTimeoutRef.current !== null) {
-            clearTimeout(pickerColorTimeoutRef.current);
-            pickerColorTimeoutRef.current = null;
-          }
-        } else {
-          // Schedule update if not already scheduled
-          if (pickerColorTimeoutRef.current === null) {
-            const delay = 16 - (now - lastPickerColorUpdateRef.current);
-            pickerColorTimeoutRef.current = window.setTimeout(() => {
-              setPickerColor(hexColor);
-              lastPickerColorUpdateRef.current = Date.now();
-              pickerColorTimeoutRef.current = null;
-            }, delay);
-          }
-        }
-      } else {
-        // For other colors, update immediately
-        setPickerColor(hexColor);
-        onColorChange(hexColor, label === "Component Color" ? Date.now() : undefined);
-      }
+  const handleSwatchClick = useCallback(
+    (swatchHex: string) => {
+      onColorChange(swatchHex, label === "Component Color" ? Date.now() : undefined);
     },
-    [onColorChange, label, selectedComponentIds, setLiveComponentColor, setLiveDrawerColor],
+    [onColorChange, label],
   );
-
-  const handleColorChangeComplete = useCallback(
-    (colorResult: ColorResult) => {
-      const rgba = colorResult.rgb;
-      const a = rgba.a ?? 1;
-      const hexColor =
-        a === 1 ? colorResult.hex : rgbaToHex(rgba.r, rgba.g, rgba.b, a);
-
-      // For Component Color, commit the change and clear live color
-      if (label === "Component Color" && selectedComponentIds.length > 0) {
-        isDraggingRef.current = false;
-        liveColorRef.current = null;
-        // Clear live color and commit actual change
-        setLiveComponentColor(null, selectedComponentIds);
-        setLiveDrawerColor(null);
-        setPickerColor(hexColor); // Update picker color after commit
-        onColorChange(hexColor, Date.now());
-      } else {
-        // For other colors, just update
-        setPickerColor(hexColor); // Update picker color
-        onColorChange(hexColor, label === "Component Color" ? Date.now() : undefined);
-      }
-    },
-    [onColorChange, label, selectedComponentIds, setLiveComponentColor, setLiveDrawerColor],
-  );
-
-  const handleEyedropperClick = useCallback(async () => {
-    // Check if EyeDropper API is available
-    if (!("EyeDropper" in window)) {
-      alert("EyeDropper API is not supported in this browser. Try clicking on the canvas to sample colors manually.");
-      return;
-    }
-
-    setIsEyedropperActive(true);
-    eyedropperAbortRef.current = new AbortController();
-
-    try {
-      const eyeDropper = new (window as any).EyeDropper();
-      const result = await eyeDropper.open({ signal: eyedropperAbortRef.current.signal });
-      onColorChange(result.sRGBHex, Date.now());
-    } catch (error: any) {
-      // User cancelled or error occurred
-      if (error.name !== "AbortError") {
-        console.error("Eyedropper error:", error);
-      }
-    } finally {
-      setIsEyedropperActive(false);
-      eyedropperAbortRef.current = null;
-    }
-  }, [onColorChange]);
-
-  const handleSwatchClick = (swatchHex: string) => {
-    onColorChange(swatchHex, label === "Component Color" ? Date.now() : undefined);
-  };
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
@@ -303,75 +139,7 @@ export default function ColorSection({
         )}
       </Box>
 
-      {/* Collapsible Color Swatches */}
-      <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 0.5 }}>
-        <Tooltip title={swatchesExpanded ? "Hide swatches" : "Show swatches"} slotProps={tooltipSlotProps}>
-          <IconButton
-            size="small"
-            onClick={() => setSwatchesExpanded(!swatchesExpanded)}
-            sx={{ padding: 0.25 }}
-          >
-            {swatchesExpanded ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
-          </IconButton>
-        </Tooltip>
-        <Typography
-          variant="caption"
-          color="text.secondary"
-          sx={{
-            fontSize: "0.7rem",
-            cursor: "pointer",
-            userSelect: "none",
-            "&:hover": {
-              color: "text.primary",
-            },
-          }}
-          onClick={() => setSwatchesExpanded(!swatchesExpanded)}
-        >
-          Swatches
-        </Typography>
-      </Box>
-      <Collapse in={swatchesExpanded}>
-        <Box
-          sx={{
-            display: "grid",
-            gridTemplateColumns: "repeat(6, 1fr)",
-            gap: 0.5,
-            mt: 0.5,
-          }}
-        >
-          {swatchColors.map((swatchColor) => (
-            <Tooltip
-              key={swatchColor.hex}
-              title={swatchColor.name}
-              slotProps={tooltipSlotProps}
-              enterDelay={500}
-              enterNextDelay={200}
-              placement="top"
-              arrow
-            >
-              <Box
-                onClick={() => handleSwatchClick(swatchColor.hex)}
-                sx={{
-                  width: "100%",
-                  aspectRatio: "1",
-                  backgroundColor: swatchColor.hex,
-                  border:
-                    color.toUpperCase() === swatchColor.hex.toUpperCase()
-                      ? "2px solid #1976d2"
-                      : "1px solid #ccc",
-                  borderRadius: 0.5,
-                  cursor: "pointer",
-                  "&:hover": {
-                    border: "2px solid #1976d2",
-                    transform: "scale(1.1)",
-                  },
-                  transition: "all 0.15s ease",
-                }}
-              />
-            </Tooltip>
-          ))}
-        </Box>
-      </Collapse>
+      <ColorSwatches color={color} onSwatchClick={handleSwatchClick} />
     </Box>
   );
 }
