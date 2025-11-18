@@ -16,7 +16,6 @@ const TableCellContent = ({
   onEditChange,
   onEditBlur,
   onEditKeyDown,
-  onCellDoubleClick,
   isHeader = false,
 }: {
   field: string;
@@ -24,11 +23,10 @@ const TableCellContent = ({
   isEditing: boolean;
   editingField: string;
   editValue: string;
-  inputRef: React.RefObject<HTMLInputElement>;
+  inputRef: React.RefObject<HTMLInputElement | null>;
   onEditChange: (value: string) => void;
   onEditBlur: () => void;
   onEditKeyDown: (e: React.KeyboardEvent) => void;
-  onCellDoubleClick: (field: string, currentText: string) => void;
   isHeader?: boolean;
 }) => {
   const fieldMap: Record<string, string> = {
@@ -130,7 +128,6 @@ export default function TableRenderer({
                 onEditChange={onEditChange}
                 onEditBlur={onEditBlur}
                 onEditKeyDown={onEditKeyDown}
-                onCellDoubleClick={onCellDoubleClick}
                 isHeader
               />
             </TableCell>
@@ -149,7 +146,6 @@ export default function TableRenderer({
                 onEditChange={onEditChange}
                 onEditBlur={onEditBlur}
                 onEditKeyDown={onEditKeyDown}
-                onCellDoubleClick={onCellDoubleClick}
                 isHeader
               />
             </TableCell>
@@ -168,7 +164,6 @@ export default function TableRenderer({
                 onEditChange={onEditChange}
                 onEditBlur={onEditBlur}
                 onEditKeyDown={onEditKeyDown}
-                onCellDoubleClick={onCellDoubleClick}
                 isHeader
               />
             </TableCell>
@@ -191,7 +186,6 @@ export default function TableRenderer({
                 onEditChange={onEditChange}
                 onEditBlur={onEditBlur}
                 onEditKeyDown={onEditKeyDown}
-                onCellDoubleClick={onCellDoubleClick}
               />
             </TableCell>
             <TableCell
@@ -209,7 +203,6 @@ export default function TableRenderer({
                 onEditChange={onEditChange}
                 onEditBlur={onEditBlur}
                 onEditKeyDown={onEditKeyDown}
-                onCellDoubleClick={onCellDoubleClick}
               />
             </TableCell>
             <TableCell
@@ -227,7 +220,6 @@ export default function TableRenderer({
                 onEditChange={onEditChange}
                 onEditBlur={onEditBlur}
                 onEditKeyDown={onEditKeyDown}
-                onCellDoubleClick={onCellDoubleClick}
               />
             </TableCell>
           </TableRow>
@@ -247,7 +239,6 @@ export default function TableRenderer({
                 onEditChange={onEditChange}
                 onEditBlur={onEditBlur}
                 onEditKeyDown={onEditKeyDown}
-                onCellDoubleClick={onCellDoubleClick}
               />
             </TableCell>
             <TableCell
@@ -265,7 +256,6 @@ export default function TableRenderer({
                 onEditChange={onEditChange}
                 onEditBlur={onEditBlur}
                 onEditKeyDown={onEditKeyDown}
-                onCellDoubleClick={onCellDoubleClick}
               />
             </TableCell>
             <TableCell
@@ -283,7 +273,6 @@ export default function TableRenderer({
                 onEditChange={onEditChange}
                 onEditBlur={onEditBlur}
                 onEditKeyDown={onEditKeyDown}
-                onCellDoubleClick={onCellDoubleClick}
               />
             </TableCell>
           </TableRow>

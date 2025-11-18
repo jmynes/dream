@@ -78,13 +78,6 @@ const theme = createTheme({
         },
       },
     },
-    MuiBox: {
-      styleOverrides: {
-        root: {
-          transition: "none !important",
-        },
-      },
-    },
     MuiRadio: {
       styleOverrides: {
         root: {

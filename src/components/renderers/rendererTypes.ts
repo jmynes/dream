@@ -11,7 +11,7 @@ export interface RendererProps {
   isEditing: boolean;
   editingField: string;
   editValue: string;
-  inputRef: React.RefObject<HTMLInputElement>;
+  inputRef: React.RefObject<HTMLInputElement | null>;
   onEditChange: (value: string) => void;
   onEditBlur: () => void;
   onEditKeyDown: (e: React.KeyboardEvent) => void;

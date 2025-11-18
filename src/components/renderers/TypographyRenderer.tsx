@@ -23,7 +23,7 @@ export default function TypographyRenderer({
         {...widthProps}
         {...centeredAlignment}
         sx={{
-          ...(widthProps.sx || {}),
+          ...("sx" in widthProps ? widthProps.sx : {}),
           ...(centeredAlignment.sx || {}),
           color: componentColor,
         }}

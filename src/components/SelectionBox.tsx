@@ -78,6 +78,11 @@ export default function SelectionBox({ start, end, endRef }: SelectionBoxProps) 
         isActiveRef.current = false;
       } else {
         const currentEnd = endRef?.current || end;
+        if (!currentEnd) {
+          box.style.display = "none";
+          isActiveRef.current = false;
+          return;
+        }
         const minX = Math.min(start.x, currentEnd.x);
         const minY = Math.min(start.y, currentEnd.y);
         const width = Math.abs(currentEnd.x - start.x);

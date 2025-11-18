@@ -165,10 +165,9 @@ function ComponentRenderer({
     setSpeedDialOpen(true);
   };
 
-  const handleSpeedDialClose = (event: React.SyntheticEvent, reason?: string) => {
+  const handleSpeedDialClose = (event: React.SyntheticEvent<Element, Event>, reason?: string) => {
     // Don't close if the reason is mouseLeave and the mouse is over a tooltip
     if (reason === "mouseLeave") {
-      const target = event.target as HTMLElement;
       const relatedTarget = (event.nativeEvent as MouseEvent).relatedTarget as HTMLElement | null;
       
       // Check if we're moving to a tooltip or tooltip-related element
@@ -294,7 +293,7 @@ function ComponentRenderer({
   };
   
   const handleSliderChange = (
-    _event: Event,
+    _event: Event | React.SyntheticEvent<Element, Event>,
     value: number | number[],
   ) => {
     const numericValue = Array.isArray(value) ? value[0] : value;
@@ -304,7 +303,7 @@ function ComponentRenderer({
   };
 
   const handleSliderChangeCommitted = (
-    _event: Event,
+    _event: Event | React.SyntheticEvent<Element, Event>,
     value: number | number[],
   ) => {
     const numericValue = Array.isArray(value) ? value[0] : value;
@@ -807,8 +806,9 @@ function ComponentRenderer({
             open={speedDialOpen}
             onClose={(event, reason) => {
               // Only close on backdrop click, not on mouse leave or escape (handled separately)
-              if (reason === "backdropClick") {
-                handleSpeedDialClose(event, reason);
+              const reasonStr = String(reason);
+              if (reasonStr === "backdropClick" || reasonStr === "toggle") {
+                handleSpeedDialClose(event as React.SyntheticEvent<Element, Event>, reasonStr);
               }
             }}
             onClick={(e) => e.stopPropagation()}

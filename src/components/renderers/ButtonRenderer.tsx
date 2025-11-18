@@ -28,8 +28,8 @@ export default function ButtonRenderer({
       variant="contained"
       {...otherProps}
       sx={{
-        ...(widthProps.sx || {}),
-        ...(heightProps.sx || {}),
+        ...("sx" in widthProps ? widthProps.sx : {}),
+        ...("sx" in heightProps ? heightProps.sx : {}),
         ...(centeredAlignment.sx || {}),
         backgroundColor: componentColor,
         color: getTextColorForFilled(componentColor),

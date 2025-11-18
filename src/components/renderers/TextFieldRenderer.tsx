@@ -19,7 +19,7 @@ export default function TextFieldRenderer({
         isEditing && editingField === "value" ? editValue : (component.props?.value as string) || ""
       }
       sx={{
-        ...(widthProps.sx || {}),
+        ...("sx" in widthProps ? widthProps.sx : {}),
         "& input": { textAlign: "center", color: componentColor },
         "& .MuiOutlinedInput-root": {
           "& fieldset": { borderColor: componentColor },

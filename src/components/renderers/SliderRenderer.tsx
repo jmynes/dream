@@ -7,8 +7,8 @@ interface SliderRendererProps extends RendererProps {
   onSliderMouseDown: (e: React.MouseEvent) => void;
   onSliderMouseMove: (e: React.MouseEvent) => void;
   onSliderMouseUp: (e: React.MouseEvent) => void;
-  onSliderChange: (event: Event, value: number | number[]) => void;
-  onSliderChangeCommitted: (event: Event, value: number | number[]) => void;
+  onSliderChange: (event: Event | React.SyntheticEvent<Element, Event>, value: number | number[]) => void;
+  onSliderChangeCommitted: (event: Event | React.SyntheticEvent<Element, Event>, value: number | number[]) => void;
 }
 
 export default function SliderRenderer({

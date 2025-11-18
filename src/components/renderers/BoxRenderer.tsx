@@ -5,8 +5,6 @@ import { inlineInputStyle } from "./rendererUtils";
 export default function BoxRenderer({
   component,
   componentColor,
-  widthProps,
-  heightProps,
   centeredAlignment,
   isEditing,
   editingField,
