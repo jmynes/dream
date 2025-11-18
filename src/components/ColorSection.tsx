@@ -108,8 +108,9 @@ export default function ColorSection({
     const rgba = colorResult.rgb;
     const a = rgba.a ?? 1;
     const hexColor = a === 1 ? colorResult.hex : rgbaToHex(rgba.r, rgba.g, rgba.b, a);
-    onColorChange(hexColor);
-  }, [onColorChange]);
+    // Component color needs timestamp for proper updates
+    onColorChange(hexColor, label === "Component Color" ? Date.now() : undefined);
+  }, [onColorChange, label]);
 
   const handleEyedropperClick = useCallback(async () => {
     // Check if EyeDropper API is available
