@@ -773,6 +773,7 @@ function ComponentRenderer({
       {/* biome-ignore lint/a11y/noStaticElementInteractions: Draggable container wrapper */}
       <div
         ref={componentRef}
+        data-component-id={component.id}
         style={containerStyle}
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}

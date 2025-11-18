@@ -1,8 +1,9 @@
-import { createContext, useContext, useMemo, useCallback } from "react";
+import { createContext, useContext, useMemo, useRef, useCallback } from "react";
 
 interface ColorUtilsContextValue {
   isDarkColor: (color: string) => boolean;
   getTextColorForFilled: (bgColor: string) => string;
+  setLiveComponentColor: (color: string | null, selectedIds: string[]) => void;
 }
 
 const ColorUtilsContext = createContext<ColorUtilsContextValue | null>(null);
@@ -59,12 +60,57 @@ interface ColorUtilsProviderProps {
 }
 
 export function ColorUtilsProvider({ children }: ColorUtilsProviderProps) {
+  const liveColorRef = useRef<string | null>(null);
+  const selectedIdsRef = useRef<string[]>([]);
+  const animationFrameRef = useRef<number | null>(null);
+
+  // Update live color for selected components using CSS custom properties
+  const setLiveComponentColor = useCallback(
+    (color: string | null, selectedIds: string[]) => {
+      liveColorRef.current = color;
+      selectedIdsRef.current = selectedIds;
+
+      // Cancel any pending animation frame
+      if (animationFrameRef.current !== null) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+
+      // Schedule DOM update on next frame
+      animationFrameRef.current = requestAnimationFrame(() => {
+        if (color === null) {
+          // Clear live color - remove CSS variable from all selected components
+          selectedIdsRef.current.forEach((id) => {
+            const element = document.querySelector(
+              `[data-component-id="${id}"]`,
+            ) as HTMLElement | null;
+            if (element) {
+              element.style.removeProperty("--live-component-color");
+            }
+          });
+        } else {
+          // Set live color via CSS custom property
+          selectedIdsRef.current.forEach((id) => {
+            const element = document.querySelector(
+              `[data-component-id="${id}"]`,
+            ) as HTMLElement | null;
+            if (element) {
+              element.style.setProperty("--live-component-color", color);
+            }
+          });
+        }
+        animationFrameRef.current = null;
+      });
+    },
+    [],
+  );
+
   const value = useMemo(
     () => ({
       isDarkColor: isDarkColorImpl,
       getTextColorForFilled: getTextColorForFilledImpl,
+      setLiveComponentColor,
     }),
-    []
+    [setLiveComponentColor],
   );
 
   return (

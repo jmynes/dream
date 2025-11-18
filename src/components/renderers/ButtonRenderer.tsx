@@ -23,6 +23,9 @@ export default function ButtonRenderer({
     [key: string]: unknown;
   };
 
+  // Use CSS variable for live color updates, fallback to prop
+  const bgColor = `var(--live-component-color, ${componentColor})`;
+
   return (
     <Button
       variant="contained"
@@ -31,9 +34,9 @@ export default function ButtonRenderer({
         ...("sx" in widthProps ? widthProps.sx : {}),
         ...("sx" in heightProps ? heightProps.sx : {}),
         ...(centeredAlignment.sx || {}),
-        backgroundColor: componentColor,
-        color: getTextColorForFilled(componentColor),
-        "&:hover": { backgroundColor: componentColor },
+        backgroundColor: bgColor,
+        color: getTextColorForFilled(componentColor), // Text color uses prop for calculation
+        "&:hover": { backgroundColor: bgColor },
         textTransform: "none",
         ...((propsSx as object) || {}),
       }}

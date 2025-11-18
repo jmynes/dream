@@ -148,6 +148,7 @@ function App() {
   const [components, setComponents] = useState<CanvasComponent[]>([]);
   const [selectedComponentType, setSelectedComponentType] =
     useState<ComponentType | null>(null);
+  const [selectedComponentIds, setSelectedComponentIds] = useState<string[]>([]);
   const [clearCanvasKey, setClearCanvasKey] = useState(0);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -459,6 +460,7 @@ function App() {
             onBrowserUIEnabledToggle={setIsBrowserUIEnabled}
             isMacOSStyle={isMacOSStyle}
             onMacOSStyleToggle={setIsMacOSStyle}
+            selectedComponentIds={selectedComponentIds}
           />
           <Box sx={{ flex: 1, overflow: "hidden", display: "flex" }}>
             <Canvas
@@ -486,6 +488,7 @@ function App() {
               canvasColor={canvasColor}
               resizeMode={resizeMode}
               isTextSelectMode={isTextSelectMode}
+              onSelectedComponentIdsChange={setSelectedComponentIds}
               onResetTools={() => {
                 setIsDrawing(false);
                 setIsEraser(false);

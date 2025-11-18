@@ -58,6 +58,7 @@ interface ToolsDrawerProps {
   onBrowserUIEnabledToggle: (enabled: boolean) => void;
   isMacOSStyle: boolean;
   onMacOSStyleToggle: (isMacOS: boolean) => void;
+  selectedComponentIds?: string[];
 }
 
 export default function ToolsDrawer({
@@ -95,6 +96,7 @@ export default function ToolsDrawer({
   onBrowserUIEnabledToggle,
   isMacOSStyle,
   onMacOSStyleToggle,
+  selectedComponentIds = [],
 }: ToolsDrawerProps) {
   const tooltipSlotProps = { tooltip: { sx: { fontSize: "0.85rem" } } };
   
@@ -313,6 +315,7 @@ export default function ToolsDrawer({
           color={componentColor}
           onColorChange={onComponentColorChange}
           defaultColor="#1976d2"
+          selectedComponentIds={selectedComponentIds}
         />
 
         <ColorSection

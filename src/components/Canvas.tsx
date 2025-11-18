@@ -71,6 +71,7 @@ interface CanvasProps {
   canvasColor?: string;
   isTextSelectMode?: boolean;
   onResetTools?: () => void;
+  onSelectedComponentIdsChange?: (ids: string[]) => void;
 }
 
 export default function Canvas({
@@ -100,12 +101,20 @@ export default function Canvas({
   canvasColor = "#ffffff",
   isTextSelectMode = false,
   onResetTools,
+  onSelectedComponentIdsChange,
 }: CanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [selectedComponentIds, setSelectedComponentIds] = useState<string[]>(
     [],
   );
+
+  // Notify parent of selected component IDs changes
+  useEffect(() => {
+    if (onSelectedComponentIdsChange) {
+      onSelectedComponentIdsChange(selectedComponentIds);
+    }
+  }, [selectedComponentIds, onSelectedComponentIdsChange]);
   const [copiedComponents, setCopiedComponents] = useState<CanvasComponent[]>(
     [],
   );

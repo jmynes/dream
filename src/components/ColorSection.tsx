@@ -16,6 +16,7 @@ import {
   ExpandLess as ExpandLessIcon,
 } from "@mui/icons-material";
 import { useState, useCallback, useRef } from "react";
+import { useColorUtils } from "../contexts/ColorUtilsContext";
 
 // Type for react-color color result
 type ColorResult = {
@@ -81,6 +82,7 @@ interface ColorSectionProps {
   onColorChange: (color: string, timestamp?: number) => void;
   defaultColor: string;
   resetTooltip?: string;
+  selectedComponentIds?: string[];
 }
 
 export default function ColorSection({
@@ -89,12 +91,16 @@ export default function ColorSection({
   onColorChange,
   defaultColor,
   resetTooltip = "Reset to default",
+  selectedComponentIds = [],
 }: ColorSectionProps) {
   const [pickerAnchor, setPickerAnchor] = useState<HTMLElement | null>(null);
   const [isEyedropperActive, setIsEyedropperActive] = useState(false);
   const [swatchesExpanded, setSwatchesExpanded] = useState(false);
   const eyedropperAbortRef = useRef<AbortController | null>(null);
   const tooltipSlotProps = { tooltip: { sx: { fontSize: "0.85rem" } } };
+  const { setLiveComponentColor } = useColorUtils();
+  const isDraggingRef = useRef(false);
+  const liveColorRef = useRef<string | null>(null);
 
   const handlePickerOpen = (event: React.MouseEvent<HTMLElement>) => {
     setPickerAnchor(event.currentTarget);
@@ -102,15 +108,56 @@ export default function ColorSection({
 
   const handlePickerClose = () => {
     setPickerAnchor(null);
+    // Clear live color when picker closes (in case user closed without completing)
+    if (label === "Component Color" && selectedComponentIds.length > 0 && isDraggingRef.current) {
+      isDraggingRef.current = false;
+      liveColorRef.current = null;
+      setLiveComponentColor(null, selectedComponentIds);
+    }
   };
 
-  const handleColorChange = useCallback((colorResult: ColorResult) => {
-    const rgba = colorResult.rgb;
-    const a = rgba.a ?? 1;
-    const hexColor = a === 1 ? colorResult.hex : rgbaToHex(rgba.r, rgba.g, rgba.b, a);
-    // Component color needs timestamp for proper updates
-    onColorChange(hexColor, label === "Component Color" ? Date.now() : undefined);
-  }, [onColorChange, label]);
+  const handleColorChange = useCallback(
+    (colorResult: ColorResult) => {
+      const rgba = colorResult.rgb;
+      const a = rgba.a ?? 1;
+      const hexColor =
+        a === 1 ? colorResult.hex : rgbaToHex(rgba.r, rgba.g, rgba.b, a);
+
+      // For Component Color, use live color updates during dragging
+      if (label === "Component Color" && selectedComponentIds.length > 0) {
+        isDraggingRef.current = true;
+        liveColorRef.current = hexColor;
+        // Update live color via CSS custom properties (no re-renders)
+        setLiveComponentColor(hexColor, selectedComponentIds);
+      } else {
+        // For other colors, update immediately
+        onColorChange(hexColor, label === "Component Color" ? Date.now() : undefined);
+      }
+    },
+    [onColorChange, label, selectedComponentIds, setLiveComponentColor],
+  );
+
+  const handleColorChangeComplete = useCallback(
+    (colorResult: ColorResult) => {
+      const rgba = colorResult.rgb;
+      const a = rgba.a ?? 1;
+      const hexColor =
+        a === 1 ? colorResult.hex : rgbaToHex(rgba.r, rgba.g, rgba.b, a);
+
+      // For Component Color, commit the change and clear live color
+      if (label === "Component Color" && selectedComponentIds.length > 0) {
+        isDraggingRef.current = false;
+        liveColorRef.current = null;
+        // Clear live color and commit actual change
+        setLiveComponentColor(null, selectedComponentIds);
+        onColorChange(hexColor, Date.now());
+      } else {
+        // For other colors, just update
+        onColorChange(hexColor, label === "Component Color" ? Date.now() : undefined);
+      }
+    },
+    [onColorChange, label, selectedComponentIds, setLiveComponentColor],
+  );
 
   const handleEyedropperClick = useCallback(async () => {
     // Check if EyeDropper API is available
@@ -176,9 +223,9 @@ export default function ColorSection({
           <Box sx={{ p: 2 }}>
             <Box sx={{ "& > div": { boxShadow: "none !important", border: "1px solid #e0e0e0", borderRadius: "4px" } }}>
               <ChromePicker
-                color={color}
+                color={liveColorRef.current || color}
                 onChange={handleColorChange}
-                onChangeComplete={handleColorChange}
+                onChangeComplete={handleColorChangeComplete}
               />
             </Box>
           </Box>
