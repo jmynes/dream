@@ -43,36 +43,36 @@ const rgbaToHex = (r: number, g: number, b: number, a: number): string => {
   return `#${toHex(r)}${toHex(g)}${toHex(b)}${toHex(alpha)}`;
 };
 
-// Material color swatches
+// Material color swatches with names
 const swatchColors = [
   // Blues & Teals
-  "#1976D2",
-  "#2196F3",
-  "#03A9F4",
-  "#00BCD4",
-  "#0097A7",
-  "#40E0D0",
+  { hex: "#1976D2", name: "Primary Blue" },
+  { hex: "#2196F3", name: "Blue" },
+  { hex: "#03A9F4", name: "Light Blue" },
+  { hex: "#00BCD4", name: "Cyan" },
+  { hex: "#0097A7", name: "Teal" },
+  { hex: "#40E0D0", name: "Turquoise" },
   // Purples & Reds
-  "#7B1FA2",
-  "#9C27B0",
-  "#E91E63",
-  "#F44336",
-  "#FF5722",
-  "#FF9800",
+  { hex: "#7B1FA2", name: "Deep Purple" },
+  { hex: "#9C27B0", name: "Purple" },
+  { hex: "#E91E63", name: "Pink" },
+  { hex: "#F44336", name: "Red" },
+  { hex: "#FF5722", name: "Deep Orange" },
+  { hex: "#FF9800", name: "Orange" },
   // Greens & Yellows
-  "#4CAF50",
-  "#8BC34A",
-  "#CDDC39",
-  "#D4AF37",
-  "#FFEB3B",
-  "#FFE135",
+  { hex: "#4CAF50", name: "Green" },
+  { hex: "#8BC34A", name: "Light Green" },
+  { hex: "#CDDC39", name: "Lime" },
+  { hex: "#D4AF37", name: "Gold" },
+  { hex: "#FFEB3B", name: "Yellow" },
+  { hex: "#FFE135", name: "Banana" },
   // Neutrals
-  "#212121",
-  "#616161",
-  "#9E9E9E",
-  "#E0E0E0",
-  "#F5F5F5",
-  "#FFFFFF",
+  { hex: "#212121", name: "Grey 900" },
+  { hex: "#616161", name: "Grey 700" },
+  { hex: "#9E9E9E", name: "Grey 500" },
+  { hex: "#E0E0E0", name: "Grey 300" },
+  { hex: "#F5F5F5", name: "Grey 100" },
+  { hex: "#FFFFFF", name: "White" },
 ];
 
 interface ColorSectionProps {
@@ -137,8 +137,8 @@ export default function ColorSection({
     }
   }, [onColorChange]);
 
-  const handleSwatchClick = (swatchColor: string) => {
-    onColorChange(swatchColor, label === "Component Color" ? Date.now() : undefined);
+  const handleSwatchClick = (swatchHex: string) => {
+    onColorChange(swatchHex, label === "Component Color" ? Date.now() : undefined);
   };
 
   return (
@@ -220,7 +220,19 @@ export default function ColorSection({
             {swatchesExpanded ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
           </IconButton>
         </Tooltip>
-        <Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.7rem" }}>
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          sx={{
+            fontSize: "0.7rem",
+            cursor: "pointer",
+            userSelect: "none",
+            "&:hover": {
+              color: "text.primary",
+            },
+          }}
+          onClick={() => setSwatchesExpanded(!swatchesExpanded)}
+        >
           Swatches
         </Typography>
       </Box>
@@ -234,15 +246,23 @@ export default function ColorSection({
           }}
         >
           {swatchColors.map((swatchColor) => (
-            <Tooltip key={swatchColor} title={swatchColor} slotProps={tooltipSlotProps}>
+            <Tooltip
+              key={swatchColor.hex}
+              title={swatchColor.name}
+              slotProps={tooltipSlotProps}
+              enterDelay={500}
+              enterNextDelay={200}
+              placement="top"
+              arrow
+            >
               <Box
-                onClick={() => handleSwatchClick(swatchColor)}
+                onClick={() => handleSwatchClick(swatchColor.hex)}
                 sx={{
                   width: "100%",
                   aspectRatio: "1",
-                  backgroundColor: swatchColor,
+                  backgroundColor: swatchColor.hex,
                   border:
-                    color.toUpperCase() === swatchColor.toUpperCase()
+                    color.toUpperCase() === swatchColor.hex.toUpperCase()
                       ? "2px solid #1976d2"
                       : "1px solid #ccc",
                   borderRadius: 0.5,
