@@ -25,7 +25,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 
 // Helper functions for hex/rgba conversion
 const hexToRgba = (hex: string): { r: number; g: number; b: number; a: number } => {
@@ -157,62 +157,175 @@ export default function ColorPicker({
   }, [onColorChange]);
   
   // Computed values from single source of truth
-  const rgbHex = rgbaToRgbHex(rgba.r, rgba.g, rgba.b).replace("#", "").toUpperCase();
+  const rgbHex = useMemo(() => rgbaToRgbHex(rgba.r, rgba.g, rgba.b).replace("#", "").toUpperCase(), [rgba.r, rgba.g, rgba.b]);
+  const alphaHex = useMemo(() => Math.round(rgba.a).toString(16).toUpperCase().padStart(2, "0"), [rgba.a]);
   const opacityPercent = Math.round((rgba.a / 255) * 100);
   const displayColor = rgbaToRgbHex(rgba.r, rgba.g, rgba.b);
-  const hexValue = rgbHex + (rgba.a === 255 ? "" : Math.round(rgba.a).toString(16).toUpperCase().padStart(2, "0"));
   
-  // Handle hex input changes
-  const handleHexChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const hex = e.target.value.replace(/[^0-9A-Fa-f]/g, "").toUpperCase();
-    if (hex.length <= 8) {
-      updateSourceRef.current = "hex";
+  // Local state for the two input fields
+  const [hexInput, setHexInput] = useState(rgbHex);
+  const [alphaInput, setAlphaInput] = useState(alphaHex);
+  
+  // Sync inputs when rgba changes externally
+  useEffect(() => {
+    if (updateSourceRef.current === "external" || updateSourceRef.current === "picker" || updateSourceRef.current === "swatch") {
+      setHexInput(rgbHex);
+      setAlphaInput(alphaHex);
+    }
+  }, [rgbHex, alphaHex]);
+  
+  // Refs for input elements
+  const hexInputRef = useRef<HTMLInputElement>(null);
+  const alphaInputRef = useRef<HTMLInputElement>(null);
+  
+  // Handle hex input changes (RGB part)
+  const handleHexInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/[^0-9A-Fa-f]/g, "").toUpperCase();
+    if (value.length <= 6) {
+      setHexInput(value);
       
-      if (hex.length >= 6) {
-        const r = parseInt(hex.substring(0, 2), 16) || 0;
-        const g = parseInt(hex.substring(2, 4), 16) || 0;
-        const b = parseInt(hex.substring(4, 6), 16) || 0;
-        let a = rgba.a; // Preserve current alpha if hex is 6 digits
+      if (value.length === 6) {
+        const r = parseInt(value.substring(0, 2), 16) || 0;
+        const g = parseInt(value.substring(2, 4), 16) || 0;
+        const b = parseInt(value.substring(4, 6), 16) || 0;
         
-        // If 8 digits, use alpha from hex
-        if (hex.length === 8) {
-          a = parseInt(hex.substring(6, 8), 16) || 255;
-        }
-        
-        updateColor({ r, g, b, a });
+        updateSourceRef.current = "hex";
+        updateColor({ r, g, b, a: rgba.a });
       }
     }
   }, [rgba.a, updateColor]);
   
-  const handleHexBlur = useCallback(() => {
-    let hex = hexValue.replace("#", "").toUpperCase();
+  // Handle hex input keydown (auto-advance)
+  const handleHexInputKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    const input = e.currentTarget;
     
-    // Normalize hex value
-    if (hex.length < 6) {
-      hex = hex.padEnd(6, "0").substring(0, 6);
-    } else if (hex.length === 7) {
-      hex = hex.padEnd(8, "F").substring(0, 8);
-    } else if (hex.length === 6) {
-      // Add alpha from current opacity
-      const aHex = Math.round((rgba.a / 255) * 255).toString(16).toUpperCase().padStart(2, "0");
-      hex = hex + aHex;
-    }
-    
-    const r = parseInt(hex.substring(0, 2), 16) || 0;
-    const g = parseInt(hex.substring(2, 4), 16) || 0;
-    const b = parseInt(hex.substring(4, 6), 16) || 0;
-    const a = hex.length === 8 ? (parseInt(hex.substring(6, 8), 16) || 255) : rgba.a;
-    
-    updateSourceRef.current = "hex";
-    updateColor({ r, g, b, a });
-  }, [hexValue, rgba.a, updateColor]);
-  
-  const handleHexKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
+    // Auto-advance to alpha input when hex is complete
+    if (input.value.length === 6 && /[0-9A-Fa-f]/.test(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey) {
       e.preventDefault();
-      handleHexBlur();
+      const newValue = input.value + e.key.toUpperCase();
+      setHexInput(newValue.substring(0, 6));
+      
+      // Move overflow to alpha input
+      const overflow = newValue.substring(6);
+      if (overflow.length > 0) {
+        setAlphaInput(overflow.substring(0, 2));
+        alphaInputRef.current?.focus();
+        alphaInputRef.current?.setSelectionRange(overflow.length, overflow.length);
+      }
     }
-  }, [handleHexBlur]);
+    
+    // Handle paste
+    if ((e.ctrlKey || e.metaKey) && e.key === "v") {
+      // Will be handled by onPaste
+    }
+  }, []);
+  
+  // Handle hex input paste
+  const handleHexInputPaste = useCallback((e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData("text").replace(/[^0-9A-Fa-f]/g, "").toUpperCase();
+    
+    if (pasted.length === 8) {
+      // Split 8-digit hex into both fields
+      const rgb = pasted.substring(0, 6);
+      const alpha = pasted.substring(6, 8);
+      setHexInput(rgb);
+      setAlphaInput(alpha);
+      
+      const r = parseInt(rgb.substring(0, 2), 16) || 0;
+      const g = parseInt(rgb.substring(2, 4), 16) || 0;
+      const b = parseInt(rgb.substring(4, 6), 16) || 0;
+      const a = parseInt(alpha, 16) || 255;
+      
+      updateSourceRef.current = "hex";
+      updateColor({ r, g, b, a });
+      alphaInputRef.current?.focus();
+    } else if (pasted.length > 0) {
+      // Partial paste into hex field
+      const combined = hexInput + pasted;
+      const rgb = combined.substring(0, 6);
+      const overflow = combined.substring(6);
+      
+      setHexInput(rgb);
+      if (overflow.length > 0) {
+        setAlphaInput(overflow.substring(0, 2));
+        alphaInputRef.current?.focus();
+      }
+    }
+  }, [hexInput, updateColor]);
+  
+  // Handle hex input blur
+  const handleHexInputBlur = useCallback(() => {
+    const normalized = hexInput.padEnd(6, "0").substring(0, 6);
+    if (normalized !== hexInput) {
+      setHexInput(normalized);
+      
+      const r = parseInt(normalized.substring(0, 2), 16) || 0;
+      const g = parseInt(normalized.substring(2, 4), 16) || 0;
+      const b = parseInt(normalized.substring(4, 6), 16) || 0;
+      
+      updateSourceRef.current = "hex";
+      updateColor({ r, g, b, a: rgba.a });
+    }
+  }, [hexInput, rgba.a, updateColor]);
+  
+  // Handle alpha input changes
+  const handleAlphaInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/[^0-9A-Fa-f]/g, "").toUpperCase();
+    if (value.length <= 2) {
+      setAlphaInput(value);
+      
+      if (value.length === 2) {
+        const a = parseInt(value, 16) || 255;
+        
+        updateSourceRef.current = "hex";
+        updateColor({ ...rgba, a });
+      }
+    }
+  }, [rgba, updateColor]);
+  
+  // Handle alpha input keydown (auto-advance backwards)
+  const handleAlphaInputKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    const input = e.currentTarget;
+    
+    // Backspace at start moves to hex input
+    if (e.key === "Backspace" && input.selectionStart === 0 && input.selectionEnd === 0) {
+      if (alphaInput.length > 0) {
+        // Move last char of alpha to end of hex
+        const lastChar = alphaInput.substring(alphaInput.length - 1);
+        setAlphaInput(alphaInput.substring(0, alphaInput.length - 1));
+        const newHex = hexInput + lastChar;
+        setHexInput(newHex.substring(0, 6));
+        hexInputRef.current?.focus();
+        const newPos = Math.min(newHex.length, 6);
+        setTimeout(() => {
+          hexInputRef.current?.setSelectionRange(newPos, newPos);
+        }, 0);
+      } else if (hexInput.length > 0) {
+        // Alpha is empty, just move to hex and backspace there
+        e.preventDefault();
+        hexInputRef.current?.focus();
+        const newHex = hexInput.substring(0, hexInput.length - 1);
+        setHexInput(newHex);
+        setTimeout(() => {
+          hexInputRef.current?.setSelectionRange(newHex.length, newHex.length);
+        }, 0);
+      }
+    }
+  }, [hexInput, alphaInput]);
+  
+  // Handle alpha input blur
+  const handleAlphaInputBlur = useCallback(() => {
+    const normalized = alphaInput.padEnd(2, "F").substring(0, 2);
+    if (normalized !== alphaInput) {
+      setAlphaInput(normalized);
+      
+      const a = parseInt(normalized, 16) || 255;
+      
+      updateSourceRef.current = "hex";
+      updateColor({ ...rgba, a });
+    }
+  }, [alphaInput, rgba, updateColor]);
   
   // Handle opacity slider changes
   const handleOpacityChange = useCallback((_event: Event, value: number | number[]) => {
@@ -295,7 +408,7 @@ export default function ColorPicker({
         </Box>
       ))}
 
-      {/* Native color picker and hex input */}
+      {/* Native color picker and hex/alpha inputs */}
       <Box sx={{ display: "flex", gap: 1, alignItems: "center", mb: 2 }}>
         <Box
           component="input"
@@ -311,20 +424,37 @@ export default function ColorPicker({
             padding: 0,
           }}
         />
-        <TextField
-          size="small"
-          label="Hex"
-          value={hexValue}
-          onChange={handleHexChange}
-          onBlur={handleHexBlur}
-          onKeyDown={handleHexKeyDown}
-          sx={{ flex: 1 }}
-          inputProps={{
-            maxLength: 8,
-            style: { textTransform: "uppercase" },
-          }}
-          helperText={hexValue.length === 8 ? "8-digit hex (with alpha)" : "6 or 8 digit hex"}
-        />
+        <Box sx={{ display: "flex", gap: 0.5, alignItems: "flex-start", flex: 1 }}>
+          <TextField
+            size="small"
+            label="Hex"
+            value={hexInput}
+            onChange={handleHexInputChange}
+            onBlur={handleHexInputBlur}
+            onKeyDown={handleHexInputKeyDown}
+            onPaste={handleHexInputPaste}
+            inputRef={hexInputRef}
+            sx={{ flex: 1 }}
+            inputProps={{
+              maxLength: 6,
+              style: { textTransform: "uppercase" },
+            }}
+          />
+          <TextField
+            size="small"
+            label="Alpha"
+            value={alphaInput}
+            onChange={handleAlphaInputChange}
+            onBlur={handleAlphaInputBlur}
+            onKeyDown={handleAlphaInputKeyDown}
+            inputRef={alphaInputRef}
+            sx={{ width: 80 }}
+            inputProps={{
+              maxLength: 2,
+              style: { textTransform: "uppercase" },
+            }}
+          />
+        </Box>
       </Box>
 
       {/* Opacity slider */}
