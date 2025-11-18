@@ -25,14 +25,12 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 
 // Helper functions for hex/rgba conversion
 const hexToRgba = (hex: string): { r: number; g: number; b: number; a: number } => {
-  // Remove # if present
   hex = hex.replace("#", "");
   
-  // Support both 6-digit and 8-digit hex
   if (hex.length === 6) {
     const r = parseInt(hex.substring(0, 2), 16);
     const g = parseInt(hex.substring(2, 4), 16);
@@ -46,7 +44,6 @@ const hexToRgba = (hex: string): { r: number; g: number; b: number; a: number } 
     return { r, g, b, a };
   }
   
-  // Fallback for invalid hex
   return { r: 0, g: 0, b: 0, a: 255 };
 };
 
@@ -56,12 +53,10 @@ const rgbaToHex = (r: number, g: number, b: number, a: number): string => {
     return hex.length === 1 ? `0${hex}` : hex;
   };
   
-  // If alpha is 255 (fully opaque), return 6-digit hex
   if (a === 255) {
     return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
   }
   
-  // Otherwise return 8-digit hex with alpha
   return `#${toHex(r)}${toHex(g)}${toHex(b)}${toHex(a)}`;
 };
 
@@ -126,6 +121,8 @@ interface ColorPickerProps {
   onClose: () => void;
 }
 
+type UpdateSource = "hex" | "opacity" | "swatch" | "picker" | "external";
+
 export default function ColorPicker({
   currentColor,
   onColorChange,
@@ -133,127 +130,118 @@ export default function ColorPicker({
 }: ColorPickerProps) {
   const tooltipSlotProps = { tooltip: { sx: { fontSize: "0.85rem" } } };
   
-  // Parse current color to rgba
-  const currentRgba = useMemo(() => hexToRgba(currentColor), [currentColor]);
+  // Single source of truth: RGBA values
+  const [rgba, setRgba] = useState(() => hexToRgba(currentColor));
   
-  // Parse hex value - can be 6 or 8 digits
-  const parseHexValue = (hex: string) => {
-    if (hex.length === 6) {
-      return hex;
-    } else if (hex.length === 8) {
-      return hex.substring(0, 6);
-    }
-    return hex;
-  };
-
-  const [hexValue, setHexValue] = useState(() => {
-    const hex = currentColor.toUpperCase().replace("#", "");
-    return hex.length === 8 ? hex : hex.padEnd(8, "F");
-  });
-  const [opacity, setOpacity] = useState(() => {
-    const rgba = hexToRgba(currentColor);
-    return Math.round((rgba.a / 255) * 100);
-  });
-  const [displayColor, setDisplayColor] = useState(() => {
-    const rgba = hexToRgba(currentColor);
-    return rgbaToRgbHex(rgba.r, rgba.g, rgba.b);
-  });
-
-  // Update local state when currentColor prop changes
+  // Track update source to prevent loops
+  const updateSourceRef = useRef<UpdateSource>("external");
+  const isInternalUpdateRef = useRef(false);
+  
+  // Sync with prop changes (external updates only)
   useEffect(() => {
-    const hex = currentColor.toUpperCase().replace("#", "");
-    const rgba = hexToRgba(currentColor);
-    setHexValue(hex.length === 8 ? hex : hex.padEnd(8, "F"));
-    setOpacity(Math.round((rgba.a / 255) * 100));
-    setDisplayColor(rgbaToRgbHex(rgba.r, rgba.g, rgba.b));
-  }, [currentColor]);
-
-  // Update color when hex or opacity changes
-  useEffect(() => {
-    if (hexValue.length >= 6) {
-      const rgbHex = parseHexValue(hexValue);
-      const r = parseInt(rgbHex.substring(0, 2), 16) || 0;
-      const g = parseInt(rgbHex.substring(2, 4), 16) || 0;
-      const b = parseInt(rgbHex.substring(4, 6), 16) || 0;
-      
-      // Use alpha from hex if 8 digits, otherwise use opacity slider
-      let a: number;
-      if (hexValue.length === 8) {
-        const aHex = hexValue.substring(6, 8);
-        a = parseInt(aHex, 16) || 255;
-        // Sync opacity slider with hex alpha (only if different to avoid loops)
-        const newOpacity = Math.round((a / 255) * 100);
-        if (newOpacity !== opacity) {
-          setOpacity(newOpacity);
-        }
-      } else {
-        a = Math.round((opacity / 100) * 255);
-      }
-      
-      const newColor = rgbaToHex(r, g, b, a);
-      setDisplayColor(rgbaToRgbHex(r, g, b));
-      onColorChange(newColor);
+    if (isInternalUpdateRef.current) {
+      isInternalUpdateRef.current = false;
+      return;
     }
-  }, [hexValue, opacity, onColorChange]);
-
-  const handleHexChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const hex = e.target.value.replace(/[^0-9A-Fa-f]/g, "").toUpperCase();
-    // Support both 6-digit and 8-digit hex
-    if (hex.length <= 8) {
-      setHexValue(hex);
-    }
-  };
-
-  const handleHexBlur = () => {
-    // Apply color when user leaves the field
-    let hex = hexValue;
     
-    // If less than 6 characters, pad with zeros for RGB part
+    updateSourceRef.current = "external";
+    setRgba(hexToRgba(currentColor));
+  }, [currentColor]);
+  
+  // Update parent when rgba changes internally
+  const updateColor = useCallback((newRgba: { r: number; g: number; b: number; a: number }) => {
+    setRgba(newRgba);
+    const newColor = rgbaToHex(newRgba.r, newRgba.g, newRgba.b, newRgba.a);
+    isInternalUpdateRef.current = true;
+    onColorChange(newColor);
+  }, [onColorChange]);
+  
+  // Computed values from single source of truth
+  const rgbHex = rgbaToRgbHex(rgba.r, rgba.g, rgba.b).replace("#", "").toUpperCase();
+  const opacityPercent = Math.round((rgba.a / 255) * 100);
+  const displayColor = rgbaToRgbHex(rgba.r, rgba.g, rgba.b);
+  const hexValue = rgbHex + (rgba.a === 255 ? "" : Math.round(rgba.a).toString(16).toUpperCase().padStart(2, "0"));
+  
+  // Handle hex input changes
+  const handleHexChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const hex = e.target.value.replace(/[^0-9A-Fa-f]/g, "").toUpperCase();
+    if (hex.length <= 8) {
+      updateSourceRef.current = "hex";
+      
+      if (hex.length >= 6) {
+        const r = parseInt(hex.substring(0, 2), 16) || 0;
+        const g = parseInt(hex.substring(2, 4), 16) || 0;
+        const b = parseInt(hex.substring(4, 6), 16) || 0;
+        let a = rgba.a; // Preserve current alpha if hex is 6 digits
+        
+        // If 8 digits, use alpha from hex
+        if (hex.length === 8) {
+          a = parseInt(hex.substring(6, 8), 16) || 255;
+        }
+        
+        updateColor({ r, g, b, a });
+      }
+    }
+  }, [rgba.a, updateColor]);
+  
+  const handleHexBlur = useCallback(() => {
+    let hex = hexValue.replace("#", "").toUpperCase();
+    
+    // Normalize hex value
     if (hex.length < 6) {
       hex = hex.padEnd(6, "0").substring(0, 6);
-    }
-    // If between 6 and 8, pad alpha to FF (fully opaque) if not complete
-    else if (hex.length === 7) {
+    } else if (hex.length === 7) {
       hex = hex.padEnd(8, "F").substring(0, 8);
-    }
-    // If exactly 6, add alpha from opacity slider
-    else if (hex.length === 6) {
-      const aHex = Math.round((opacity / 100) * 255).toString(16).toUpperCase().padStart(2, "0");
+    } else if (hex.length === 6) {
+      // Add alpha from current opacity
+      const aHex = Math.round((rgba.a / 255) * 255).toString(16).toUpperCase().padStart(2, "0");
       hex = hex + aHex;
     }
     
-    setHexValue(hex);
-  };
-
-  const handleHexKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const r = parseInt(hex.substring(0, 2), 16) || 0;
+    const g = parseInt(hex.substring(2, 4), 16) || 0;
+    const b = parseInt(hex.substring(4, 6), 16) || 0;
+    const a = hex.length === 8 ? (parseInt(hex.substring(6, 8), 16) || 255) : rgba.a;
+    
+    updateSourceRef.current = "hex";
+    updateColor({ r, g, b, a });
+  }, [hexValue, rgba.a, updateColor]);
+  
+  const handleHexKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       e.preventDefault();
       handleHexBlur();
     }
-  };
-
-  const handleOpacityChange = (_event: Event, value: number | number[]) => {
+  }, [handleHexBlur]);
+  
+  // Handle opacity slider changes
+  const handleOpacityChange = useCallback((_event: Event, value: number | number[]) => {
     const newOpacity = Array.isArray(value) ? value[0] : value;
-    setOpacity(newOpacity);
-  };
-
-  const handleColorPickerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const a = Math.round((newOpacity / 100) * 255);
+    
+    updateSourceRef.current = "opacity";
+    updateColor({ ...rgba, a });
+  }, [rgba, updateColor]);
+  
+  // Handle native color picker changes
+  const handleColorPickerChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const color = e.target.value;
-    const rgba = hexToRgba(color);
-    const rgbHex = color.toUpperCase().replace("#", "");
-    const aHex = Math.round((opacity / 100) * 255).toString(16).toUpperCase().padStart(2, "0");
-    setHexValue(rgbHex + aHex);
-    setDisplayColor(color);
-  };
-
-  const handleColorSwatchClick = (hex: string) => {
-    const rgba = hexToRgba(hex);
-    const rgbHex = hex.toUpperCase().replace("#", "");
-    const aHex = Math.round((opacity / 100) * 255).toString(16).toUpperCase().padStart(2, "0");
-    setHexValue(rgbHex + aHex);
-    setDisplayColor(hex);
-  };
-
+    const newRgba = hexToRgba(color);
+    
+    // Preserve current alpha
+    updateSourceRef.current = "picker";
+    updateColor({ ...newRgba, a: rgba.a });
+  }, [rgba.a, updateColor]);
+  
+  // Handle color swatch clicks
+  const handleColorSwatchClick = useCallback((hex: string) => {
+    const newRgba = hexToRgba(hex);
+    
+    // Preserve current alpha
+    updateSourceRef.current = "swatch";
+    updateColor({ ...newRgba, a: rgba.a });
+  }, [rgba.a, updateColor]);
+  
   return (
     <Box sx={{ p: 2, minWidth: 300 }}>
       <Typography variant="body2" sx={{ mb: 1.5, fontWeight: 500 }}>
@@ -283,9 +271,7 @@ export default function ColorPicker({
                 slotProps={tooltipSlotProps}
               >
                 <Box
-                  onClick={() => {
-                    handleColorSwatchClick(colorItem.hex);
-                  }}
+                  onClick={() => handleColorSwatchClick(colorItem.hex)}
                   sx={{
                     width: "100%",
                     aspectRatio: "1",
@@ -348,11 +334,11 @@ export default function ColorPicker({
             Opacity
           </Typography>
           <Typography variant="caption" color="text.secondary">
-            {opacity}%
+            {opacityPercent}%
           </Typography>
         </Box>
         <Slider
-          value={opacity}
+          value={opacityPercent}
           onChange={handleOpacityChange}
           min={0}
           max={100}
@@ -378,4 +364,3 @@ export default function ColorPicker({
     </Box>
   );
 }
-
