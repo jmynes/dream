@@ -10,9 +10,36 @@ import {
   EditNote as EditNoteIcon,
   Palette as PaletteIcon,
 } from "@mui/icons-material";
-import { useState, useRef, useEffect, memo } from "react";
+import { useState, useRef, useEffect, memo, useCallback } from "react";
 import type { CanvasComponent } from "../types/component";
-import ColorPicker from "./ColorPicker";
+import { ChromePicker } from "react-color";
+
+// Type for react-color color result
+type ColorResult = {
+  hex: string;
+  rgb: {
+    r: number;
+    g: number;
+    b: number;
+    a?: number;
+  };
+};
+
+// Convert rgba to hex with alpha (8-digit if alpha < 1)
+const rgbaToHex = (r: number, g: number, b: number, a: number): string => {
+  const toHex = (n: number) => {
+    const hex = Math.round(n).toString(16).toUpperCase();
+    return hex.length === 1 ? `0${hex}` : hex;
+  };
+  
+  const alpha = Math.round(a * 255);
+  if (alpha === 255) {
+    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+  }
+  
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}${toHex(alpha)}`;
+};
+
 import ButtonRenderer from "./renderers/ButtonRenderer";
 import TextFieldRenderer from "./renderers/TextFieldRenderer";
 import CardRenderer from "./renderers/CardRenderer";
@@ -67,7 +94,8 @@ function ComponentRenderer({
   );
   const [speedDialOpen, setSpeedDialOpen] = useState(false);
   const [speedDialAnchor, setSpeedDialAnchor] = useState<{ x: number; y: number } | null>(null);
-  const [colorPickerAnchor, setColorPickerAnchor] = useState<HTMLElement | null>(null);
+  const [colorPickerAnchor, setColorPickerAnchor] = useState<{ x: number; y: number } | null>(null);
+  const componentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const propValue = (component.props?.value as number) ?? 50;
@@ -167,7 +195,11 @@ function ComponentRenderer({
     e.stopPropagation();
     setSpeedDialOpen(false);
     setSpeedDialAnchor(null);
-    setColorPickerAnchor(e.currentTarget as HTMLElement);
+    // Position color picker at the right side of the component (same as SpeedDial)
+    if (componentRef.current) {
+      const rect = componentRef.current.getBoundingClientRect();
+      setColorPickerAnchor({ x: rect.right, y: rect.top + rect.height / 2 });
+    }
   };
 
   const handleDelete = (e: React.MouseEvent) => {
@@ -230,11 +262,16 @@ function ComponentRenderer({
     setColorPickerAnchor(null);
   };
 
-  const handleColorChange = (color: string) => {
+  const handleColorChange = useCallback((colorResult: ColorResult) => {
     if (onComponentColorChange) {
-      onComponentColorChange(component.id, color);
+      const rgba = colorResult.rgb;
+      const a = rgba.a ?? 1;
+      const hexColor = a === 1 
+        ? colorResult.hex 
+        : rgbaToHex(rgba.r, rgba.g, rgba.b, a);
+      onComponentColorChange(component.id, hexColor);
     }
-  };
+  }, [onComponentColorChange, component.id]);
   
   const handleSliderMouseDown = (e: React.MouseEvent) => {
     // Stop all propagation for slider interactions
@@ -699,6 +736,7 @@ function ComponentRenderer({
     <>
       {/* biome-ignore lint/a11y/noStaticElementInteractions: Draggable container wrapper */}
       <div
+        ref={componentRef}
         style={containerStyle}
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
@@ -865,19 +903,35 @@ function ComponentRenderer({
       {/* Color Picker Popover */}
       <Popover
         open={Boolean(colorPickerAnchor)}
-        anchorEl={colorPickerAnchor}
+        anchorReference="anchorPosition"
+        anchorPosition={
+          colorPickerAnchor
+            ? {
+                top: colorPickerAnchor.y,
+                left: colorPickerAnchor.x,
+              }
+            : undefined
+        }
         onClose={handleColorPickerClose}
         anchorOrigin={{
-          vertical: "bottom",
+          vertical: "center",
+          horizontal: "left",
+        }}
+        transformOrigin={{
+          vertical: "center",
           horizontal: "left",
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <ColorPicker
-          currentColor={component.color || "#1976d2"}
-          onColorChange={handleColorChange}
-          onClose={handleColorPickerClose}
-        />
+        <Box sx={{ p: 2 }}>
+          <Box sx={{ "& > div": { boxShadow: "none !important", border: "1px solid #e0e0e0", borderRadius: "4px" } }}>
+            <ChromePicker
+              color={component.color || "#1976d2"}
+              onChange={handleColorChange}
+              onChangeComplete={handleColorChange}
+            />
+          </Box>
+        </Box>
       </Popover>
     </>
   );
