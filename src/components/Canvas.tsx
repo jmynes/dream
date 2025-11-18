@@ -152,13 +152,18 @@ export default function Canvas({
   
   useEffect(() => {
     if (selectedComponentIds.length > 0 && componentColorTimestamp > lastAppliedTimestampRef.current) {
-      selectedComponentIds.forEach((id) => {
-        updateComponent(id, (comp) => ({ ...comp, color: componentColor }));
+      // Batch update all selected components in a single state update
+      const updatedComponents = components.map((comp) => {
+        if (selectedComponentIds.includes(comp.id)) {
+          return { ...comp, color: componentColor };
+        }
+        return comp;
       });
+      onComponentsChange(updatedComponents);
       lastAppliedTimestampRef.current = componentColorTimestamp;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [componentColor, componentColorTimestamp, selectedComponentIds, updateComponent]); // Run when componentColor or timestamp changes
+  }, [componentColor, componentColorTimestamp, selectedComponentIds]); // Run when componentColor or timestamp changes
 
   // Canvas lifecycle management
   const { actualWidth, actualHeight } = useCanvasLifecycle({
