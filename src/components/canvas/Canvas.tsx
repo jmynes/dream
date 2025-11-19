@@ -8,6 +8,13 @@ import { useKeyboardShortcuts } from "../../hooks/canvas/useKeyboardShortcuts";
 import { useMagicWand } from "../../hooks/canvas/useMagicWand";
 import { useSelectionBox } from "../../hooks/canvas/useSelectionBox";
 import { useComponentDragResize } from "../../hooks/component/useComponentDragResize";
+import {
+  useComponents,
+  useComponentActions,
+  useSelectedComponentIds,
+  useSelectionActions,
+  useCanvasStore,
+} from "../../stores/canvasStore";
 import type { CanvasComponent, ComponentType } from "../../types/component";
 import {
   getPointFromEvent,
@@ -49,12 +56,11 @@ interface CanvasProps {
   penColor?: string;
   componentColor?: string;
   componentColorTimestamp?: number;
-  penSize?: number;
   isDrawing?: boolean;
   isEraser?: boolean;
   isMagicWand?: boolean;
   isLasso?: boolean;
-  components: CanvasComponent[];
+  components?: CanvasComponent[]; // Optional - will use store if not provided
   onComponentsChange: (components: CanvasComponent[]) => void;
   selectedComponentType: ComponentType | null;
   onComponentPlaced: () => void;
@@ -79,12 +85,11 @@ export default function Canvas({
   penColor = "#1976d2",
   componentColor = "#1976d2",
   componentColorTimestamp = 0,
-  penSize = 2,
   isDrawing = true,
   isEraser = false,
   isMagicWand = false,
   isLasso = false,
-  components,
+  components: componentsProp,
   onComponentsChange,
   selectedComponentType,
   onComponentPlaced,
@@ -104,9 +109,21 @@ export default function Canvas({
 }: CanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [selectedComponentIds, setSelectedComponentIds] = useState<string[]>(
-    [],
-  );
+  
+  // Use Zustand store for components and selection (performance optimization)
+  // Use prop components if provided (for backward compatibility), otherwise use store
+  const storeComponents = useComponents();
+  const components = componentsProp ?? storeComponents;
+  const selectedComponentIds = useSelectedComponentIds();
+  const { setComponents, updateComponent: updateComponentInStore } = useComponentActions();
+  const { setSelectedComponentIds: setSelectedComponentIdsInStore } = useSelectionActions();
+  
+  // Track if we're using prop components (to avoid circular updates)
+  const isUsingPropComponents = componentsProp !== undefined;
+  
+  // Use useMemo to cache selectors and prevent infinite loops
+  const copiedComponents = useCanvasStore((state) => state.copiedComponents);
+  const setCopiedComponents = useCanvasStore((state) => state.setCopiedComponents);
 
   // Notify parent of selected component IDs changes
   useEffect(() => {
@@ -114,9 +131,6 @@ export default function Canvas({
       onSelectedComponentIdsChange(selectedComponentIds);
     }
   }, [selectedComponentIds, onSelectedComponentIdsChange]);
-  const [copiedComponents, setCopiedComponents] = useState<CanvasComponent[]>(
-    [],
-  );
   const [lassoPath, setLassoPath] = useState<Point[]>([]);
   const lassoPathRef = useRef<Point[]>([]);
   const [isLassoDrawing, setIsLassoDrawing] = useState(false);
@@ -144,11 +158,15 @@ export default function Canvas({
       componentId: string,
       updater: (comp: CanvasComponent) => CanvasComponent,
     ) => {
-      onComponentsChange(
-        components.map((c) => (c.id === componentId ? updater(c) : c)),
-      );
+      const updated = components.map((c) => (c.id === componentId ? updater(c) : c));
+      // Only update store if we're not using prop components (to avoid circular updates)
+      if (!isUsingPropComponents) {
+        updateComponentInStore(componentId, updater);
+      }
+      // Always notify parent for backward compatibility
+      onComponentsChange(updated);
     },
-    [components, onComponentsChange],
+    [components, onComponentsChange, updateComponentInStore, isUsingPropComponents],
   );
 
   // Update selected components' colors when componentColor changes or when timestamp changes
@@ -167,6 +185,10 @@ export default function Canvas({
         }
         return comp;
       });
+      // Only update store if we're not using prop components (to avoid circular updates)
+      if (!isUsingPropComponents) {
+        setComponents(updatedComponents);
+      }
       onComponentsChange(updatedComponents);
       lastAppliedTimestampRef.current = componentColorTimestamp;
     }
@@ -176,6 +198,8 @@ export default function Canvas({
     selectedComponentIds,
     components,
     onComponentsChange,
+    isUsingPropComponents,
+    setComponents,
   ]); // Run when componentColor or timestamp changes
 
   // Canvas lifecycle management
@@ -276,8 +300,13 @@ export default function Canvas({
       });
 
       const newComponentIds = newComponents.map((c) => c.id);
-      onComponentsChange([...components, ...newComponents]);
-      setSelectedComponentIds(newComponentIds);
+      const updatedComponents = [...components, ...newComponents];
+      // Only update store if we're not using prop components (to avoid circular updates)
+      if (!isUsingPropComponents) {
+        setComponents(updatedComponents);
+      }
+      onComponentsChange(updatedComponents);
+      setSelectedComponentIdsInStore(newComponentIds);
       setToastMessage(
         `${newComponents.length} component${newComponents.length === 1 ? "" : "s"} pasted`,
       );
@@ -318,9 +347,9 @@ export default function Canvas({
   // Helper: Select all components
   const selectAllComponents = useCallback(() => {
     if (components.length > 0) {
-      setSelectedComponentIds(components.map((c) => c.id));
+      setSelectedComponentIdsInStore(components.map((c) => c.id));
     }
-  }, [components]);
+  }, [components, setSelectedComponentIdsInStore]);
 
   // Canvas drawing hook
   const {
@@ -330,7 +359,6 @@ export default function Canvas({
   } = useCanvasDrawing({
     canvasRef,
     penColor,
-    penSize,
     isDrawing,
     isEraser,
     isMagicWand,
@@ -378,7 +406,7 @@ export default function Canvas({
     isTextMode: isTextSelectMode,
     selectedComponentType,
     components,
-    onSelectionChange: setSelectedComponentIds,
+    onSelectionChange: setSelectedComponentIdsInStore,
   });
 
   const handleLassoStart = useCallback(
@@ -387,7 +415,7 @@ export default function Canvas({
       setIsLassoDrawing(true);
       lassoPathRef.current = [point];
       setLassoPath([point]);
-      setSelectedComponentIds([]);
+      setSelectedComponentIdsInStore([]);
     },
     [isLasso],
   );
@@ -470,7 +498,7 @@ export default function Canvas({
       return edgesIntersect;
     });
 
-    setSelectedComponentIds(selected.map((c) => c.id));
+      setSelectedComponentIdsInStore(selected.map((c) => c.id));
     resetLasso();
   }, [isLassoDrawing, components, resetLasso]);
 
@@ -506,7 +534,7 @@ export default function Canvas({
           .sort()
           .join(",");
         if (previewStr !== currentStr) {
-          setSelectedComponentIds(preview);
+          setSelectedComponentIdsInStore(preview);
           lastSelectionUpdateRef.current = now;
         }
       }
@@ -530,6 +558,18 @@ export default function Canvas({
     };
   }, [selectionBoxStart, getPreviewSelection]);
 
+  // Wrapper for onComponentsChange that updates both store and parent
+  // Only update store if we're not using prop components (to avoid circular updates)
+  const handleComponentsChange = useCallback(
+    (updatedComponents: CanvasComponent[]) => {
+      if (!isUsingPropComponents) {
+        setComponents(updatedComponents);
+      }
+      onComponentsChange(updatedComponents);
+    },
+    [onComponentsChange, setComponents, isUsingPropComponents],
+  );
+
   // Component drag/resize hook
   const {
     draggedComponentId,
@@ -540,7 +580,7 @@ export default function Canvas({
     checkJustFinishedResize,
   } = useComponentDragResize({
     components,
-    onComponentsChange,
+    onComponentsChange: handleComponentsChange,
     selectedComponentIds,
     snapToGrid,
     gridCellWidth,
@@ -718,7 +758,12 @@ export default function Canvas({
     (point: Point) => {
       if (!selectedComponentType) return;
       const newComponent = createComponent(selectedComponentType, point);
-      onComponentsChange([...components, newComponent]);
+      const updatedComponents = [...components, newComponent];
+      // Only update store if we're not using prop components (to avoid circular updates)
+      if (!isUsingPropComponents) {
+        setComponents(updatedComponents);
+      }
+      onComponentsChange(updatedComponents);
       onComponentPlaced();
     },
     [
@@ -727,6 +772,8 @@ export default function Canvas({
       components,
       onComponentsChange,
       onComponentPlaced,
+      isUsingPropComponents,
+      setComponents,
     ],
   );
 
@@ -751,7 +798,7 @@ export default function Canvas({
           return;
         }
         if (isCursorMode) {
-          setSelectedComponentIds([]);
+          setSelectedComponentIdsInStore([]);
           return;
         }
         if (selectedComponentType) {
@@ -782,7 +829,7 @@ export default function Canvas({
         componentId,
         point,
         isEraser,
-        setSelectedComponentIds,
+        setSelectedComponentIdsInStore,
         resizeDirection,
       );
     },
@@ -815,7 +862,7 @@ export default function Canvas({
     (e: React.MouseEvent<HTMLDivElement>) => {
       if (e.target === e.currentTarget) {
         if (!e.ctrlKey && !e.metaKey && !e.shiftKey) {
-          setSelectedComponentIds([]);
+          setSelectedComponentIdsInStore([]);
         }
         if (pendingRecognition || recognitionFailed || hasDrawing) {
           handleCancelRecognition();
@@ -846,7 +893,12 @@ export default function Canvas({
 
       const point = getPointFromEventFn(e);
       const newComponent = createComponent(componentType, point);
-      onComponentsChange([...components, newComponent]);
+      const updatedComponents = [...components, newComponent];
+      // Only update store if we're not using prop components (to avoid circular updates)
+      if (!isUsingPropComponents) {
+        setComponents(updatedComponents);
+      }
+      onComponentsChange(updatedComponents);
       onComponentPlaced();
     },
     [
@@ -855,6 +907,8 @@ export default function Canvas({
       components,
       onComponentsChange,
       onComponentPlaced,
+      isUsingPropComponents,
+      setComponents,
     ],
   );
 
@@ -871,13 +925,16 @@ export default function Canvas({
     snapToGrid,
     onSelectAll: selectAllComponents,
     onDeleteSelected: () => {
-      onComponentsChange(
-        components.filter((c) => !selectedComponentIds.includes(c.id)),
-      );
-      setSelectedComponentIds([]);
+      const filtered = components.filter((c) => !selectedComponentIds.includes(c.id));
+      // Only update store if we're not using prop components (to avoid circular updates)
+      if (!isUsingPropComponents) {
+        setComponents(filtered);
+      }
+      onComponentsChange(filtered);
+      setSelectedComponentIdsInStore([]);
     },
     onDeselectAll: () => {
-      setSelectedComponentIds([]);
+      setSelectedComponentIdsInStore([]);
     },
     onMoveSelected: (deltaX, deltaY) => {
       if (selectedComponentIds.length === 0) return;
@@ -902,6 +959,10 @@ export default function Canvas({
         return { ...comp, x: newPoint.x, y: newPoint.y };
       });
 
+      // Only update store if we're not using prop components (to avoid circular updates)
+      if (!isUsingPropComponents) {
+        setComponents(updatedComponents);
+      }
       onComponentsChange(updatedComponents);
     },
     onCopySelected: () => {
@@ -1035,7 +1096,6 @@ export default function Canvas({
         isMagicWand={isMagicWand}
         selectedComponentType={selectedComponentType}
         brushPosition={brushPosition}
-        penSize={penSize}
       />
 
       <SelectionBox
@@ -1083,7 +1143,12 @@ export default function Canvas({
           updateComponent(componentId, (c) => ({ ...c, color }));
         }}
         onComponentDelete={(componentId) => {
-          onComponentsChange(components.filter((c) => c.id !== componentId));
+          const filtered = components.filter((c) => c.id !== componentId);
+          // Only update store if we're not using prop components (to avoid circular updates)
+          if (!isUsingPropComponents) {
+            setComponents(filtered);
+          }
+          onComponentsChange(filtered);
         }}
         onComponentCopy={(component) => {
           // Store component in clipboard instead of immediately pasting

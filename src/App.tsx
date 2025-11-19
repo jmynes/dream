@@ -8,6 +8,7 @@ import ToolsDrawer from "./components/drawers/ToolsDrawer";
 import Footer from "./components/ui/Footer";
 import MenuBar from "./components/ui/MenuBar";
 import { ColorUtilsProvider } from "./contexts/ColorUtilsContext";
+import { useCanvasStore } from "./stores/canvasStore";
 import type { CanvasComponent, ComponentType } from "./types/component";
 
 const theme = createTheme({
@@ -130,7 +131,6 @@ function App() {
   const [componentColor, setComponentColor] = useState("#1976d2");
   const [componentColorTimestamp, setComponentColorTimestamp] = useState(0);
   const [canvasColor, setCanvasColor] = useState("#ffffff");
-  const [penSize, setPenSize] = useState(2);
   const [isDrawing, setIsDrawing] = useState(false);
   const [isEraser, setIsEraser] = useState(false);
   const [isMagicWand, setIsMagicWand] = useState(false);
@@ -148,9 +148,6 @@ function App() {
   const [components, setComponents] = useState<CanvasComponent[]>([]);
   const [selectedComponentType, setSelectedComponentType] =
     useState<ComponentType | null>(null);
-  const [selectedComponentIds, setSelectedComponentIds] = useState<string[]>(
-    [],
-  );
   const [clearCanvasKey, setClearCanvasKey] = useState(0);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -199,6 +196,7 @@ function App() {
 
   const handleDeleteEverything = () => {
     setComponents([]);
+    setStoreComponents([]);
     setClearCanvasKey((prev) => prev + 1);
     saveHistory([], null);
   };
@@ -245,6 +243,9 @@ function App() {
     }
   };
 
+  // Get Zustand store actions
+  const setStoreComponents = useCanvasStore((state) => state.setComponents);
+  
   // Undo function
   const handleUndo = useCallback(() => {
     const currentIndex = historyIndexRef.current;
@@ -254,7 +255,9 @@ function App() {
       const state = hist[newIndex];
       isUndoRedoRef.current = true;
       setHistoryIndex(newIndex);
-      setComponents([...state.components]);
+      const restoredComponents = [...state.components];
+      setComponents(restoredComponents);
+      setStoreComponents(restoredComponents);
       canvasImageDataRef.current = state.canvasImageData;
       setRestoreCanvasImageData(state.canvasImageData);
       setToastMessage("Action undone (Ctrl + Z / Cmd + Z)");
@@ -265,7 +268,7 @@ function App() {
     } else {
       setToastMessage("Nothing to undo");
     }
-  }, []);
+  }, [setStoreComponents]);
 
   // Redo function
   const handleRedo = useCallback(() => {
@@ -276,7 +279,9 @@ function App() {
       const state = hist[newIndex];
       isUndoRedoRef.current = true;
       setHistoryIndex(newIndex);
-      setComponents([...state.components]);
+      const restoredComponents = [...state.components];
+      setComponents(restoredComponents);
+      setStoreComponents(restoredComponents);
       canvasImageDataRef.current = state.canvasImageData;
       setRestoreCanvasImageData(state.canvasImageData);
       setToastMessage("Action redone (Ctrl + Y / Cmd + Y)");
@@ -287,7 +292,14 @@ function App() {
     } else {
       setToastMessage("Nothing to redo");
     }
-  }, []);
+  }, [setStoreComponents]);
+
+  // Sync Zustand store with App state (components only; selection flows one-way from store)
+  useEffect(() => {
+    if (!isUndoRedoRef.current) {
+      setStoreComponents(components);
+    }
+  }, [components, setStoreComponents]);
 
   // Track component changes for history
   const handleComponentsChange = (comps: CanvasComponent[]) => {
@@ -375,8 +387,6 @@ function App() {
               }}
               canvasColor={canvasColor}
               onCanvasColorChange={setCanvasColor}
-              penSize={penSize}
-              onPenSizeChange={setPenSize}
               isDrawing={isDrawing}
               onDrawingToggle={(drawing) => {
                 setIsDrawing(drawing);
@@ -462,7 +472,6 @@ function App() {
               onBrowserUIEnabledToggle={setIsBrowserUIEnabled}
               isMacOSStyle={isMacOSStyle}
               onMacOSStyleToggle={setIsMacOSStyle}
-              selectedComponentIds={selectedComponentIds}
             />
             <Box sx={{ flex: 1, overflow: "hidden", display: "flex" }}>
               <Canvas
@@ -470,7 +479,6 @@ function App() {
                 penColor={penColor}
                 componentColor={componentColor}
                 componentColorTimestamp={componentColorTimestamp}
-                penSize={penSize}
                 isDrawing={isDrawing}
                 isEraser={isEraser}
                 isMagicWand={isMagicWand}
@@ -490,7 +498,6 @@ function App() {
                 canvasColor={canvasColor}
                 resizeMode={resizeMode}
                 isTextSelectMode={isTextSelectMode}
-                onSelectedComponentIdsChange={setSelectedComponentIds}
                 onResetTools={() => {
                   setIsDrawing(false);
                   setIsEraser(false);

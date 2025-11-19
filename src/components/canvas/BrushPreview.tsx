@@ -1,5 +1,6 @@
-import { Box } from "@mui/material";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import type { Point } from "../../utils/canvas/canvasUtils";
+import { usePenSizeValue } from "../../stores/canvasStore";
 
 interface BrushPreviewProps {
   isDrawing: boolean;
@@ -7,67 +8,105 @@ interface BrushPreviewProps {
   isMagicWand: boolean;
   selectedComponentType: string | null;
   brushPosition: Point | null;
-  penSize: number;
 }
 
-export default function BrushPreview({
+function BrushPreview({
   isDrawing,
   isEraser,
   isMagicWand,
   selectedComponentType,
   brushPosition,
-  penSize,
 }: BrushPreviewProps) {
-  if (
-    !(isDrawing || isEraser || isMagicWand) ||
-    selectedComponentType ||
-    !brushPosition
-  ) {
-    return null;
-  }
+  const penSize = usePenSizeValue();
+  const [renderPenSize, setRenderPenSize] = useState(penSize);
+  const pendingSizeRaf = useRef<number | null>(null);
 
-  // For 1px, use a simple 1px point at exact cursor position
-  if (penSize <= 1) {
-    return (
-      <Box
-        sx={{
-          position: "absolute",
+  useEffect(() => {
+    if (renderPenSize === penSize) {
+      return undefined;
+    }
+    if (pendingSizeRaf.current !== null) {
+      cancelAnimationFrame(pendingSizeRaf.current);
+    }
+    pendingSizeRaf.current = requestAnimationFrame(() => {
+      setRenderPenSize(penSize);
+      pendingSizeRaf.current = null;
+    });
+    return () => {
+      if (pendingSizeRaf.current !== null) {
+        cancelAnimationFrame(pendingSizeRaf.current);
+        pendingSizeRaf.current = null;
+      }
+    };
+  }, [penSize, renderPenSize]);
+
+  const brushColor = useMemo(() => {
+    if (isEraser) return "#f44336";
+    if (isMagicWand) return "#9c27b0";
+    return "#1976d2";
+  }, [isEraser, isMagicWand]);
+
+  const shouldShowBrush =
+    (isDrawing || isEraser || isMagicWand) && !selectedComponentType;
+
+  const previewConfig = useMemo(() => {
+    if (!shouldShowBrush || !brushPosition) {
+      return null;
+    }
+
+    if (renderPenSize <= 1) {
+      return {
+        type: "dot" as const,
+        style: {
+          position: "absolute" as const,
           left: `${brushPosition.x}px`,
           top: `${brushPosition.y}px`,
           width: "1px",
           height: "1px",
-          backgroundColor: isEraser
-            ? "#f44336"
-            : isMagicWand
-              ? "#9c27b0"
-              : "#1976d2",
-          pointerEvents: "none",
+          backgroundColor: brushColor,
+          pointerEvents: "none" as const,
           zIndex: 3,
-        }}
-      />
-    );
+        },
+      };
+    }
+
+    const borderWidth = renderPenSize <= 2 ? 0.5 : 1;
+    const size = renderPenSize;
+
+    return {
+      type: "circle" as const,
+      style: {
+        position: "absolute" as const,
+        transform: `translate3d(${brushPosition.x - size / 2}px, ${brushPosition.y - size / 2}px, 0)`,
+        width: `${size}px`,
+        height: `${size}px`,
+        border: `${borderWidth}px solid ${brushColor}`,
+        borderRadius: "50%",
+        pointerEvents: "none" as const,
+        zIndex: 3,
+        boxSizing: "border-box" as const,
+        boxShadow: size > 2 ? "0 0 0 1px rgba(0,0,0,0.1)" : "none",
+        willChange: "transform,width,height",
+      },
+    };
+  }, [shouldShowBrush, brushPosition, renderPenSize, brushColor]);
+
+  if (!previewConfig) {
+    return null;
   }
 
-  // For larger sizes, use a border to show the brush outline
-  const borderWidth = penSize <= 2 ? 0.5 : 1;
-
   return (
-    <Box
-      sx={{
-        position: "absolute",
-        left: brushPosition.x - penSize / 2,
-        top: brushPosition.y - penSize / 2,
-        width: penSize,
-        height: penSize,
-        border: `${borderWidth}px solid`,
-        borderColor: isEraser ? "#f44336" : isMagicWand ? "#9c27b0" : "#1976d2",
-        borderRadius: "50%",
-        pointerEvents: "none",
-        zIndex: 3,
-        boxSizing: "border-box",
-        // Only show shadow for larger sizes
-        boxShadow: penSize > 2 ? "0 0 0 1px rgba(0,0,0,0.1)" : "none",
-      }}
-    />
+    <div style={previewConfig.style} />
   );
 }
+
+// Memoize BrushPreview to prevent unnecessary re-renders
+export default memo(BrushPreview, (prevProps, nextProps) => {
+  return (
+    prevProps.isDrawing === nextProps.isDrawing &&
+    prevProps.isEraser === nextProps.isEraser &&
+    prevProps.isMagicWand === nextProps.isMagicWand &&
+    prevProps.selectedComponentType === nextProps.selectedComponentType &&
+    prevProps.brushPosition === nextProps.brushPosition
+  );
+});

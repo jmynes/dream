@@ -1,10 +1,10 @@
 import { useCallback, useRef, useState } from "react";
 import type { Point } from "../../utils/canvas/canvasUtils";
+import { useCanvasStore } from "../../stores/canvasStore";
 
 interface UseCanvasDrawingProps {
   canvasRef: React.RefObject<HTMLCanvasElement | null>;
   penColor: string;
-  penSize: number;
   isDrawing: boolean;
   isEraser: boolean;
   isMagicWand: boolean;
@@ -15,7 +15,6 @@ interface UseCanvasDrawingProps {
 export function useCanvasDrawing({
   canvasRef,
   penColor,
-  penSize,
   isDrawing,
   isEraser,
   isMagicWand,
@@ -41,6 +40,8 @@ export function useCanvasDrawing({
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
 
+      const currentPenSize = useCanvasStore.getState().penSize;
+
       if (isEraser) {
         // Use destination-out composite for erasing
         ctx.globalCompositeOperation = "destination-out";
@@ -51,11 +52,11 @@ export function useCanvasDrawing({
       }
 
       // Use exact penSize for both drawing and erasing
-      ctx.lineWidth = penSize;
+      ctx.lineWidth = currentPenSize;
 
       // Use square caps for very small sizes to avoid oversized appearance
       // Round caps add radius that makes small lines appear much larger
-      if (penSize <= 2) {
+      if (currentPenSize <= 2) {
         ctx.lineCap = "square";
         ctx.lineJoin = "miter";
       } else {
@@ -68,7 +69,7 @@ export function useCanvasDrawing({
       ctx.lineTo(to.x, to.y);
       ctx.stroke();
     },
-    [penColor, penSize, isEraser, canvasRef],
+    [penColor, isEraser, canvasRef],
   );
 
   const saveCanvasState = useCallback(() => {

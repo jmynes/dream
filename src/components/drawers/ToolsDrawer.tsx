@@ -20,7 +20,9 @@ import {
   Typography,
 } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
+import { useSelectedComponentIds } from "../../stores/canvasStore";
 import ColorSection from "../color/ColorSection";
+import { usePenSizeSetter, usePenSizeValue } from "../../stores/canvasStore";
 
 interface ToolsDrawerProps {
   penColor: string;
@@ -29,8 +31,6 @@ interface ToolsDrawerProps {
   onComponentColorChange: (color: string, timestamp?: number) => void;
   canvasColor: string;
   onCanvasColorChange: (color: string) => void;
-  penSize: number;
-  onPenSizeChange: (size: number) => void;
   isDrawing: boolean;
   onDrawingToggle: (drawing: boolean) => void;
   snapToGrid: boolean;
@@ -57,7 +57,6 @@ interface ToolsDrawerProps {
   onBrowserUIEnabledToggle: (enabled: boolean) => void;
   isMacOSStyle: boolean;
   onMacOSStyleToggle: (isMacOS: boolean) => void;
-  selectedComponentIds?: string[];
 }
 
 export default function ToolsDrawer({
@@ -67,8 +66,6 @@ export default function ToolsDrawer({
   onComponentColorChange,
   canvasColor,
   onCanvasColorChange,
-  penSize,
-  onPenSizeChange,
   isDrawing,
   onDrawingToggle,
   snapToGrid,
@@ -95,14 +92,17 @@ export default function ToolsDrawer({
   onBrowserUIEnabledToggle,
   isMacOSStyle,
   onMacOSStyleToggle,
-  selectedComponentIds = [],
 }: ToolsDrawerProps) {
+  const selectedComponentIds = useSelectedComponentIds();
   const tooltipSlotProps = { tooltip: { sx: { fontSize: "0.85rem" } } };
 
   // Brush size slider refs/state for performant updates
+  const penSize = usePenSizeValue();
+  const setPenSize = usePenSizeSetter();
   const [displayPenSize, setDisplayPenSize] = useState(penSize);
   const penSizeRefLocal = useRef(penSize);
   const penSizeRafRef = useRef<number | null>(null);
+  const storeUpdateRafRef = useRef<number | null>(null);
 
   useEffect(() => {
     penSizeRefLocal.current = penSize;
@@ -114,22 +114,36 @@ export default function ToolsDrawer({
       if (penSizeRafRef.current !== null) {
         cancelAnimationFrame(penSizeRafRef.current);
       }
+      if (storeUpdateRafRef.current !== null) {
+        cancelAnimationFrame(storeUpdateRafRef.current);
+      }
     };
   }, []);
 
   const handlePenSizeChange = (_: Event, value: number | number[]) => {
     const nextValue = Array.isArray(value) ? value[0] : value;
     penSizeRefLocal.current = nextValue;
+    setDisplayPenSize((prev) => (prev === nextValue ? prev : nextValue));
     if (penSizeRafRef.current === null) {
       penSizeRafRef.current = requestAnimationFrame(() => {
         setDisplayPenSize(penSizeRefLocal.current);
         penSizeRafRef.current = null;
       });
     }
+    if (storeUpdateRafRef.current === null) {
+      storeUpdateRafRef.current = requestAnimationFrame(() => {
+        setPenSize(penSizeRefLocal.current);
+        storeUpdateRafRef.current = null;
+      });
+    }
   };
 
   const handlePenSizeChangeCommitted = () => {
-    onPenSizeChange(penSizeRefLocal.current);
+    if (storeUpdateRafRef.current !== null) {
+      cancelAnimationFrame(storeUpdateRafRef.current);
+      storeUpdateRafRef.current = null;
+    }
+    setPenSize(penSizeRefLocal.current);
   };
 
   return (
