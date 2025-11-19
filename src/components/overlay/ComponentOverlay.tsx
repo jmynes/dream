@@ -1,4 +1,5 @@
 import { Box } from "@mui/material";
+import { memo, useMemo } from "react";
 import type { CanvasComponent } from "../../types/component";
 import type { Point } from "../../utils/canvas/canvasUtils";
 import ComponentRenderer from "../ComponentRenderer";
@@ -45,7 +46,7 @@ interface ComponentOverlayProps {
   onResetTools?: () => void;
 }
 
-export default function ComponentOverlay({
+function ComponentOverlay({
   components,
   isCursorMode,
   isLassoMode,
@@ -161,20 +162,58 @@ export default function ComponentOverlay({
         // Lasso will be finished by global mouseup listener
       }}
     >
-      {components.map((component) => (
-        <ComponentRenderer
-          key={component.id}
-          component={component}
-          onMouseDown={onComponentMouseDown}
-          onComponentUpdate={onComponentUpdate}
-          onComponentColorChange={onComponentColorChange}
-          onComponentDelete={onComponentDelete}
-          onComponentCopy={onComponentCopy}
-          isTextSelectMode={isTextSelectMode}
-          isDragging={draggedComponentId === component.id}
-          isSelected={selectedComponentIds.includes(component.id)}
-        />
-      ))}
+      {useMemo(
+        () =>
+          components.map((component) => (
+            <ComponentRenderer
+              key={component.id}
+              component={component}
+              onMouseDown={onComponentMouseDown}
+              onComponentUpdate={onComponentUpdate}
+              onComponentColorChange={onComponentColorChange}
+              onComponentDelete={onComponentDelete}
+              onComponentCopy={onComponentCopy}
+              isTextSelectMode={isTextSelectMode}
+              isDragging={draggedComponentId === component.id}
+              isSelected={selectedComponentIds.includes(component.id)}
+            />
+          )),
+        [
+          components,
+          onComponentMouseDown,
+          onComponentUpdate,
+          onComponentColorChange,
+          onComponentDelete,
+          onComponentCopy,
+          isTextSelectMode,
+          draggedComponentId,
+          selectedComponentIds,
+        ],
+      )}
     </Box>
   );
 }
+
+// Memoize ComponentOverlay to prevent unnecessary re-renders
+export default memo(ComponentOverlay, (prevProps, nextProps) => {
+  // Only re-render if props that affect rendering actually changed
+  if (
+    prevProps.components !== nextProps.components ||
+    prevProps.isCursorMode !== nextProps.isCursorMode ||
+    prevProps.isLassoMode !== nextProps.isLassoMode ||
+    prevProps.isTextSelectMode !== nextProps.isTextSelectMode ||
+    prevProps.selectionBoxStart !== nextProps.selectionBoxStart ||
+    prevProps.draggedComponentId !== nextProps.draggedComponentId ||
+    prevProps.resizingComponentId !== nextProps.resizingComponentId ||
+    prevProps.isDrawing !== nextProps.isDrawing ||
+    prevProps.isEraser !== nextProps.isEraser ||
+    prevProps.isMagicWand !== nextProps.isMagicWand ||
+    prevProps.isLassoDrawing !== nextProps.isLassoDrawing ||
+    prevProps.selectedComponentType !== nextProps.selectedComponentType ||
+    prevProps.cursor !== nextProps.cursor ||
+    prevProps.selectedComponentIds !== nextProps.selectedComponentIds
+  ) {
+    return false; // Props changed, need to re-render
+  }
+  return true; // Props are equal, skip re-render
+});

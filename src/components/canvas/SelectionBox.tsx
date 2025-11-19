@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { memo, useEffect, useRef } from "react";
 import type { Point } from "../../utils/canvas/canvasUtils";
 
 interface SelectionBoxProps {
@@ -7,7 +7,7 @@ interface SelectionBoxProps {
   endRef?: React.MutableRefObject<Point | null>;
 }
 
-export default function SelectionBox({
+function SelectionBox({
   start,
   end,
   endRef,
@@ -115,3 +115,12 @@ export default function SelectionBox({
     />
   );
 }
+
+// Memoize SelectionBox to prevent unnecessary re-renders
+export default memo(SelectionBox, (prevProps, nextProps) => {
+  return (
+    prevProps.start === nextProps.start &&
+    prevProps.end === nextProps.end &&
+    prevProps.endRef === nextProps.endRef
+  );
+});

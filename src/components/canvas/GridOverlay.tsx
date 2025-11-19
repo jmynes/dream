@@ -1,4 +1,5 @@
 import { Box } from "@mui/material";
+import { memo } from "react";
 
 interface GridOverlayProps {
   snapToGrid: boolean;
@@ -6,7 +7,7 @@ interface GridOverlayProps {
   gridCellHeight: number;
 }
 
-export default function GridOverlay({
+function GridOverlay({
   snapToGrid,
   gridCellWidth,
   gridCellHeight,
@@ -32,3 +33,12 @@ export default function GridOverlay({
     />
   );
 }
+
+// Memoize GridOverlay to prevent unnecessary re-renders
+export default memo(GridOverlay, (prevProps, nextProps) => {
+  return (
+    prevProps.snapToGrid === nextProps.snapToGrid &&
+    prevProps.gridCellWidth === nextProps.gridCellWidth &&
+    prevProps.gridCellHeight === nextProps.gridCellHeight
+  );
+});
