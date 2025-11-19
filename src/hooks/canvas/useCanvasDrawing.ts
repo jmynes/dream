@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from "react";
+import { getStroke } from "perfect-freehand";
 import type { Point } from "../../utils/canvas/canvasUtils";
 import { useCanvasStore } from "../../stores/canvasStore";
 
@@ -12,6 +13,23 @@ interface UseCanvasDrawingProps {
   onCanvasStateChange?: (imageData: string | null) => void;
 }
 
+const MIN_POINT_DISTANCE = 0.5;
+
+const strokeToPath = (stroke: number[][]) => {
+  if (!stroke.length) {
+    return "";
+  }
+
+  const d = stroke.reduce((acc, [x0, y0], i, arr) => {
+    const [x1, y1] = arr[(i + 1) % arr.length];
+    const midX = (x0 + x1) / 2;
+    const midY = (y0 + y1) / 2;
+    return `${acc} Q ${x0.toFixed(2)} ${y0.toFixed(2)} ${midX.toFixed(2)} ${midY.toFixed(2)}`;
+  }, `M ${stroke[0][0].toFixed(2)} ${stroke[0][1].toFixed(2)}`);
+
+  return `${d} Z`;
+};
+
 export function useCanvasDrawing({
   canvasRef,
   penColor,
@@ -21,56 +39,10 @@ export function useCanvasDrawing({
   selectedComponentType,
   onCanvasStateChange,
 }: UseCanvasDrawingProps) {
-  // Use refs to avoid re-renders on every mouse move
   const isDraggingPenRef = useRef(false);
-  const lastPointRef = useRef<Point | null>(null);
-  // Keep state for external consumers if needed, but update refs for performance
   const [isDraggingPen, setIsDraggingPen] = useState(false);
-
-  // Batch drawing operations using requestAnimationFrame
-  const pendingDrawRef = useRef<{ from: Point; to: Point } | null>(null);
-  const drawAnimationFrameRef = useRef<number | null>(null);
-  const lastDrawTimeRef = useRef<number>(0);
-
-  const drawLine = useCallback(
-    (from: Point, to: Point) => {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return;
-
-      const currentPenSize = useCanvasStore.getState().penSize;
-
-      if (isEraser) {
-        // Use destination-out composite for erasing
-        ctx.globalCompositeOperation = "destination-out";
-        ctx.strokeStyle = "rgba(0,0,0,1)";
-      } else {
-        ctx.globalCompositeOperation = "source-over";
-        ctx.strokeStyle = penColor;
-      }
-
-      // Use exact penSize for both drawing and erasing
-      ctx.lineWidth = currentPenSize;
-
-      // Use square caps for very small sizes to avoid oversized appearance
-      // Round caps add radius that makes small lines appear much larger
-      if (currentPenSize <= 2) {
-        ctx.lineCap = "square";
-        ctx.lineJoin = "miter";
-      } else {
-        ctx.lineCap = "round";
-        ctx.lineJoin = "round";
-      }
-
-      ctx.beginPath();
-      ctx.moveTo(from.x, from.y);
-      ctx.lineTo(to.x, to.y);
-      ctx.stroke();
-    },
-    [penColor, isEraser, canvasRef],
-  );
+  const strokePointsRef = useRef<Point[]>([]);
+  const canvasSnapshotRef = useRef<ImageData | null>(null);
 
   const saveCanvasState = useCallback(() => {
     const canvas = canvasRef.current;
@@ -80,150 +52,150 @@ export function useCanvasDrawing({
     onCanvasStateChange(imageData);
   }, [onCanvasStateChange, canvasRef]);
 
+  const drawSmoothStroke = useCallback(
+    (points: Point[]) => {
+      if (points.length === 0) return;
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      const penSize = useCanvasStore.getState().penSize;
+      const stroke = getStroke(
+        points.map((p) => [p.x, p.y]),
+        {
+          size: penSize,
+          thinning: 0.6,
+          smoothing: 0.65,
+          streamline: 0.4,
+          easing: (t) => t,
+          simulatePressure: false,
+        },
+      );
+
+      const path = strokeToPath(stroke);
+      if (!path) return;
+
+      const path2d = new Path2D(path);
+      ctx.save();
+      ctx.globalCompositeOperation = isEraser ? "destination-out" : "source-over";
+      ctx.fillStyle = isEraser ? "#000" : penColor;
+      ctx.fill(path2d);
+      ctx.restore();
+    },
+    [canvasRef, isEraser, penColor],
+  );
+
+  const restoreSnapshot = useCallback(() => {
+    const canvas = canvasRef.current;
+    const snapshot = canvasSnapshotRef.current;
+    if (!canvas || !snapshot) return false;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return false;
+    ctx.putImageData(snapshot, 0, 0);
+    return true;
+  }, [canvasRef]);
+
+  const updateStrokePreview = useCallback(() => {
+    const points = strokePointsRef.current;
+    if (points.length === 0) return;
+    restoreSnapshot();
+    drawSmoothStroke(points);
+  }, [restoreSnapshot, drawSmoothStroke]);
+
   const handleCanvasMouseDown = useCallback(
     (point: Point) => {
       if ((!isDrawing && !isEraser && !isMagicWand) || selectedComponentType)
         return;
 
-      // Update refs immediately (no re-render)
-      lastPointRef.current = point;
-      isDraggingPenRef.current = true;
-      // Update state only for external consumers
-      setIsDraggingPen(true);
-    },
-    [isDrawing, isEraser, isMagicWand, selectedComponentType],
-  );
-
-  // Batched drawing function that processes pending draws
-  const processPendingDraw = useCallback(() => {
-    const pending = pendingDrawRef.current;
-    if (!pending) {
-      drawAnimationFrameRef.current = null;
-      return;
-    }
-
-    const { from, to } = pending;
-    pendingDrawRef.current = null;
-    drawAnimationFrameRef.current = null;
-
-    // Draw the line
-    if (isDrawing || isEraser) {
-      drawLine(from, to);
-    } else if (isMagicWand) {
-      drawLine(from, to);
-    }
-  }, [isDrawing, isEraser, isMagicWand, drawLine]);
-
-  const handleCanvasMouseMove = useCallback(
-    (point: Point, onPathPoint?: (point: Point) => void) => {
-      // Use refs to avoid re-renders
-      const dragging = isDraggingPenRef.current;
-      const lastPoint = lastPointRef.current;
-
-      if (
-        !dragging ||
-        (!isDrawing && !isEraser && !isMagicWand) ||
-        !lastPoint ||
-        selectedComponentType
-      )
-        return;
-
-      // Track path for magic wand
-      if (isMagicWand && onPathPoint) {
-        onPathPoint(point);
-      }
-
-      // Batch drawing operations using requestAnimationFrame for smooth 60fps updates
-      const now = performance.now();
-      const timeSinceLastDraw = now - lastDrawTimeRef.current;
-
-      // Draw immediately if enough time has passed (throttle to ~60fps)
-      // This ensures smooth drawing while preventing excessive canvas operations
-      if (timeSinceLastDraw >= 16) {
-        // If there's a pending draw, process it first to avoid gaps
-        if (pendingDrawRef.current) {
-          const pending = pendingDrawRef.current;
-          if (isDrawing || isEraser) {
-            drawLine(pending.from, pending.to);
-          } else if (isMagicWand) {
-            drawLine(pending.from, pending.to);
+      const canvas = canvasRef.current;
+      if (canvas) {
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          try {
+            canvasSnapshotRef.current = ctx.getImageData(
+              0,
+              0,
+              canvas.width,
+              canvas.height,
+            );
+          } catch {
+            canvasSnapshotRef.current = null;
           }
-          pendingDrawRef.current = null;
-        }
-
-        // Cancel any pending animation frame since we're drawing now
-        if (drawAnimationFrameRef.current !== null) {
-          cancelAnimationFrame(drawAnimationFrameRef.current);
-          drawAnimationFrameRef.current = null;
-        }
-
-        // Draw current line immediately
-        if (isDrawing || isEraser) {
-          drawLine(lastPoint, point);
-        } else if (isMagicWand) {
-          drawLine(lastPoint, point);
-        }
-
-        lastDrawTimeRef.current = now;
-      } else {
-        // Schedule draw for next frame, but update the pending point
-        // to ensure we always draw to the latest point
-        pendingDrawRef.current = { from: lastPoint, to: point };
-
-        if (drawAnimationFrameRef.current === null) {
-          drawAnimationFrameRef.current = requestAnimationFrame(() => {
-            processPendingDraw();
-            lastDrawTimeRef.current = performance.now();
-          });
         }
       }
 
-      // Update ref (no re-render)
-      lastPointRef.current = point;
+      strokePointsRef.current = [point];
+      isDraggingPenRef.current = true;
+      setIsDraggingPen(true);
+      updateStrokePreview();
     },
     [
       isDrawing,
       isEraser,
       isMagicWand,
       selectedComponentType,
-      drawLine,
-      processPendingDraw,
+      canvasRef,
+      updateStrokePreview,
+    ],
+  );
+
+  const handleCanvasMouseMove = useCallback(
+    (point: Point, onPathPoint?: (point: Point) => void) => {
+      if (
+        !isDraggingPenRef.current ||
+        (!isDrawing && !isEraser && !isMagicWand) ||
+        selectedComponentType
+      ) {
+        return;
+      }
+
+      const points = strokePointsRef.current;
+      const lastPoint = points[points.length - 1];
+      if (
+        !lastPoint ||
+        Math.hypot(point.x - lastPoint.x, point.y - lastPoint.y) >
+          MIN_POINT_DISTANCE
+      ) {
+        points.push(point);
+      }
+
+      if (isMagicWand && onPathPoint) {
+        onPathPoint(point);
+      }
+
+      updateStrokePreview();
+    },
+    [
+      isDrawing,
+      isEraser,
+      isMagicWand,
+      selectedComponentType,
+      updateStrokePreview,
     ],
   );
 
   const handleCanvasMouseUp = useCallback(() => {
-    // Process any pending draw before finishing
-    if (pendingDrawRef.current && lastPointRef.current) {
-      const pending = pendingDrawRef.current;
-      if (isDrawing || isEraser) {
-        drawLine(pending.from, pending.to);
-      } else if (isMagicWand) {
-        drawLine(pending.from, pending.to);
-      }
-      pendingDrawRef.current = null;
+    if (!isDraggingPenRef.current) {
+      return;
     }
 
-    // Cancel any pending animation frame
-    if (drawAnimationFrameRef.current !== null) {
-      cancelAnimationFrame(drawAnimationFrameRef.current);
-      drawAnimationFrameRef.current = null;
-    }
-
-    // Reset refs immediately (no re-render)
     isDraggingPenRef.current = false;
-    lastPointRef.current = null;
-    lastDrawTimeRef.current = 0;
-    // Update state for external consumers
     setIsDraggingPen(false);
 
-    // Save canvas state after drawing/erasing
+    if (strokePointsRef.current.length > 0) {
+      restoreSnapshot();
+      drawSmoothStroke(strokePointsRef.current);
+      strokePointsRef.current = [];
+    }
+    canvasSnapshotRef.current = null;
+
     if (isDrawing || isEraser) {
-      // Use setTimeout to ensure the drawing is complete
       setTimeout(() => {
         saveCanvasState();
       }, 0);
     }
-  }, [isDrawing, isEraser, isMagicWand, saveCanvasState, drawLine]);
+  }, [isDrawing, isEraser, restoreSnapshot, drawSmoothStroke, saveCanvasState]);
 
   return {
     isDraggingPen,
