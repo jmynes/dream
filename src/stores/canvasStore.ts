@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
 import { useMemo } from "react";
 import type { CanvasComponent, ComponentType } from "../types/component";
+import type { Point } from "../utils/canvas/canvasUtils";
 
 interface CanvasState {
   // Components
@@ -14,6 +15,11 @@ interface CanvasState {
   addComponent: (component: CanvasComponent) => void;
   removeComponent: (componentId: string) => void;
   removeComponents: (componentIds: string[]) => void;
+  moveComponents: (
+    deltaX: number,
+    deltaY: number,
+    clampPosition: (point: Point, comp: CanvasComponent) => Point,
+  ) => void;
 
   // Selection
   selectedComponentIds: string[];
@@ -99,6 +105,26 @@ export const useCanvasStore = create<CanvasState>()(
         components: state.components.filter(
           (c) => !componentIds.includes(c.id),
         ),
+      })),
+    moveComponents: (deltaX, deltaY, clampPosition) =>
+      set((state) => ({
+        components: state.components.map((comp) => {
+          if (!state.selectedComponentIds.includes(comp.id)) {
+            return comp;
+          }
+          const newPoint = clampPosition(
+            {
+              x: comp.x + deltaX,
+              y: comp.y + deltaY,
+            },
+            comp,
+          );
+          return {
+            ...comp,
+            x: newPoint.x,
+            y: newPoint.y,
+          };
+        }),
       })),
 
     // Selection
@@ -210,6 +236,9 @@ export const useComponentActions = () => {
     [setComponents, updateComponent, addComponent, removeComponent, removeComponents],
   );
 };
+
+export const useComponentMove = () =>
+  useCanvasStore((state) => state.moveComponents);
 
 export const useSelectionActions = () => {
   const setSelectedComponentIds = useSetSelectedComponentIds();

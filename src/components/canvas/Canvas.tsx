@@ -14,6 +14,7 @@ import {
   useSelectedComponentIds,
   useSelectionActions,
   useCanvasStore,
+  useComponentMove,
 } from "../../stores/canvasStore";
 import type { CanvasComponent, ComponentType } from "../../types/component";
 import {
@@ -117,6 +118,7 @@ export default function Canvas({
   const selectedComponentIds = useSelectedComponentIds();
   const { setComponents, updateComponent: updateComponentInStore } = useComponentActions();
   const { setSelectedComponentIds: setSelectedComponentIdsInStore } = useSelectionActions();
+  const moveComponentsInStore = useComponentMove();
   
   // Track if we're using prop components (to avoid circular updates)
   const isUsingPropComponents = componentsProp !== undefined;
@@ -939,30 +941,35 @@ export default function Canvas({
     onMoveSelected: (deltaX, deltaY) => {
       if (selectedComponentIds.length === 0) return;
 
+      const clampPosition = (point: Point, comp: CanvasComponent) => {
+        const compWidth = comp.width || 100;
+        const compHeight = comp.height || 40;
+        const snapped = snapPointToGrid(point);
+        return clampComponentPosition(
+          snapped.x,
+          snapped.y,
+          compWidth,
+          compHeight,
+        );
+      };
+
+      if (!isUsingPropComponents) {
+        moveComponentsInStore(deltaX, deltaY, clampPosition);
+        const updated = useCanvasStore.getState().components;
+        onComponentsChange(updated);
+        return;
+      }
+
       const updatedComponents = components.map((comp) => {
         if (!selectedComponentIds.includes(comp.id)) {
           return comp;
         }
-
-        const compWidth = comp.width || 100;
-        const compHeight = comp.height || 40;
-        let newPoint = { x: comp.x + deltaX, y: comp.y + deltaY };
-
-        newPoint = snapPointToGrid(newPoint);
-        newPoint = clampComponentPosition(
-          newPoint.x,
-          newPoint.y,
-          compWidth,
-          compHeight,
+        const newPoint = clampPosition(
+          { x: comp.x + deltaX, y: comp.y + deltaY },
+          comp,
         );
-
         return { ...comp, x: newPoint.x, y: newPoint.y };
       });
-
-      // Only update store if we're not using prop components (to avoid circular updates)
-      if (!isUsingPropComponents) {
-        setComponents(updatedComponents);
-      }
       onComponentsChange(updatedComponents);
     },
     onCopySelected: () => {

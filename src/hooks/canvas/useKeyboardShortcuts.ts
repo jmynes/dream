@@ -54,6 +54,89 @@ export function useKeyboardShortcuts({
   onCancelRecognition,
 }: UseKeyboardShortcutsProps) {
   useEffect(() => {
+    const pressedArrows = {
+      ArrowLeft: false,
+      ArrowRight: false,
+      ArrowUp: false,
+      ArrowDown: false,
+    };
+    let moveLoopId: number | null = null;
+    let lastMoveTimestamp = 0;
+    let holdStartTimestamp = 0;
+
+    const stopMoveLoop = () => {
+      if (moveLoopId !== null) {
+        cancelAnimationFrame(moveLoopId);
+        moveLoopId = null;
+      }
+      lastMoveTimestamp = 0;
+      holdStartTimestamp = 0;
+    };
+
+    const moveLoop = (timestamp: number) => {
+      const anyPressed =
+        pressedArrows.ArrowLeft ||
+        pressedArrows.ArrowRight ||
+        pressedArrows.ArrowUp ||
+        pressedArrows.ArrowDown;
+
+      if (!anyPressed) {
+        stopMoveLoop();
+        return;
+      }
+
+      const intervalMs = snapToGrid ? 90 : 14;
+      if (timestamp - lastMoveTimestamp >= intervalMs) {
+        let deltaX = 0;
+        let deltaY = 0;
+        const holdDuration = holdStartTimestamp
+          ? timestamp - holdStartTimestamp
+          : 0;
+        const speedMultiplier = snapToGrid
+          ? 1
+          : Math.min(32, 1 + holdDuration / 40);
+        const unitX = snapToGrid ? gridCellWidth : speedMultiplier;
+        const unitY = snapToGrid ? gridCellHeight : speedMultiplier;
+
+        if (pressedArrows.ArrowLeft) deltaX -= unitX;
+        if (pressedArrows.ArrowRight) deltaX += unitX;
+        if (pressedArrows.ArrowUp) deltaY -= unitY;
+        if (pressedArrows.ArrowDown) deltaY += unitY;
+
+        if (deltaX !== 0 || deltaY !== 0) {
+          onMoveSelected(deltaX, deltaY);
+          lastMoveTimestamp = timestamp;
+        }
+      }
+
+      moveLoopId = requestAnimationFrame(moveLoop);
+    };
+
+    const ensureMoveLoop = () => {
+      if (moveLoopId === null) {
+        moveLoopId = requestAnimationFrame((timestamp) => {
+          lastMoveTimestamp = timestamp;
+          if (holdStartTimestamp === 0) {
+            holdStartTimestamp = timestamp;
+          }
+          moveLoop(timestamp);
+        });
+      }
+    };
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (!(e.key in pressedArrows)) return;
+      pressedArrows[e.key as keyof typeof pressedArrows] = false;
+      const anyPressed =
+        pressedArrows.ArrowLeft ||
+        pressedArrows.ArrowRight ||
+        pressedArrows.ArrowUp ||
+        pressedArrows.ArrowDown;
+      if (!anyPressed) {
+        stopMoveLoop();
+      }
+    };
+
     const handleKeyDown = (e: KeyboardEvent) => {
       // Handle Ctrl+A / Cmd+A to select all components
       if ((e.ctrlKey || e.metaKey) && e.key === "a") {
@@ -171,33 +254,30 @@ export function useKeyboardShortcuts({
           return;
         }
 
-        let deltaX = 0;
-        let deltaY = 0;
-
-        if (e.key === "ArrowLeft") {
+        if (
+          e.key === "ArrowLeft" ||
+          e.key === "ArrowRight" ||
+          e.key === "ArrowUp" ||
+          e.key === "ArrowDown"
+        ) {
           e.preventDefault();
-          deltaX = snapToGrid ? -gridCellWidth : -1;
-        } else if (e.key === "ArrowRight") {
-          e.preventDefault();
-          deltaX = snapToGrid ? gridCellWidth : 1;
-        } else if (e.key === "ArrowUp") {
-          e.preventDefault();
-          deltaY = snapToGrid ? -gridCellHeight : -1;
-        } else if (e.key === "ArrowDown") {
-          e.preventDefault();
-          deltaY = snapToGrid ? gridCellHeight : 1;
-        }
-
-        if (deltaX !== 0 || deltaY !== 0) {
-          onMoveSelected(deltaX, deltaY);
+          pressedArrows[e.key as keyof typeof pressedArrows] = true;
+          if (holdStartTimestamp === 0) {
+            holdStartTimestamp = performance.now();
+          }
+          ensureMoveLoop();
+          return;
         }
       }
     };
 
     window.addEventListener("keydown", handleKeyDown, true);
+    window.addEventListener("keyup", handleKeyUp, true);
 
     return () => {
       window.removeEventListener("keydown", handleKeyDown, true);
+      window.removeEventListener("keyup", handleKeyUp, true);
+      stopMoveLoop();
     };
   }, [
     components.length,
