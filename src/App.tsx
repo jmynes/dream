@@ -192,7 +192,13 @@ function App() {
 
   const handleComponentPlaced = () => {
     setSelectedComponentType(null);
+    // Clear any drag-related toast when component is placed
+    setToastMessage(null);
   };
+
+  const handleComponentDragStart = useCallback((componentLabel: string) => {
+    setToastMessage(`Dragging ${componentLabel} to canvas`);
+  }, []);
 
   const handleDeleteEverything = () => {
     setComponents([]);
@@ -512,6 +518,7 @@ function App() {
               onComponentSelect={handleComponentSelect}
               selectedComponentType={selectedComponentType}
               componentColor={componentColor}
+              onDragStart={handleComponentDragStart}
             />
           </Box>
           <Footer />

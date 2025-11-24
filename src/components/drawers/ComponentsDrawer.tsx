@@ -20,6 +20,7 @@ interface ComponentsDrawerProps {
   onComponentSelect: (type: ComponentType) => void;
   selectedComponentType: ComponentType | null;
   componentColor: string;
+  onDragStart?: (componentLabel: string) => void;
 }
 
 const fuzzyMatch = (query: string, target: string): boolean => {
@@ -49,6 +50,7 @@ export default function ComponentsDrawer({
   onComponentSelect,
   selectedComponentType,
   componentColor,
+  onDragStart,
 }: ComponentsDrawerProps) {
   const componentItems = getComponentItems(componentColor);
   const [searchQuery, setSearchQuery] = useState("");
@@ -145,6 +147,65 @@ export default function ComponentsDrawer({
                   onDragStart={(e) => {
                     e.dataTransfer.setData("componentType", item.type);
                     e.dataTransfer.effectAllowed = "copy";
+                    
+                    // Create custom drag image showing just the component preview
+                    const dragImageContainer = document.createElement("div");
+                    dragImageContainer.style.position = "absolute";
+                    dragImageContainer.style.top = "-9999px";
+                    dragImageContainer.style.left = "-9999px";
+                    dragImageContainer.style.width = "120px";
+                    dragImageContainer.style.height = "80px";
+                    dragImageContainer.style.display = "flex";
+                    dragImageContainer.style.alignItems = "center";
+                    dragImageContainer.style.justifyContent = "center";
+                    dragImageContainer.style.backgroundColor = "white";
+                    dragImageContainer.style.border = "1px solid rgba(0, 0, 0, 0.1)";
+                    dragImageContainer.style.borderRadius = "4px";
+                    dragImageContainer.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.15)";
+                    dragImageContainer.style.padding = "8px";
+                    
+                    // Clone the preview element
+                    const previewBox = e.currentTarget.querySelector(
+                      '[data-preview-container]',
+                    ) as HTMLElement;
+                    if (previewBox) {
+                      const clonedPreview = previewBox.cloneNode(true) as HTMLElement;
+                      clonedPreview.style.pointerEvents = "none";
+                      clonedPreview.style.width = "100%";
+                      clonedPreview.style.height = "100%";
+                      dragImageContainer.appendChild(clonedPreview);
+                    } else {
+                      // Fallback: create a simple text representation
+                      const fallbackPreview = document.createElement("div");
+                      fallbackPreview.style.width = "100%";
+                      fallbackPreview.style.height = "100%";
+                      fallbackPreview.style.display = "flex";
+                      fallbackPreview.style.alignItems = "center";
+                      fallbackPreview.style.justifyContent = "center";
+                      fallbackPreview.textContent = item.label;
+                      dragImageContainer.appendChild(fallbackPreview);
+                    }
+                    
+                    document.body.appendChild(dragImageContainer);
+                    
+                    // Set the drag image with offset to center it on cursor
+                    const offsetX = 60; // Half of width
+                    const offsetY = 40; // Half of height
+                    e.dataTransfer.setDragImage(
+                      dragImageContainer,
+                      offsetX,
+                      offsetY,
+                    );
+                    
+                    // Clean up after a short delay
+                    setTimeout(() => {
+                      document.body.removeChild(dragImageContainer);
+                    }, 0);
+                    
+                    // Notify parent that dragging has started
+                    if (onDragStart) {
+                      onDragStart(item.label);
+                    }
                   }}
                   sx={{
                     flexDirection: "column",
@@ -178,6 +239,7 @@ export default function ComponentsDrawer({
                     </Typography>
                   </Box>
                   <Box
+                    data-preview-container
                     sx={{
                       width: "100%",
                       display: "flex",
