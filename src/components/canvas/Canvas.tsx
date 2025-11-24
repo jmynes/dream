@@ -111,6 +111,7 @@ export default function Canvas({
 }: CanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const canvasContainerRef = useRef<HTMLDivElement>(null);
   
   // Use Zustand store for components and selection (performance optimization)
   // Use prop components if provided (for backward compatibility), otherwise use store
@@ -206,7 +207,7 @@ export default function Canvas({
     setComponents,
   ]); // Run when componentColor or timestamp changes
 
-  // Canvas lifecycle management
+  // Canvas lifecycle management - get container size for grid calculation
   const { actualWidth, actualHeight } = useCanvasLifecycle({
     canvasRef,
     containerRef,
@@ -215,11 +216,50 @@ export default function Canvas({
     restoreCanvasImageData,
   });
 
-  // Grid calculation
-  const { gridCellWidth, gridCellHeight } = useGrid({
+  // Grid calculation - returns fixed canvas dimensions based on 12 columns × 24 rows
+  const { gridCellWidth, gridCellHeight, canvasWidth, canvasHeight } = useGrid({
     width: actualWidth,
     height: actualHeight,
   });
+
+  // Override canvas dimensions to use fixed grid size (12 columns × 24 rows)
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || canvasWidth === 0 || canvasHeight === 0) return;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    // Only update if dimensions have changed
+    if (canvas.width !== canvasWidth || canvas.height !== canvasHeight) {
+      const oldWidth = canvas.width;
+      const oldHeight = canvas.height;
+      const isInitialSetup = oldWidth === 0 && oldHeight === 0;
+
+      let imageData: ImageData | null = null;
+      if (!isInitialSetup && oldWidth > 0 && oldHeight > 0) {
+        imageData = ctx.getImageData(0, 0, oldWidth, oldHeight);
+      }
+
+      // Use fixed canvas dimensions
+      canvas.width = canvasWidth;
+      canvas.height = canvasHeight;
+
+      if (imageData) {
+        const tempCanvas = document.createElement("canvas");
+        tempCanvas.width = oldWidth;
+        tempCanvas.height = oldHeight;
+        const tempCtx = tempCanvas.getContext("2d");
+        if (tempCtx) {
+          tempCtx.putImageData(imageData, 0, 0);
+          ctx.drawImage(tempCanvas, 0, 0);
+        }
+      } else {
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+      }
+    }
+  }, [canvasWidth, canvasHeight, canvasRef]);
 
   // Create snapToGridPoint function
   const snapToGridPointFn = useCallback(
@@ -231,7 +271,7 @@ export default function Canvas({
   // Create getPointFromEvent function
   const getPointFromEventFn = useCallback(
     (e: React.MouseEvent | MouseEvent) =>
-      getPointFromEvent(e, containerRef.current),
+      getPointFromEvent(e, canvasContainerRef.current),
     [],
   );
 
@@ -247,20 +287,20 @@ export default function Canvas({
   // Helper: Convert global mouse event to canvas coordinates with clamping
   const getClampedCanvasPoint = useCallback(
     (e: MouseEvent): Point => {
-      const container = containerRef.current;
-      if (!container) return { x: 0, y: 0 };
+      const canvasContainer = canvasContainerRef.current;
+      if (!canvasContainer) return { x: 0, y: 0 };
 
-      const rect = container.getBoundingClientRect();
+      const rect = canvasContainer.getBoundingClientRect();
       let x = e.clientX - rect.left;
       let y = e.clientY - rect.top;
 
-      // Clamp to canvas boundaries
-      x = Math.max(0, Math.min(x, actualWidth));
-      y = Math.max(0, Math.min(y, actualHeight));
+      // Clamp to fixed canvas boundaries (12 columns × 24 rows)
+      x = Math.max(0, Math.min(x, canvasWidth));
+      y = Math.max(0, Math.min(y, canvasHeight));
 
       return { x, y };
     },
-    [actualWidth, actualHeight],
+    [canvasWidth, canvasHeight],
   );
 
   // Helper: Create component with snapping
@@ -341,11 +381,11 @@ export default function Canvas({
   const clampComponentPosition = useCallback(
     (x: number, y: number, compWidth: number, compHeight: number): Point => {
       return {
-        x: Math.max(0, Math.min(x, actualWidth - compWidth)),
-        y: Math.max(0, Math.min(y, actualHeight - compHeight)),
+        x: Math.max(0, Math.min(x, canvasWidth - compWidth)),
+        y: Math.max(0, Math.min(y, canvasHeight - compHeight)),
       };
     },
-    [actualWidth, actualHeight],
+    [canvasWidth, canvasHeight],
   );
 
   // Helper: Select all components
@@ -511,12 +551,16 @@ export default function Canvas({
   const selectedComponentIdsRef = useRef<string[]>([]);
   const lastSelectionUpdateRef = useRef<number>(0);
   const selectionUpdateTimeoutRef = useRef<number | null>(null);
+  const selectionBoxStartRef = useRef<Point | null>(null);
 
   useEffect(() => {
     selectedComponentIdsRef.current = selectedComponentIds;
   }, [selectedComponentIds]);
 
   useEffect(() => {
+    // Keep ref in sync with state
+    selectionBoxStartRef.current = selectionBoxStart;
+    
     if (!selectionBoxStart) {
       // Clear any pending updates when selection box stops
       if (selectionUpdateTimeoutRef.current !== null) {
@@ -529,6 +573,12 @@ export default function Canvas({
     const THROTTLE_MS = 100; // Update selection state max once per 100ms
 
     const updateSelection = () => {
+      // Don't update if selection box has been cleared (finishSelectionBox was called)
+      // Use ref to check current state, not closure value
+      if (!selectionBoxStartRef.current) {
+        selectionUpdateTimeoutRef.current = null;
+        return;
+      }
       const now = Date.now();
       if (now - lastSelectionUpdateRef.current >= THROTTLE_MS) {
         const preview = getPreviewSelection();
@@ -591,8 +641,8 @@ export default function Canvas({
     gridCellHeight,
     resizeMode,
     snapToGridPoint: snapToGridPointFn,
-    canvasWidth: actualWidth,
-    canvasHeight: actualHeight,
+    canvasWidth: canvasWidth,
+    canvasHeight: canvasHeight,
   });
 
   // Brush preview hook
@@ -683,6 +733,11 @@ export default function Canvas({
   useEffect(() => {
     const handleGlobalMouseUp = () => {
       if (selectionBoxStart !== null) {
+        // Clear any pending selection updates before finishing
+        if (selectionUpdateTimeoutRef.current !== null) {
+          clearTimeout(selectionUpdateTimeoutRef.current);
+          selectionUpdateTimeoutRef.current = null;
+        }
         finishSelectionBox();
       }
       if (isLassoDrawing) {
@@ -1030,11 +1085,21 @@ export default function Canvas({
         position: "relative",
         border: "1px solid #e0e0e0",
         borderRadius: 1,
-        overflow: "hidden",
+        overflow: "auto",
         cursor,
         width: "100%",
         height: "100%",
         backgroundColor: canvasColor,
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "flex-start",
+        minWidth: 0,
+        minHeight: 0,
+        boxSizing: "border-box",
+      }}
+      onDragStart={(e) => {
+        // Prevent default drag behavior that might cause container expansion
+        e.preventDefault();
       }}
       onClick={(e) => {
         handleContainerClick(e);
@@ -1072,80 +1137,95 @@ export default function Canvas({
       onDragOver={handleDragOver}
       onDrop={handleDrop}
     >
-      <canvas
-        ref={canvasRef}
-        onMouseDown={(e) => {
-          // Middle mouse button (button === 1) to reset tools
-          if (e.button === 1 && onResetTools) {
-            e.preventDefault();
-            onResetTools();
-            return;
-          }
-          handleCanvasMouseDown(e);
+      <Box
+        ref={canvasContainerRef}
+        sx={{
+          position: "relative",
+          width: `${canvasWidth}px`,
+          height: `${canvasHeight}px`,
+          minWidth: `${canvasWidth}px`,
+          minHeight: `${canvasHeight}px`,
+          maxWidth: `${canvasWidth}px`,
+          maxHeight: `${canvasHeight}px`,
+          margin: "auto",
+          flexShrink: 0,
+          overflow: "hidden",
+          boxSizing: "border-box",
         }}
-        onMouseMove={(e) => {
-          handleCanvasMouseMove(e);
-          handleBrushMouseMove(e);
-        }}
-        onMouseUp={handleCanvasMouseUpBase}
-        onMouseLeave={handleBrushMouseLeave}
-        onDragOver={handleDragOver}
-        onDrop={handleDrop}
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          display: "block",
-          width: "100%",
-          height: "100%",
-          pointerEvents:
-            (isDrawing || isEraser || isMagicWand) && !selectedComponentType
-              ? "auto"
-              : "none",
-          cursor,
-        }}
-      />
-
-      {isBrowserUIEnabled && (
-        <BrowserUI
-          showTitleBar={showTitleBar}
-          showUrlBar={showUrlBar}
-          showBookmarkBar={showBookmarkBar}
-          isMacOSStyle={isMacOSStyle}
+      >
+        <canvas
+          ref={canvasRef}
+          onMouseDown={(e) => {
+            // Middle mouse button (button === 1) to reset tools
+            if (e.button === 1 && onResetTools) {
+              e.preventDefault();
+              onResetTools();
+              return;
+            }
+            handleCanvasMouseDown(e);
+          }}
+          onMouseMove={(e) => {
+            handleCanvasMouseMove(e);
+            handleBrushMouseMove(e);
+          }}
+          onMouseUp={handleCanvasMouseUpBase}
+          onMouseLeave={handleBrushMouseLeave}
+          onDragOver={handleDragOver}
+          onDrop={handleDrop}
+          style={{
+            display: "block",
+            width: `${canvasWidth}px`,
+            height: `${canvasHeight}px`,
+            maxWidth: `${canvasWidth}px`,
+            maxHeight: `${canvasHeight}px`,
+            pointerEvents:
+              (isDrawing || isEraser || isMagicWand) && !selectedComponentType
+                ? "auto"
+                : "none",
+            cursor,
+          }}
         />
-      )}
 
-      <GridOverlay
-        snapToGrid={snapToGrid}
-        gridCellWidth={gridCellWidth}
-        gridCellHeight={gridCellHeight}
-      />
+        {isBrowserUIEnabled && (
+          <BrowserUI
+            showTitleBar={showTitleBar}
+            showUrlBar={showUrlBar}
+            showBookmarkBar={showBookmarkBar}
+            isMacOSStyle={isMacOSStyle}
+          />
+        )}
 
-      <BrushPreview
-        isDrawing={isDrawing}
-        isEraser={isEraser}
-        isMagicWand={isMagicWand}
-        selectedComponentType={selectedComponentType}
-        brushPosition={brushPosition}
-      />
-
-      <SelectionBox
-        start={selectionBoxStart}
-        end={selectionBoxEnd}
-        endRef={selectionBoxEndRef}
-      />
-      <LassoPath path={lassoPath} isActive={isLassoDrawing} />
-      {hoveredCell && (
-        <CellHighlight
-          x={hoveredCell.x}
-          y={hoveredCell.y}
-          cellWidth={gridCellWidth}
-          cellHeight={gridCellHeight}
-          visible={isCursorMode && snapToGrid}
+        <GridOverlay
+          snapToGrid={snapToGrid}
+          gridCellWidth={gridCellWidth}
+          gridCellHeight={gridCellHeight}
         />
-      )}
 
-      <ComponentOverlay
+        <BrushPreview
+          isDrawing={isDrawing}
+          isEraser={isEraser}
+          isMagicWand={isMagicWand}
+          selectedComponentType={selectedComponentType}
+          brushPosition={brushPosition}
+        />
+
+        <SelectionBox
+          start={selectionBoxStart}
+          end={selectionBoxEnd}
+          endRef={selectionBoxEndRef}
+        />
+        <LassoPath path={lassoPath} isActive={isLassoDrawing} />
+        {hoveredCell && (
+          <CellHighlight
+            x={hoveredCell.x}
+            y={hoveredCell.y}
+            cellWidth={gridCellWidth}
+            cellHeight={gridCellHeight}
+            visible={isCursorMode && snapToGrid}
+          />
+        )}
+
+        <ComponentOverlay
         components={components}
         isCursorMode={isCursorMode}
         isLassoMode={isLasso}
@@ -1207,7 +1287,8 @@ export default function Canvas({
           });
         }}
         onResetTools={onResetTools}
-      />
+        />
+      </Box>
 
       {/* Submit button for magic wand - shown when drawing */}
       {isMagicWand &&

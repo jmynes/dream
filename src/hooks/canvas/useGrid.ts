@@ -6,18 +6,27 @@ interface UseGridProps {
 }
 
 const GRID_COLUMNS = 12;
-const BASE_ROW_HEIGHT = 40;
+const GRID_ROWS = 28;
+const BASE_CELL_HEIGHT = 40;
 
 export function useGrid({ width, height }: UseGridProps) {
-  const { gridCellWidth, gridCellHeight } = useMemo(() => {
+  const { gridCellWidth, gridCellHeight, canvasWidth, canvasHeight } = useMemo(() => {
+    // Calculate cell width based on available width, divided by columns
     const cellWidth = Math.floor(width / GRID_COLUMNS);
-    const rows = Math.max(1, Math.floor(height / BASE_ROW_HEIGHT));
-    const cellHeight = Math.floor(height / rows);
+    // Use fixed cell height
+    const cellHeight = BASE_CELL_HEIGHT;
+    
+    // Calculate canvas dimensions based on fixed grid
+    const calculatedCanvasWidth = cellWidth * GRID_COLUMNS;
+    const calculatedCanvasHeight = cellHeight * GRID_ROWS;
+    
     return {
       gridCellWidth: cellWidth,
       gridCellHeight: cellHeight,
+      canvasWidth: calculatedCanvasWidth,
+      canvasHeight: calculatedCanvasHeight,
     };
   }, [width, height]);
 
-  return { gridCellWidth, gridCellHeight };
+  return { gridCellWidth, gridCellHeight, canvasWidth, canvasHeight };
 }

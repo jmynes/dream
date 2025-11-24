@@ -29,6 +29,7 @@ export function useSelectionBox({
   const [selectionBoxEnd, setSelectionBoxEnd] = useState<Point | null>(null);
   const selectionBoxEndRef = useRef<Point | null>(null);
   const justFinishedSelectionBoxRef = useRef(false);
+  const isFinishingRef = useRef(false);
 
   const isCursorMode =
     !isDrawing &&
@@ -99,27 +100,37 @@ export function useSelectionBox({
   );
 
   const finishSelectionBox = useCallback(() => {
+    // Prevent multiple calls
+    if (isFinishingRef.current) return;
+    isFinishingRef.current = true;
+
     // Use ref value for final calculation (most up-to-date)
     const endPoint = selectionBoxEndRef.current;
-    if (!selectionBoxStart || !endPoint) return;
+    const startPoint = selectionBoxStart;
+    if (!startPoint || !endPoint) {
+      isFinishingRef.current = false;
+      return;
+    }
 
     // Sync state with ref value for final render
     setSelectionBoxEnd(endPoint);
 
-    const minX = Math.min(selectionBoxStart.x, endPoint.x);
-    const maxX = Math.max(selectionBoxStart.x, endPoint.x);
-    const minY = Math.min(selectionBoxStart.y, endPoint.y);
-    const maxY = Math.max(selectionBoxStart.y, endPoint.y);
-
+    // Calculate selection box bounds
+    const minX = Math.min(startPoint.x, endPoint.x);
+    const maxX = Math.max(startPoint.x, endPoint.x);
+    const minY = Math.min(startPoint.y, endPoint.y);
+    const maxY = Math.max(startPoint.y, endPoint.y);
+    
     // Only select if the selection box has some size (not just a click)
     const hasSelectionBoxSize =
       Math.abs(maxX - minX) > 5 || Math.abs(maxY - minY) > 5;
 
     if (hasSelectionBoxSize) {
-      // Mark that we just finished a selection box drag
+      // Mark that we just finished a selection box drag BEFORE clearing state
       justFinishedSelectionBoxRef.current = true;
 
       // Find components that intersect with the selection box
+      // Calculate directly here to avoid any closure issues
       const selectedComponents = components.filter((comp) => {
         const compRight = comp.x + (comp.width || 100);
         const compBottom = comp.y + (comp.height || 40);
@@ -132,28 +143,29 @@ export function useSelectionBox({
         );
       });
 
-      // Select all components that intersect with the box
-      // Note: Selection is already updated in real-time during drag,
-      // so this just ensures final state is correct
-      if (selectedComponents.length > 0) {
-        onSelectionChange(selectedComponents.map((c) => c.id));
-      } else {
-        // If no components were found in the box, deselect all
-        onSelectionChange([]);
-      }
+      // Apply the final selection immediately
+      const finalSelection = selectedComponents.map((c) => c.id);
+      onSelectionChange(finalSelection);
 
-      // Reset the flag after a short delay to allow click handler to check it
+      // Reset the flag after a delay to allow click handler to check it
+      // Use a longer delay to ensure click handlers have time to see the flag
       setTimeout(() => {
         justFinishedSelectionBoxRef.current = false;
-      }, 0);
+      }, 100);
     } else {
       // If it was just a click (no size), deselect all
       onSelectionChange([]);
     }
 
+    // Clear selection box state AFTER applying selection
     setSelectionBoxStart(null);
     selectionBoxEndRef.current = null;
     setSelectionBoxEnd(null);
+    
+    // Reset the finishing flag after a short delay
+    setTimeout(() => {
+      isFinishingRef.current = false;
+    }, 0);
   }, [selectionBoxStart, components, onSelectionChange]);
 
   const clearSelectionBox = useCallback(() => {
