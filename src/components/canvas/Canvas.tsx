@@ -31,6 +31,7 @@ import CanvasContextMenu from "./CanvasContextMenu";
 import GridOverlay from "./GridOverlay";
 import LassoPath from "./LassoPath";
 import SelectionBox from "./SelectionBox";
+import CellHighlight from "./CellHighlight";
 
 const isPointInPolygon = (point: Point, polygon: Point[]): boolean => {
   let inside = false;
@@ -137,6 +138,7 @@ export default function Canvas({
   const lassoPathRef = useRef<Point[]>([]);
   const [isLassoDrawing, setIsLassoDrawing] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [hoveredCell, setHoveredCell] = useState<Point | null>(null);
   const [contextMenuAnchor, setContextMenuAnchor] = useState<{
     mouseX: number;
     mouseY: number;
@@ -843,16 +845,38 @@ export default function Canvas({
     ],
   );
 
+  // Handle cell highlighting in cursor mode
+  const handleCellHighlight = useCallback(
+    (point: Point) => {
+      if (!isCursorMode || !snapToGrid) {
+        setHoveredCell(null);
+        return;
+      }
+      // Check if we should clear (negative coordinates signal clear)
+      if (point.x < 0 || point.y < 0) {
+        setHoveredCell(null);
+        return;
+      }
+      // Calculate which cell the mouse is over
+      const cellX = Math.floor(point.x / gridCellWidth) * gridCellWidth;
+      const cellY = Math.floor(point.y / gridCellHeight) * gridCellHeight;
+      setHoveredCell({ x: cellX, y: cellY });
+    },
+    [isCursorMode, snapToGrid, gridCellWidth, gridCellHeight],
+  );
+
   // Container mouse handlers
   // Note: Selection box is handled by ComponentOverlay in cursor mode
   // These handlers are only needed for drag/resize which must work outside component bounds
   const handleContainerMouseMove = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
       const point = getPointFromEventFn(e);
+      // Handle cell highlighting
+      handleCellHighlight(point);
       // Handle drag/resize (needed even when dragging outside component bounds)
       handleContainerMouseMoveBase(point);
     },
-    [getPointFromEventFn, handleContainerMouseMoveBase],
+    [getPointFromEventFn, handleCellHighlight, handleContainerMouseMoveBase],
   );
 
   const handleContainerMouseUp = useCallback(() => {
@@ -1111,6 +1135,15 @@ export default function Canvas({
         endRef={selectionBoxEndRef}
       />
       <LassoPath path={lassoPath} isActive={isLassoDrawing} />
+      {hoveredCell && (
+        <CellHighlight
+          x={hoveredCell.x}
+          y={hoveredCell.y}
+          cellWidth={gridCellWidth}
+          cellHeight={gridCellHeight}
+          visible={isCursorMode && snapToGrid}
+        />
+      )}
 
       <ComponentOverlay
         components={components}
@@ -1134,6 +1167,7 @@ export default function Canvas({
         }
         onSelectionBoxFinish={finishSelectionBox}
         onSelectionBoxClear={clearSelectionBox}
+        onCellHighlight={handleCellHighlight}
         onBrushMouseMove={handleBrushMouseMove}
         onBrushMouseLeave={handleBrushMouseLeave}
         onLassoStart={handleLassoStart}

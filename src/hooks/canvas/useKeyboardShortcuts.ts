@@ -117,7 +117,7 @@ export function useKeyboardShortcuts({
         moveLoopId = requestAnimationFrame((timestamp) => {
           lastMoveTimestamp = timestamp;
           if (holdStartTimestamp === 0) {
-            holdStartTimestamp = timestamp;
+          holdStartTimestamp = timestamp;
           }
           moveLoop(timestamp);
         });

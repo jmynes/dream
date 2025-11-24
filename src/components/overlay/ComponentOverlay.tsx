@@ -44,6 +44,7 @@ interface ComponentOverlayProps {
   onOverlayClick: (e: React.MouseEvent<HTMLDivElement>) => void;
   onContextMenu?: (e: React.MouseEvent<HTMLDivElement>) => void;
   onResetTools?: () => void;
+  onCellHighlight?: (point: Point) => void;
 }
 
 function ComponentOverlay({
@@ -79,6 +80,7 @@ function ComponentOverlay({
   onOverlayClick,
   onContextMenu,
   onResetTools,
+  onCellHighlight,
 }: ComponentOverlayProps) {
   return (
     <Box
@@ -115,17 +117,20 @@ function ComponentOverlay({
         }
       }}
       onMouseMove={(e) => {
+        const point = getPointFromEvent(e);
+        // Handle cell highlighting in cursor mode
+        if (isCursorMode && onCellHighlight) {
+          onCellHighlight(point);
+        }
         if (
           isCursorMode &&
           selectionBoxStart &&
           !draggedComponentId &&
           !resizingComponentId
         ) {
-          const point = getPointFromEvent(e);
           onSelectionBoxUpdate(point);
         }
         if (isLassoMode && isLassoDrawing) {
-          const point = getPointFromEvent(e);
           onLassoUpdate(point);
         }
         if ((isDrawing || isEraser || isMagicWand) && !selectedComponentType) {
@@ -153,6 +158,10 @@ function ComponentOverlay({
       }}
       onMouseLeave={() => {
         onBrushMouseLeave();
+        // Clear cell highlight when mouse leaves overlay
+        if (onCellHighlight) {
+          onCellHighlight({ x: -1, y: -1 }); // Signal to clear
+        }
         // Don't clear selection box on mouse leave - let it persist until mouseup
         // Only clear if we're not actively selecting
         if (!selectionBoxStart) {
